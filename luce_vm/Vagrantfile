@@ -1,0 +1,101 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+# LuceVM Setup
+Vagrant.configure("2") do |config|
+
+
+  config.vm.define "lucevm", primary: true do |lucevm|
+
+    # Use pre-provisioned custom box
+    lucevm.vm.box = "arnoan/lucevm"
+    lucevm.vm.box_check_update = true
+    config.vm.provision :docker
+
+
+    # ==== PORT CONFIGURATION ====
+
+    # Apache Web Server
+    lucevm.vm.network :forwarded_port, guest: 80, host: 4567
+
+    # Jupyter Notebook
+    lucevm.vm.network :forwarded_port, guest: 8888, host: 8888
+
+    # Jupyter Notebook Alternative Port
+    lucevm.vm.network :forwarded_port, guest: 8889, host: 8889
+
+    # Ganache Blockchain
+    #lucevm.vm.network :forwarded_port, guest: 8545, host: 8545
+
+    # Django - Open a few ports for testing multiple servers
+    lucevm.vm.network :forwarded_port, guest: 8000, host: 8000
+    lucevm.vm.network :forwarded_port, guest: 8001, host: 8001
+    lucevm.vm.network :forwarded_port, guest: 8002, host: 8002
+
+    # ==== VirtualBox CONFIGURATION ====
+
+    lucevm.vm.provider "virtualbox" do |vb|
+
+      # Amount of memory used by VM (1GB)
+      vb.memory = "1024"
+      #vb.memory = "2048"
+      vb.cpus = 1    
+
+      # Display VirtualBox GUI when booting the machine
+      #vb.gui = true
+
+      # Disable creation of log file
+      vb.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
+
+      # Hard-code virtual ethernet cable connection
+      # This prevents SSH auth method: private key from getting stuck
+      vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
+    end
+
+    # ==== ADDITIONAL CONFIGURATION ====
+    
+    # Set up shared network interface
+    lucevm.vm.network "private_network", ip: "192.168.72.2"
+
+    # Disable checking for new vbguest updates
+    if Vagrant.has_plugin?("vagrant-vbguest")
+    	lucevm.vbguest.auto_update = false
+    end
+
+    # ==== SCRIPTS TO RUN AFTER STARTUP ====
+
+    lucevm.vm.provision :shell, path: "./scripts/bootstrap_custom_lucevm.sh"
+
+  end
+
+end
+
+
+# PostgreSQL/LuceDB Setup
+Vagrant.configure("2") do |config|
+  
+  config.vm.define "lucedb", autostart: false do |lucedb| 
+
+    # Use pre-provisioned custom box
+    lucedb.vm.box = "arnoan/lucedb"
+    lucedb.vm.box_check_update = true
+
+    # Disable checking for new vbguest updates
+    if Vagrant.has_plugin?("vagrant-vbguest")
+    	lucedb.vbguest.auto_update = false
+    end
+
+    # Migrated these configurations from old v1 format
+    lucedb.vm.hostname = "postgresql" 
+    lucedb.vm.synced_folder ".", "/mnt/bootstrap"
+
+    # Set up shared network interface
+    lucedb.vm.network "private_network", ip: "192.168.72.3"
+    lucedb.vm.network :forwarded_port, guest: 5432, host: 15432
+
+    lucedb.vm.provision :shell, path: "./scripts/bootstrap_custom_lucedb.sh"
+
+  end
+
+end

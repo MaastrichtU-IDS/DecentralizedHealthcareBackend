@@ -1,0 +1,110 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1504\cocoasubrtf830
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww16680\viewh10820\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \
+Free Spoken Digit Dataset (FSDD)\
+\
+\pard\pardeftab720\partightenfactor0
+\cf0 A simple audio/speech dataset consisting of recordings of spoken digits in wav files at 8kHz. The recordings are trimmed so that they have near minimal silence at the beginnings and ends.\
+\
+Source: https://github.com/Jakobovski/free-spoken-digit-dataset\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 ----\
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 WordNet\
+\
+\pard\pardeftab720\partightenfactor0
+\cf0 WordNet is a large database of English synsets. Synsets are groups of synonyms that each describe a different concept. WordNet\'92s structure makes it a very useful tool for NLP.\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 \
+Source: Christiane Fellbaum (1998, ed.) WordNet: An Electronic Lexical Database. Cambridge, MA: MIT Press.\
+\
+\
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+----\
+\
+Hydropower Dams - West Africa and India\
+\
+This database contains parameters gathered after an assessment of the technological potential for development of floating solar photovoltaic (PV) projects on existing hydropower dams and other reservoirs, starting with a pilot in FY18 focused on West Africa and India.\
+The database is primarily based on the information provided by FAO Aquastat Database (http://www.fao.org/nr/water/aquastat/sets/index.stm#dams) and on the data gathered from World Bank hydro projects.\
+\
+Source: OCEAN Commons Marketplace\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 ----\
+\
+\
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+----\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 \
+\
+Twenty Newsgroups\
+\
+This dataset contains information about newsgroups. To curate this dataset, 1000 Usenet articles were taken from 20 different newsgroups. The articles have typical features like subject lines, signatures, and quotes.\
+\
+Original Owner and Donor: \
+Tom Mitchell \
+School of Computer Science \
+Carnegie Mellon University \
+\
+Source: UCI Machine Learning Repository\
+\
+----\
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+Health Nutrition and Population Statistics\
+\
+This database presents HNP data by wealth quintile since 1990s to present. It covers more than 70 indicators, including childhood diseases and interventions, nutrition, sexual and reproductive health, mortality, and other determinants of health, for more than 90 low- and middle-income countries.\
+\
+The data sources are Demographic and Health Surveys (DHS) and Multiple Indicator Cluster Surveys (MICS).\
+\
+Author: World Development Indicators, The World Bank\
+Source: OCEAN Commons Marketplace\
+\
+----\
+\
+\
+What a Waste Global Database\
+\
+What a Waste is a global project to aggregate data on solid waste management from around the world. This database features the statistics collected through the effort, covering nearly all countries and over 330 cities. The metrics included cover all steps from the waste management value chain, including waste generation, composition, collection, and disposal, as well as information on user fees and financing, the informal sector, administrative structures, public communication, and legal information. The information presented is the best available based on a study of current literature and limited conversations with waste agencies and authorities. While there may be variations in the definitions and quality of reporting for individual data points, general trends should reflect the global reality. All sources and any estimations are noted.\
+\
+Author: World Development Indicators, The World Bank\
+Source: OCEAN Commons Marketplace\
+\
+\
+----\
+\
+\pard\pardeftab720\sl360\partightenfactor0
+\cf0 Schizophrenic Eye-Tracking\
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+Based on this dataset Rubin and Wu propose a novel and general mixture component model, the features of which include a hierarchical structure with random effects, mixture components characterized by ANOVA-like linear regressions, and mixing mechanisms governed by logistic regressions. The model was developed as a consequence of attending to long-standing psychological theory about schizophrenic behavior. Scientifically revealing results are obtained by fitting the model to a data set concerning nonschizophrenic and schizophrenic eye-tracking behavior under different conditions. Included are descriptions of the algorithms for model fitting, specifically the ECM/SECM algorithms for large sample modal inference, and the Gibbs sampler for simulating the posterior distribution. For guidance on model comparison and selection, we use posterior predictive check distributions to obtain posterior predictive p-values for likelihood ratio statistics, which do not have asymptotic \uc0\u967 2 reference distributions. These posterior predictive p-values suggest that all the mixture components in our model are necessary. The final model is selected using a combination of scientific parsimony, the posterior predictive p-values, and the posterior distributions of relevant parameters.\
+\
+\pard\pardeftab720\sl360\partightenfactor0
+\cf0 Schizophrenic Eye-Tracking Data in Rubin and Wu (1997)\
+Biometrics. Yingnian Wu (wu@hustat.harvard.edu) 14/Oct/97\
+\
+\pard\pardeftab720\partightenfactor0
+\cf0 Source: OCEAN Commons Marketplace\
+\
+\
+----\
+\
+NOT USED.. 7 demo datasets is enough\
+\
+Social Protection and Labour\
+\
+Over 150 indicators on labor-related topics, covering over 200 economies from 1990 to present.\
+\
+Source: OCEAN Commons Marketplace\
+}

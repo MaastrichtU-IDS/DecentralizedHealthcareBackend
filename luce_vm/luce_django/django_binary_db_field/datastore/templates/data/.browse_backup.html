@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+<!-- Main Content Section -->
+{% block content %}
+
+	<h1> Available Datasets </h1>
+
+	<!-- Row containing dataset cards -->
+	<div class="row my-2">
+
+		<!-- Receive dataset_list as variable from view context -->
+		{% for dataset in dataset_list %}
+
+			  <!-- Style prototype for dataset list -->
+			  <div class="col-sm-4 my-2">
+			    <div class="card shadow-sm">
+			      <div class="card-body">
+
+			        <!-- Title -->
+			        <h5 class="card-title"> {{ dataset.title }} {% if dataset.file %} (File) {% endif %} </h5>
+
+			        <!-- Description -->
+			        <p class="card-text"> {{ dataset.description|truncatewords:30 }} </p>
+			   
+			        	  <!-- Buttons for View & Edit -->
+			              <div class="d-flex justify-content-between align-items-center">
+			                <div class="btn-group">
+			                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href='{{ dataset.get_absolute_url }} '">View</button>
+			                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href=' {{ dataset.get_edit_url }}'">Edit</button>
+			                </div>
+			                <small class="text-muted"> Last Update: {{ dataset.updated|date:"d/m/Y" }}</small>
+			              </div>
+
+			      </div> <!-- End of card body -->
+			    </div>
+			  </div> <!-- End of card column -->
+
+	{% endfor %}
+
+	</div>
+    
+{% endblock content %}

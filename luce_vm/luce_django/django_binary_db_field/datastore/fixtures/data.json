@@ -1,0 +1,47 @@
+[
+{
+    "model": "datastore.dataset",
+    "pk": 1,
+    "fields": {
+        "title": "Test Dataset",
+        "description": "This is the initial test dataset.\r\n\r\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas iaculis lacus eget elit ultricies convallis. Ut accumsan tempus quam ac pulvinar. Ut non nisl luctus, egestas ipsum lobortis, consequat metus. Aenean lobortis purus vitae tincidunt porta. Integer tristique purus quis orci lacinia pellentesque. Vivamus eu risus tellus. Quisque nec aliquam ex, et tristique purus.\r\n\r\nMorbi nibh mi, egestas id orci sagittis, pellentesque blandit arcu. Maecenas non velit sollicitudin enim malesuada facilisis ut malesuada sem. Nullam nunc justo, ultricies ut libero sit amet, lacinia dictum mauris. Sed mollis viverra nisl vel consectetur. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Etiam consequat suscipit varius. Vestibulum interdum ipsum tellus, quis convallis erat consequat eget.\r\n\r\nDonec vulputate vel diam in facilisis. Morbi gravida erat nec risus interdum, sed cursus augue fringilla. Nam pellentesque iaculis diam, facilisis vestibulum ipsum malesuada ac. Fusce mi sapien, auctor eget mattis sed, mattis eu leo. Proin et ante ultrices, vehicula magna eu, mattis quam. Vivamus scelerisque, erat at placerat ultrices, quam enim pulvinar neque, in eleifend massa neque eget massa. Phasellus est eros, aliquet eu risus sed, finibus convallis massa. Donec elementum libero erat, sed facilisis nulla sollicitudin efficitur. Donec blandit lacus sit amet nunc volutpat, et luctus nulla aliquam.",
+        "file": "",
+        "owner": "arno",
+        "owner_address": "0x0a68a27F5b59C7Ed8A3c64330745AffD88ecfc85",
+        "license": 1,
+        "created_by": 1,
+        "timestamp": "2019-07-05T03:57:14.322Z",
+        "updated": "2019-07-05T03:57:14.322Z"
+    }
+},
+{
+    "model": "datastore.dataset",
+    "pk": 3,
+    "fields": {
+        "title": "Text File",
+        "description": "This dataset contains text characters..",
+        "file": "files/test.txt",
+        "owner": "arno",
+        "owner_address": "",
+        "license": 3,
+        "created_by": 1,
+        "timestamp": "2019-07-05T05:32:14.995Z",
+        "updated": "2019-07-05T05:32:14.995Z"
+    }
+},
+{
+    "model": "datastore.dataset",
+    "pk": 4,
+    "fields": {
+        "title": "Fourth Dataset",
+        "description": "Another description for the dataset. I am interested whether the list view handles multiple rows of data correctly.\r\n\r\nAlso curious to see truncation and line-break  filters in action.",
+        "file": "",
+        "owner": "arno",
+        "owner_address": "",
+        "license": 5,
+        "created_by": 1,
+        "timestamp": "2019-07-09T04:44:49.362Z",
+        "updated": "2019-07-09T04:44:49.362Z"
+    }
+}
+]

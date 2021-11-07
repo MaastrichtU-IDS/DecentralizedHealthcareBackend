@@ -1,0 +1,56 @@
+[
+{
+    "model": "accounts.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$150000$BEIAMuClAa54$RZU0FS/WIEQaHeP9X7LyM3gReqBOuGKN/LWEgQ07+Nw=",
+        "last_login": "2019-07-25T05:05:57.588Z",
+        "email": "vagrant@luce.com",
+        "first_name": "Vagrant",
+        "last_name": "Luce",
+        "institution": "Maastricht University",
+        "ethereum_public_key": "0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
+        "ethereum_private_key": "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3",
+        "is_approved": true,
+        "active": true,
+        "staff": true,
+        "admin": true
+    }
+},
+{
+    "model": "accounts.user",
+    "pk": 2,
+    "fields": {
+        "password": "pbkdf2_sha256$150000$0wROkT9DcS0N$w2YW2jScQdOjcZhutzk1VRAW1aRKzRb6bKS4bCOwq9c=",
+        "last_login": "2019-07-25T05:22:58.155Z",
+        "email": "provider@luce.com",
+        "first_name": "Provider",
+        "last_name": "Luce",
+        "institution": "Maastricht University",
+        "ethereum_public_key": "0xfBe9e6C78E0160cFf670824897e12B2d576baD7D",
+        "ethereum_private_key": "0x9cdc1af35e72d887eb005f8f2e7b331735f6efd5b8b65e0f94e0f411f6e2603f",
+        "is_approved": true,
+        "active": true,
+        "staff": false,
+        "admin": false
+    }
+},
+{
+    "model": "accounts.user",
+    "pk": 3,
+    "fields": {
+        "password": "pbkdf2_sha256$150000$t4G2eAhEBlsO$mjNwjnjCkOzkErducmv69VFEBDxPu5oQ6JSbRTYTRrE=",
+        "last_login": null,
+        "email": "requester@luce.com",
+        "first_name": "Requester",
+        "last_name": "Luce",
+        "institution": "Maastricht University",
+        "ethereum_public_key": "0x980fa11448AeB814992FA6D3B279d011f42f8c21",
+        "ethereum_private_key": "0xed058820d79f9c249c63ffa0e1d1e1b6a2e1bebf83810ea8ba6b4675f905bc8f",
+        "is_approved": true,
+        "active": true,
+        "staff": false,
+        "admin": false
+    }
+}
+]

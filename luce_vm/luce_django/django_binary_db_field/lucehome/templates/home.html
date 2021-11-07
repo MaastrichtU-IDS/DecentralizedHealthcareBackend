@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+<!-- Main Content Section -->
+{% block content %}
+
+	<h1> Welcome to LUCE <br> Data Exchange </h1>
+
+<div class='container-fluid mt-4'>
+	<div class='col-md-6'>
+		<!-- Anonymous user -->
+		{% if not user.is_authenticated %}
+			You are currently not logged in. You can still browse and search for published datasets. Please login to request access to a dataset or upload and manage your own datasets.
+		    
+
+		{% endif %}
+
+		<!-- Authenticated User -->
+
+		{% if user.is_authenticated %}
+			You are logged in. 
+
+			<br><br> Please use the navigation bar at the top to navigate through the page. You can search for specific data, browse through all available datasets and request access to download a dataset. 
+
+			<br><br> You can also upload and manage data of your own.
+
+		{% endif %}
+	</div>
+</div>
+
+{% endblock %}

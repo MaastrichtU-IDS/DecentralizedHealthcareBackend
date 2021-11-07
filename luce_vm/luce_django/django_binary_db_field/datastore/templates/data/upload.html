@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+<!-- Main Content Section -->
+{% block content %}
+
+	<h1> Upload a Dataset </h1>
+
+		<!-- Dataset Submission Form -->
+		<!-- Allow form to receive information. Enctype (encoding type) allows data. -->
+		<form method='POST' action='.' enctype='multipart/form-data'> {% csrf_token %}
+		    {{ form.as_p }}
+		    <button type='submit'>Upload Dataset</button>
+		</form> 
+    
+{% endblock %}

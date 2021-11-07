@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<h1>Are you sure you confirm to the binding license terms of this dataset? </h1>
+<p> {{ dataset.title }} </p>
+<p> {{ dataset.description }} </p>
+<p> License: {{ dataset.license }} </p>
+
+<p class="border badge badge-danger badge">WARNING: <br> Your agreement to the license terms will be stored on the Luce blockchain. <br> 
+					Please only agree if you are sure you understand the licence terms and genuinely intend to comply. <br>
+					Failure to comply with the agreed upon licensing terms can be reported to the supervisory authority and has consequences.</p>
+
+<!-- This is simply a confirmation page. 
+	All other logic happens in view.py -->
+<form method ='POST'>{% csrf_token %}
+
+	<button class='btn btn-warning'> Yes, agree to the license! </button>
+
+</form>
+
+<!-- Alternative Button -->
+<button class='btn btn-info mt-1' onclick="window.location.href=' {{ dataset.get_absolute_url }} '"> No, take me back. </button>
+
+{% endblock %}

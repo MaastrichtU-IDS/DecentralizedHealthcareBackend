@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<h1>Are you sure you want to delete the following? </h1>
+<p> {{ dataset.title }} </p>
+<p> {{ dataset.description }} </p>
+
+<!-- This is a confirmation page. 
+	The deletion logic happens in view.py -->
+<form method ='POST'>{% csrf_token %}
+
+	<button class='btn btn-danger'> Yes, delete! </button>
+
+</form>
+
+<!-- Alternative Button -->
+<button class='btn btn-info mt-1' onclick="window.location.href=' {{ dataset.get_absolute_url }} '"> No, take me back. </button>
+
+{% endblock %}

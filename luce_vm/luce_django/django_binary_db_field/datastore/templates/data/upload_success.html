@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<!-- Create container to center content -->
+<div class='container'>
+
+			<!-- Dataset Detail View -->
+			<div class="col my-2">
+			    <div class="card shadow-sm">
+			      <div class="card-body">
+
+			      	<!-- THIS IS DISPLAYED FOR EVERYONE -->
+			        <h5 class="badge-pill badge-info text-center">
+			        Your dataset was successfully uploaded!  </h5>
+			        <h5 class="card-title"> {{ dataset.title }} </h5>
+			        <p class="card-text"> {{ dataset.description|linebreaks }} </p>
+			        <p class="card-text"> License: {{ dataset.license }} </p>
+			   
+
+			        <!-- ANONYMOUS USER -->
+					{% if not user.is_authenticated %}
+
+					<a class="navbar-text text-info" href="/login">Sign in to request access for this dataset.</a>
+
+			        	  <!-- Buttons for Edit & Delete -->
+			              <div class="d-flex justify-content-between align-items-center">
+			                <div class="btn-group">
+			                </div>
+			                <small class="text-muted"> Last Update: {{ dataset.updated|date:"d/m/Y" }}</small>
+			              </div>
+					{% endif %}
+
+
+
+			        <!-- LOGGED IN, NOT OWNER -->
+					{% if user.is_authenticated %}
+					{% if not user == dataset.created_by %}
+
+			        {% if dataset.published %}
+				        <p class="card-text"> Contract Address: {{ dataset.contract_address }} </p>
+			   		{% endif %}
+
+			   		<!-- Check if current user has access rights -->
+			   		{% if user not in dataset.access_granted.all %} 
+					<!-- NO -->
+					
+
+			        	  <!-- Request Access -->
+			              <div class="d-flex justify-content-between align-items-center">
+			                <div class="btn-group">
+
+			                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href=' {{ dataset.get_request_access_url }} '">Request Access</button>
+
+			                </div>
+			                <small class="text-muted"> Last Update: {{ dataset.updated|date:"d/m/Y" }}</small>
+			              </div>
+
+			        {% endif %}
+
+			        {% if user in dataset.access_granted.all %} 
+					<!-- YES -->
+
+			        	  <!-- Download -->
+
+		                  {% if dataset.file %}
+			                  <div class='d-flex mb-1'>
+			                  <a class='btn-sm btn-secondary bg-white text-dark border border-secondary' href="{{ dataset.file.url }}" Download> Download Dataset </a> 
+			                  </div>
+		                  {% endif %}
+
+		                  <!-- Revoke Access Rights & Renew Token -->
+
+			              <div class="d-flex justify-content-between align-items-center">
+			                <div class="btn-group">
+
+			                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href=' # '">Renew Token</button> 
+
+			                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href=' # '">Revoke Access</button>
+
+			                </div>
+			                <small class="text-muted"> Last Update: {{ dataset.updated|date:"d/m/Y" }}</small>
+			              </div>
+
+			        {% endif %}
+					{% endif %}
+					{% endif %}
+
+
+
+
+
+
+
+			        <!-- LOGGED IN AND OWNER -->
+					{% if user == dataset.created_by %}
+
+
+				        {% if dataset.published %}
+				        <p class="card-text"> Contract Address: {{ dataset.contract_address }} </p>
+				   		{% endif %}
+
+				   		{% if not dataset.published %}
+				   		<p class="navbar-text text-muted mb-2">Note: This dataset has not been published yet. When you publish a dataset the corresponding smart contract is created and the dataset becomes visible to other users. Would you like to publish it now?</p>
+				   		{% endif %}
+
+					      <!-- Download Button -->
+		                  {% if dataset.file %}
+			                  <div class='d-flex mb-1'>
+			                  <a class='btn-sm btn-secondary bg-white text-dark border border-secondary' href="{{ dataset.file.url }}" Download> Download Dataset </a> 
+			                  </div>
+		                  {% endif %}
+	              	  
+
+			        	  <!-- Buttons for Publish, Edit & Delete -->
+			              <div class="d-flex justify-content-between align-items-center">
+			                <div class="btn-group">
+			                {% if not dataset.published %}
+							  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href='{{ dataset.get_publish_url }}'">Publish</button>
+							{% endif %}
+			                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href=' {{ dataset.get_edit_url }} '">Edit</button>
+
+			                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href='{{ dataset.get_delete_url }}'">Delete</button>
+
+			                </div>
+			                <small class="text-muted"> Last Update: {{ dataset.updated|date:"d/m/Y" }}</small>
+			              </div>
+
+
+
+			   		{% endif %}
+
+
+
+
+			      </div> <!-- End of card body -->
+			    </div>
+			  </div> <!-- End of card column -->
+
+</div>
+
+{% endblock %}

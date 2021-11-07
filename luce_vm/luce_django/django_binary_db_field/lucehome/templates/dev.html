@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+<!-- Main Content Section -->
+{% block content %}
+
+	<h1> For Development </h1>
+	<p class='col-md-6 pl-0'>The buttons here are used to test new functionality before it is incroporated into the page. <br> 
+	Note: All functions operate on the currently logged in user. Ensure this user has already uploaded at least one dataset. </p>
+
+	<!-- Include some buttons to call functions in backend -->
+	<div class='row'>
+		<div class='col-sm-6'>
+				<h3>First/Second iteration:</h3>
+				<p>These functions make use of the default accounts provided by Ganache</p>
+
+				<form action="#" method="get">
+					<button type='submit' name="assign_address" value="Click">Assign Ethereum Address</button>
+				</form>
+
+				<form action="#" method="get">
+					<button type='submit' name="deploy_contract" value="Click">Deploy Contract</button>
+				</form>
+
+				<form action="#" method="get">
+					<button type='submit' name="create_wallet" value="Click">Create wallet for User</button>
+				</form>
+
+				<form action="#" method="get">
+			 		<input type="text" value="8" name="mytextbox" size="1"/>
+			 		<input type="submit" class="btn" name="mybtn" value="Get Input Value">
+				</form>
+
+		</div>
+
+		<div class='col-sm-6'>
+				<h3>Third iteration:</h3>
+				<p>These functions are built using freshly created local accounts</p>
+
+
+				<form action="#" method="get">
+					<button type='submit' name="assign_address_v3" value="Click">Register | Assign Address & Pre-Fund</button>
+				</form>
+
+				<form action="#" method="get">
+					<button type='submit' name="deploy_contract_v3" value="Click">Publish Step 1 | Deploy Contract</button>
+				</form>
+
+				<form action="#" method="get">
+					<button type='submit' name="publish_data_v3" value="Click">Publish Step 2 | Publish Data to Contract</button>
+				</form>
+
+				<form action="#" method="get">
+					<button type='submit' name="add_requester_v3" value="Click">Request Access | Add Requester</button>
+				</form>
+
+				<form action="#" method="get">
+					<button type='submit' name="update_contract_v3" value="Click">Update Data | Update Contract</button>
+				</form>
+		</div>
+
+
+
+	</div> <!-- END OF ROW -->
+
+    
+{% endblock %}

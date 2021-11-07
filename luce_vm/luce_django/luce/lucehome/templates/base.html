@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  
+  <head>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+                <!-- Website Title (in browser bar) -->
+                <title>{% block head_title %} LUCE Data Exchange {% endblock %}</title>
+
+  </head>
+
+  <body>
+
+        <!-- Load Navigation Bar -->
+        {% include 'navbar.html' %}
+
+
+
+
+
+
+
+                <!-- Main Page Content -->
+                <div class='container-fluid pb-5'>
+                    {% block content %}
+
+
+                      <!-- Content is dynamically insered there -->
+
+
+                    {% endblock %}
+                </div>
+                <!-- End Main Page Content -->
+
+
+
+
+
+
+
+        <!-- Footer -->
+        <nav class="navbar fixed-bottom navbar-light bg-light">
+
+            {% if user.is_authenticated %}
+                <a class="col-auto pr-0 mr-0 navbar-text">Logged in as: {{ user }}</a>
+                <a class="col nav-item nav-link" href="/logout">Logout</a>
+            {% else %}
+                <a class=" col-auto navbar-text" href="/login">Not logged in</a>
+            {% endif %}
+
+        </nav>
+
+
+        <!-- Source Javascript -->
+        {% include 'js.html' %}
+
+  </body>
+
+</html>

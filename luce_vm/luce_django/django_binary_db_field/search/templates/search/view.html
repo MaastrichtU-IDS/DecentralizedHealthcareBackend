@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class='row'>
+	<div class='col-12 col-8 mx-auto'>
+
+		{% if query %}
+
+		<p class='lead'> You searched for {{ query }}</p>
+		
+		{% else %}
+
+		<p class='lead'> Please provide a valid search string. </p>
+
+		{% endif %}
+
+		<!-- Search results go here -->
+
+		{% for object in results_list %}
+
+			{% include 'data/list-inline.html' with object=object description=True truncate=True %}
+
+		{% endfor %}
+
+	</div>	
+</div>
+
+
+{% endblock %}

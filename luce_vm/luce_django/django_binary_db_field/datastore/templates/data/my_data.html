@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+<!-- Main Content Section -->
+{% block content %}
+
+	<h1> Manage Datasets </h1>
+
+		<div class='row'>
+			<div class='col-md-6'>
+				<h3> Published: </h3>
+
+				<!-- Show all published datasets -->
+				{% for data in dataset_list %}
+
+					{% if data.published %}
+
+						<!-- Load HTML from inline list template and pass arguments to template -->
+						{% include 'data/list-inline.html' with object=data %}        
+
+					{% endif %}
+				{% endfor %}
+				</div>
+
+			<div class='col-md-6'>
+
+				<h3> Not yet published: </h3>
+
+				<!-- Show all not yet published datasets -->
+				{% for data in dataset_list %}
+
+					{% if not data.published %}
+
+						<!-- Load HTML from inline list template and pass arguments to template -->
+						{% include 'data/list-inline.html' with object=data description=True truncate=True %}        
+
+					{% endif %}
+				{% endfor %}
+			</div>
+		</div>
+
+    
+{% endblock %}
