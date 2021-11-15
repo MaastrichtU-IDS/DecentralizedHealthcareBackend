@@ -18,10 +18,12 @@ from django.conf import settings
 urlpatterns = [
     path('user/register/', UserRegistration.as_view()),
     path('user/<int:id>/', PublicUserInfoView.as_view()),
-    path('user/authenticated/<int:id>/', PrivateUserInfoView.as_view()),
+    path('user/authenticated/', PrivateUserInfoView.as_view()),
+    path('user/authenticated/update/', UserUpdateView.as_view()),
     path('user/all/', UserListView.as_view()),
-    path('user/login/', views.obtain_auth_token)
+    path('user/login/', views.obtain_auth_token),
 
+    path('deployContract/', ContractView.as_view())
     ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

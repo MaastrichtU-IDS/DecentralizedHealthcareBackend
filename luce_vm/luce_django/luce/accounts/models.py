@@ -25,9 +25,7 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have a last_name')
         if not password:
         	raise ValueError('Users must have a password')
-        if not gender:
-            raise ValueError('Users must have a gender')
-
+     
         user = self.model(
             email=self.normalize_email(email),
         )
@@ -43,6 +41,7 @@ class UserManager(BaseUserManager):
         user.user_type = user.user_type
         user.save(using=self._db)
         user.contract_address = contract_address
+        user.age = age
         return user
 
     def create_staffuser(self, email, first_name, last_name, password):
@@ -99,7 +98,6 @@ class User(AbstractBaseUser):
 
     ethereum_private_key = models.CharField(max_length=255, blank=True, null=True)
     ethereum_public_key = models.CharField(max_length=255, blank=True, null=True)
-    contract_address = models.CharField(max_length=255, blank=True, null = True)
 
     # Make these fields compulsory?
     first_name 	= 	models.CharField(max_length=255, blank=True, null=True)
@@ -124,17 +122,18 @@ class User(AbstractBaseUser):
     #gender of the user
     gender = models.CharField(
         choices=[(0, 'Male'), (1,'Female')],
-        max_length=6
+        max_length=6, 
+        null = True
         )
     
-    age = models.IntegerField()
+    age = models.IntegerField(null = True)
 
     # Define which field should be the username for login
     USERNAME_FIELD = 'email'
 
     # USERNAME_FIELD & Password are required by default
     # Add additional required fields here:
-    REQUIRED_FIELDS = ['first_name', 'last_name', "gender", "age"] 
+    REQUIRED_FIELDS = ['first_name', 'last_name'] 
 
     objects = UserManager()
 
@@ -173,6 +172,19 @@ class User(AbstractBaseUser):
     def is_active(self):
         "Is the user active?"
         return self.active
+
+class Restrictions(models.Model):
+    no_restrictions =  models.BooleanField()
+    open_to_general_research_and_clinical_care = models.BooleanField()
+    open_to_HMB_research = models.BooleanField()
+    open_to_population_and_ancestry_research = models.BooleanField()
+    open_to_disease_specific = models.BooleanField()
+
+class ConsentContract(models.Model):
+    contract_address = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
+
 
 
 

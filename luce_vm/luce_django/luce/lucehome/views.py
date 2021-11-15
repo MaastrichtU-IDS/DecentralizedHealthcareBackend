@@ -35,34 +35,17 @@ from django.views.generic import CreateView, FormView
 # For redirect after form submission
 from django.shortcuts import redirect
 # Import newest versions of web3 scripts
-from utils.web3_scripts import (
-assign_address_v3,
-deploy_contract_v3, 
-publish_data_v3, 
-add_requester_v3, 
-update_contract_v3,
-donate,
-register_cause,
-add_balance,
-check_balance,
-check_cause,
-createGroup, 
-contractDonations,
-groupCreations,
-donateToGroup,
-check_balance_influencer,
-)
 
-from .serializers import (
-    UserSerializer, PublicUserSerializer
- )
 
+from .serializers import *
+from utils.web3_scripts import *
 
 
 # APIview for registering donors and influencers.
 class UserRegistration(APIView):
     def post(self, request, format=None):
-        serializer = UserSerializer(data = request.data)
+        createWallet = request.data.get("create_wallet")
+        serializer = UserSerializer(data = request.data, context={"create_wallet": createWallet})
         
         if not serializer.is_valid(): 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -70,8 +53,21 @@ class UserRegistration(APIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class PublicUserInfoView(APIView):
+class UserUpdateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
+    def put(self, request, format=None):
+        user = self.request.user
+        createWallet = request.data.get("create_wallet")
+        serializer = UserSerializer(user, data=request.data, context={"create_wallet": createWallet}, partial=True)
+        if not serializer.is_valid(): 
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status = status.HTTP_200_OK)
+
+
+        
+class PublicUserInfoView(APIView):
     def get(self, request, id, format=None):
         user = self.get_object(id)
         serializer = PublicUserSerializer(user)
@@ -83,26 +79,35 @@ class PublicUserInfoView(APIView):
         except User.DoesNotExist:
             raise Http404
 
+
 class PrivateUserInfoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, id, format=None):
-        user = self.get_object(id)
+    def get(self, request, format=None):
+        user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
-
-    def get_object(self, id):
-        try:
-            return User.objects.get(pk=id)
-        except User.DoesNotExist:
-            raise Http404
+   
 
 class UserListView(APIView):
     def get(self, request, format=None):
         users = User.objects.all()
-        print(users)
         serializer = PublicUserSerializer(users, many = True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class ContractView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, format=None):
+        serializer = ConsentContractSerializer(data = request.data, context = {"restrictions":request.data, "user":request.user}, partial = True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        print(serializer)
+        return Response(serializer.data)
+    
+ 
 """
 class FundUser(APIView):
     permission_classes = [permissions.IsAuthenticated]

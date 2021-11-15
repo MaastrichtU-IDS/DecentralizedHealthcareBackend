@@ -6,10 +6,9 @@ from web3 import exceptions
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # '/vagrant/luce_django/luce'
-SOLIDITY_CONTRACT_FILE = BASE_DIR + '/utils/data/Webmon.sol'
-SOLIDITY_CONTRACT_FILE_INFLUENCER = BASE_DIR + '/utils/data/Influencer.sol'
-SOLIDITY_CONTRACT_FILE_DONOR = BASE_DIR + '/utils/data/Donor.sol'
+SOLIDITY_CONTRACT_FILE = BASE_DIR + '/utils/data/ConsentContract.sol'
 
+CONTRACT_ADDRESS = "" 
 
 
 #### WEB3 HELPER FUNCTIONS ####g
@@ -98,25 +97,18 @@ def fund_wallet(recipient, amount = 100):
 # creates a fresh ethereum account for the user.
 # It will also pre-fund the new account with some ether.
 
-def assign_address_v3(user):
+def assign_address_v3():
     # Establish web3 connection
     from web3 import Web3
     import time
     from hexbytes import HexBytes
     w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    accounts = w3.eth.accounts
-    current_user = user
-
     # Create new web3 account
     eth_account = create_wallet()
-    # Store public key and private key in user model
-    current_user.validated_data["ethereum_public_key"] = eth_account.address
-    current_user.validated_data["ethereum_private_key"] = eth_account.privateKey.hex() # this field is not implemented atm
-    # Fund wallet
     fund_wallet(recipient = eth_account.address, amount = 100)
-    print("Balance:", w3.eth.getBalance(current_user.validated_data["ethereum_public_key"])) # print balance to ensure funding took place
+    print("Balance:", w3.eth.getBalance(eth_account.address)) # print balance to ensure funding took place
     # Return user, now with wallet associated
-    return current_user
+    return eth_account
 
 def check_balance(user):
     from web3 import Web3
@@ -210,19 +202,23 @@ def add_balance(user, amount):
     print(tx_receipt["cumulativeGasUsed"])
     return tx_receipt
 
-def register_cause(cause):
+def upload_data(contract, restrictions, user):
     from web3 import Web3
-
-    cause_id = cause.id
-    goal = cause.goal
-    percentBPS = cause.percentBPS
+    noRestrictions = restrictions.no_restrictions
+    openToGeneralResearchAndClinicalCare = restrictions.open_to_general_research_and_clinical_care
+    openToHMBResearch = restrictions.open_to_HMB_research
+    openToPopulationAndAncestryResearch = restrictions.open_to_population_and_ancestry_research
+    openToDiseaseSpecific = restrictions.open_to_disease_specific
 
     w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    d = compile_and_extract_interface_influencer()
-    address = cause.creator.contract_address
-    private_key = cause.creator.ethereum_private_key
+    d = compile_and_extract_interface()
     abi = d["abi"]
-    contract_instance = w3.eth.contract(address=address, abi=abi)
+
+
+    contract_address = contract.contract_address
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
     user = w3.eth.account.privateKeyToAccount(private_key)
     nonce = w3.eth.getTransactionCount(user.address)
     txn_dict = {
@@ -231,15 +227,11 @@ def register_cause(cause):
     'gasPrice': w3.toWei('40', 'gwei'),
     'nonce': nonce,
     }
-    cause_address = cause.ethereum_public_key
-    #uint _cause_id, uint _goal, address cause_address, uint percentBPS
-    contract_txn = contract_instance.functions.addCause(cause_id, goal, cause_address, percentBPS).buildTransaction(txn_dict)
+    contract_txn = contract_instance.functions.UploadDataPrimaryCategory(user_address, noRestrictions,openToGeneralResearchAndClinicalCare,openToHMBResearch,openToPopulationAndAncestryResearch,openToDiseaseSpecific).buildTransaction(txn_dict)
     signed_txn = w3.eth.account.signTransaction(contract_txn, private_key)
     tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
     tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    logs = contract_instance.events.CauseCreated().processReceipt(tx_receipt)
-
-    return logs
+    return tx_receipt, contract_address
 
 def createGroup(causes, splits, group_id, user):
     w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
@@ -263,7 +255,6 @@ def createGroup(causes, splits, group_id, user):
     logs = contract_instance.events.GroupCreated().processReceipt(tx_receipt)
     return logs
 
-##TODO: add check so that influencer cannot donate to cause
 def donate(validated_donation_serializer, _user):
     from web3 import Web3
     from solcx import compile_source
@@ -367,15 +358,9 @@ def deploy_contract_v3(_user):
     from web3 import Web3
  
     w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-
-    user_type = _user.validated_data["user_type"]
-    private_key = _user.validated_data["ethereum_private_key"]
+    private_key = _user.ethereum_private_key
     contract_address = SOLIDITY_CONTRACT_FILE
-    if(user_type == 0) :
-        contract_interface_key = '<stdin>:Influencer'
-    else :
-        contract_interface_key = '<stdin>:Donor'
- 
+    contract_interface_key = '<stdin>:ConsentCode'
 
     # Read in LUCE contract code
     with open(contract_address, 'r') as file: # Adjust file_path for use in Jupyter/Django
@@ -393,12 +378,9 @@ def deploy_contract_v3(_user):
     
     # Obtain contract address & instantiate contract
 
-    user_address = _user.validated_data["ethereum_public_key"]
-    private_key = _user.validated_data["ethereum_private_key"]
-
-    account = w3.eth.account.privateKeyToAccount(_user.validated_data["ethereum_private_key"])
+    user_address = _user.ethereum_public_key
+    private_key = _user.ethereum_private_key
     nonce = w3.eth.getTransactionCount(user_address)
-    print(w3.eth.getBlock('latest'))
 
     transaction = {
     'from': user_address,
@@ -410,33 +392,18 @@ def deploy_contract_v3(_user):
     }
 
     signed_txn = w3.eth.account.signTransaction(transaction, private_key)
-    #luce_txn = luce.functions.donate(validated_donation_serializer.validated_data["amount"], validated_donation_serializer.validated_data["cause"].id).buildTransaction(txn_dict)
     tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
     
     # Sign transaction
     tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-        
-    # Obtain address of freshly deployed contract
-    contractAddress = tx_receipt.contractAddress
-    _user.validated_data["contract_address"] = contractAddress
-    nonce = w3.eth.getTransactionCount(contractAddress)
-    txn_dict = {
-    'gas': 6000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
 
-    donor = w3.eth.contract(address=contractAddress, abi = abi, bytecode=bytecode )
-    donor_txn = donor.constructor(_user.data["id"]).buildTransaction(txn_dict)
-    signed_txn = w3.eth.account.signTransaction(donor_txn, private_key)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+    # Obtain address of freshly deployed contrac   
     return tx_receipt
 
 
-# Auxilary function to support interaction with existing smart contract
-def compile_and_extract_interface_donor():
+
+
+def compile_and_extract_interface():
     from solcx import compile_source
     
     # Read in LUCE contract code
@@ -447,31 +414,7 @@ def compile_and_extract_interface_donor():
     compiled_sol = compile_source(contract_source_code)
 
     # Extract full interface as dict from compiled contract
-    contract_interface = compiled_sol['<stdin>:Donor']
-
-    # Extract abi and bytecode
-    abi = contract_interface['abi']
-    bytecode = contract_interface['bin']
-    
-    # Create dictionary with interface
-    d = dict()
-    d['abi']      = abi
-    d['bytecode'] = bytecode
-    d['full_interface'] = contract_interface
-    return(d)
-
-def compile_and_extract_interface_influencer():
-    from solcx import compile_source
-    
-    # Read in LUCE contract code
-    with open(SOLIDITY_CONTRACT_FILE, 'r') as file: # Adjust file_path for use in Jupyter/Django
-        contract_source_code = file.read()
-        
-    # Compile & Store Compiled source code
-    compiled_sol = compile_source(contract_source_code)
-
-    # Extract full interface as dict from compiled contract
-    contract_interface = compiled_sol['<stdin>:Influencer']
+    contract_interface = compiled_sol['<stdin>:ConsentCode']
 
     # Extract abi and bytecode
     abi = contract_interface['abi']
