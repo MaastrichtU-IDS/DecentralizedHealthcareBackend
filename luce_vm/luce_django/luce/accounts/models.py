@@ -3,9 +3,12 @@
 from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
-from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 from django.core.validators import MaxValueValidator, MinValueValidator
+import utils.web3_scripts as web3
+from django.dispatch import receiver
+
+
 
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser
@@ -96,6 +99,10 @@ class User(AbstractBaseUser):
         unique=True,
     )
 
+    country = models.CharField(max_length=25, null=True)
+    institution = models.CharField(max_length=255, null=True)
+
+
     ethereum_private_key = models.CharField(max_length=255, blank=True, null=True)
     ethereum_public_key = models.CharField(max_length=255, blank=True, null=True)
 
@@ -125,6 +132,9 @@ class User(AbstractBaseUser):
         max_length=6, 
         null = True
         )
+
+
+        
     
     age = models.IntegerField(null = True)
 
@@ -136,6 +146,12 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = ['first_name', 'last_name'] 
 
     objects = UserManager()
+
+    def create_wallet(self):
+        txn_receipt, account = web3.assign_address_v3()
+        self.ethereum_public_key = account.address
+        self.ethereum_private_key = account.privateKey.hex()
+        return txn_receipt
 
     # The following default methods are expected to be defined by Django
     def get_full_name(self):
@@ -180,10 +196,97 @@ class Restrictions(models.Model):
     open_to_population_and_ancestry_research = models.BooleanField()
     open_to_disease_specific = models.BooleanField()
 
+class ResearchPurpose(models.Model):
+    use_for_methods_development = models.BooleanField()
+    use_for_reference_or_control_material = models.BooleanField() 
+    use_for_populations_research = models.BooleanField()
+    use_for_ancestry_research = models.BooleanField()
+    use_for_HMB_research = models.BooleanField()
+
 class ConsentContract(models.Model):
-    contract_address = models.CharField(max_length=255)
+    contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
+    research_purpuse = models.ForeignKey(ResearchPurpose, on_delete=models.CASCADE, null =True)
+
+    def upload_data_consent(self, estimate):
+        return web3.upload_data_consent(self, estimate)
+
+    def retrieve_contract_owner(self):
+        return web3.retrieve_contract_owner(self)
+
+    def deploy_contract(self):
+        tx_receipt = web3.deploy_consent(self.user)
+        if type(tx_receipt) is list:
+            return tx_receipt
+        self.contract_address = tx_receipt["contractAddress"]
+        self.save()
+        return tx_receipt
+
+    def give_research_purpose(self, rp, user, estimate):
+        tx = web3.give_research_purpose(self, rp, user, estimate)
+        return tx
+
+
+
+class DataContract(models.Model):
+    contract_address = models.CharField(max_length=255, null=True, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    consent_contract = models.ForeignKey(ConsentContract, on_delete=models.CASCADE, null = True)
+    description = models.CharField(max_length=255, null = True)
+    licence = models.IntegerField(default=1)
+    link = models.CharField(max_length=255, null = True)
+
+    def deploy_contract(self):
+        tx_receipt = web3.deploy_contract_main(self.user)
+        if type(tx_receipt) is list:
+            return tx_receipt
+        self.contract_address = tx_receipt["contractAddress"]
+        self.save()
+        return tx_receipt
+    def set_registry_address(self, registry, estimate):
+        tx_receipt = web3.set_registry_address(self, registry.contract_address, estimate)
+        return tx_receipt
+    def set_consent_address(self, estimate):
+        tx_receipt = web3.set_consent_address(self, self.consent_contract.contract_address, estimate)
+        return tx_receipt
+    def publish_dataset(self, user,link, estimate):
+        tx = web3.publish_dataset(self, user, link, estimate)
+        return tx
+    def retreive_info(self):
+        tx_receipt = web3.retreive_dataset_info(self)
+        return tx_receipt
+    def add_data_requester(self, access_time,purpose_code, user, estimate):
+        tx = web3.add_data_requester(self, access_time,purpose_code, user, estimate)
+        return tx
+    def getLink(self, user, estimate):
+        link = web3.get_link(self, user, estimate)
+        return link
+
+
+class LuceRegistry(models.Model):
+    contract_address = models.CharField(max_length=255, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def deploy_contract(self):
+        tx_receipt = web3.deploy_registry(self.user)
+        if type(tx_receipt) is list:
+            return tx_receipt
+        self.contract_address = tx_receipt["contractAddress"]
+        return tx_receipt
+    
+    def is_registered(self, user, usertype):
+        isregistered = web3.is_registered(self, user, usertype)
+        return isregistered
+
+    def register_provider(self, user, estimate):
+        tx = web3.register_provider(self,user,estimate)
+        return tx
+
+    def register_requester(self, user, license, estimate):
+        tx = web3.register_requester(self, user, license, estimate)
+        return tx
+
 
 
 

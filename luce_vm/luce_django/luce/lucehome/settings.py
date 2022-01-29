@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,16 +40,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'datastore',
+    'django_filters',
     'accounts',
-    'search',
-    'monetization',
 
     'django_extensions',
     'rest_framework.authtoken',
 
     #rest framework
     'rest_framework',
+
+    'corsheaders'
 ]
 
 REST_FRAMEWORK = {
@@ -57,9 +58,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # <-- And here
     ],
+    'EXCEPTION_HANDLER': 'utils.custom_exeptions.custom_exception_handler',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.filters']
+
+
 }
 
 AUTH_USER_MODEL = 'accounts.User' # changes the built-in user model
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -69,6 +75,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+
 ]
 
 # Re-direct to home view after logout
@@ -93,7 +101,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lucehome.wsgi.application'
 
-
+ALLOWED_HOSTS=['*']
+CORS_ORIGIN_ALLOW_ALL = True
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 

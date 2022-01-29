@@ -5,7 +5,6 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from .models import User
 
 # Import Python web3 script
-from utils.web3_scripts import assign_address, assign_address_v3
 
 # Form for signup view
 class RegisterForm(forms.ModelForm):
@@ -41,7 +40,6 @@ class RegisterForm(forms.ModelForm):
 
         # Assign ethereum address to user via web3 script
         # The script already saves the user object to the database
-        current_user = assign_address_v3(user)
         if commit:
             user.save()
         return user

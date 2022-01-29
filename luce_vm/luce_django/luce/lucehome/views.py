@@ -1,44 +1,16 @@
-import re
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.template.loader import get_template
-from django.utils.http import is_safe_url
-from django.utils.regex_helper import Group
-from accounts.models import User
-from rest_framework import serializers, authentication, permissions
-from rest_framework import generics
-from rest_framework import filters
-from rest_framework import viewsets
-
-
-
-from django.http import JsonResponse
-import json
+from accounts.models import User, DataContract
+from rest_framework import permissions, generics, filters, parsers, renderers,status
+from rest_framework.compat import coreapi, coreschema
+from rest_framework.schemas import ManualSchema
+from rest_framework.schemas import coreapi as coreapi_schema
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+import utils.custom_exeptions as custom_exeptions
 from django.http import Http404
 from rest_framework.views import APIView
-
 from rest_framework.response import Response
-from rest_framework import status
-
-# Access to Dataset model
-from datastore.models import Dataset
-
-# Access to forms
-from accounts.forms import RegisterForm, LoginForm
-
-# For login view:
-from django.contrib.auth import authenticate, login, get_user_model
-
-# For class-based views:
-from django.views.generic import CreateView, FormView
-
-# For redirect after form submission
-from django.shortcuts import redirect
-# Import newest versions of web3 scripts
-
-
 from .serializers import *
 from utils.web3_scripts import *
+from utils.utils import get_initial_response
 
 
 # APIview for registering donors and influencers.
@@ -46,32 +18,148 @@ class UserRegistration(APIView):
     def post(self, request, format=None):
         createWallet = request.data.get("create_wallet")
         serializer = UserSerializer(data = request.data, context={"create_wallet": createWallet})
-        
-        if not serializer.is_valid(): 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        ##serializer validation
+        if not serializer.is_valid(): 
+            response = custom_exeptions.validation_exeption(serializer)
+            return response
+                   
+        instance = serializer.save()
+        tx_receipt = self.address_get_or_create(instance, createWallet)
+
+        #blockchain error handling
+        if type(tx_receipt) is list:
+            instance.delete()
+            return custom_exeptions.blockchain_exception(tx_receipt)
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "registration successfull"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = [{"reason":"SUCCESS"}]    
+        response["data"]["transaction receipts"] = [tx_receipt]
+    
+        return Response(response, status=status.HTTP_200_OK)
+
+    def address_get_or_create(self, instance, createWallet):
+            if(createWallet):
+                tx_receipt = instance.create_wallet()
+                instance.save()
+            
+                if tx_receipt:
+                    return tx_receipt     
+            tx_receipt = None
+            return tx_receipt
+
+class ObtainAuthToken(APIView):
+    throttle_classes = ()
+    permission_classes = ()
+    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
+    renderer_classes = (renderers.JSONRenderer,)
+    serializer_class = AuthTokenSerializer
+
+    if coreapi_schema.is_enabled():
+        schema = ManualSchema(
+            fields=[
+                coreapi.Field(
+                    name="username",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="Username",
+                        description="Valid username for authentication",
+                    ),
+                ),
+                coreapi.Field(
+                    name="password",
+                    required=True,
+                    location='form',
+                    schema=coreschema.String(
+                        title="Password",
+                        description="Valid password for authentication",
+                    ),
+                ),
+            ],
+            encoding="application/json",
+        )
+
+    def get_serializer_context(self):
+        return {
+            'request': self.request,
+            'format': self.format_kwarg,
+            'view': self
+        }
+
+    def get_serializer(self, *args, **kwargs):
+        kwargs['context'] = self.get_serializer_context()
+        return self.serializer_class(*args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid(): 
+            return custom_exeptions.validation_exeption(serializer)
+
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "login successfull"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"]["token"] = token.key
+    
+        return Response(response)
 
 class UserUpdateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def put(self, request, format=None):
         user = self.request.user
+        instance = user
         createWallet = request.data.get("create_wallet")
         serializer = UserSerializer(user, data=request.data, context={"create_wallet": createWallet}, partial=True)
+
         if not serializer.is_valid(): 
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return custom_exeptions.validation_exeption(serializer)
+        
+        tx_receipt = self.address_get_or_create(instance, createWallet)
+        if type(tx_receipt) is list:
+            return custom_exeptions.blockchain_exception(tx_receipt)
+
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "update user successfull"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"]["transaction receipts"] = [tx_receipt]
+
         serializer.save()
-        return Response(serializer.data, status = status.HTTP_200_OK)
+        return Response(response, status = status.HTTP_200_OK)
 
-
+    def address_get_or_create(self, instance, createWallet):
+                if(createWallet):
+                    tx_receipt = instance.create_wallet()
+                
+                    if tx_receipt:
+                        return tx_receipt     
+                tx_receipt = None
+                return tx_receipt
         
 class PublicUserInfoView(APIView):
     def get(self, request, id, format=None):
         user = self.get_object(id)
         serializer = PublicUserSerializer(user)
-        return Response(serializer.data)
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "user public data retrieved successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"]["users"] = [serializer.data]
+       
+        return Response(response)
 
     def get_object(self, id):
         try:
@@ -86,547 +174,316 @@ class PrivateUserInfoView(APIView):
     def get(self, request, format=None):
         user = request.user
         serializer = UserSerializer(user)
-        return Response(serializer.data)
-   
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "user private data retrieved successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"]["users"] = [serializer.data]
+        return Response(response)
+    
 
 class UserListView(APIView):
     def get(self, request, format=None):
         users = User.objects.all()
         serializer = PublicUserSerializer(users, many = True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "all user data retrieved successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"]["users"] = [serializer.data]
+        return Response(response)
+
+class ContractsListView(APIView):
+    def get(self, request, format=None):
+        contracts = DataContract.objects.all()
+        serializer = DataContractSerializer(contracts, many = True)
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "all user data retrieved successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"]["contracts"] = serializer.data
+        return Response(response)
 
 
 
-class ContractView(APIView):
+class UploadDataView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request, format=None):
-        serializer = ConsentContractSerializer(data = request.data, context = {"restrictions":request.data, "user":request.user}, partial = True)
+        user = request.user
+        estimate = request.data.get("estimate", False)
+        link = request.data.get("link", False)
+
+        if user.ethereum_public_key is None:
+            return custom_exeptions.custom_message("user needs to have a wallet connected")
+
+        if not link:
+            return custom_exeptions.custom_message("link field is required")
+
+        tx_receipts = []
+
+        if not LuceRegistry.objects.filter(pk=1).exists():
+                    return custom_exeptions.custom_message("luce registry was not deployed")
+        luceregistry = LuceRegistry.objects.get(pk = 1)
+
+        serializer = DataContractSerializer(data = request.data, context = {"estimate":estimate,"restrictions":request.data, "user":request.user}, partial = True)
+        restriction_serializer = RestrictionsSerializer(data = request.data)
+
+
+        ##check that user is registered in LuceRegistry, if not register him
+        is_registered = luceregistry.is_registered(request.user, "provider")
+        if not is_registered:
+            cost = LuceRegistry.objects.get(pk=1).register_provider(user, estimate)
+            if type(cost) is list:
+                return custom_exeptions.blockchain_exception(cost)
+            tx_receipts.append(cost)
+
+        if not restriction_serializer.is_valid():
+            return custom_exeptions.validation_exeption(restriction_serializer)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        print(serializer)
-        return Response(serializer.data)
-    
- 
-"""
-class FundUser(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request, format=None):
-        errors = {}
-        if "amount" not in request.data:
-            errors["amount"] = ["This field is required"]
-        user = request.user
-        if user.user_type == 0:
-            errors["user"] = ["influencers cannot fund their"]
-        if errors:
-            return Response(errors)
-        amount = request.data.get("amount")
-        receipt = add_balance(user, amount)
-        if type(receipt) is ValueError:
-            raise receipt
-        balances = check_balance(user)
-        return Response({"message":"blance updatad successfully", "balances":balances, "gas used":receipt["cumulativeGasUsed"]})
+            return custom_exeptions.validation_exeption(serializer)
+        datacontract = serializer.save()
+        
+        tx_receipt = datacontract.consent_contract.deploy_contract()
+        if type(tx_receipt) is list:
+                datacontract.delete()
+                return custom_exeptions.blockchain_exception(tx_receipt)
+        tx_receipts.append(tx_receipt)
 
-#get a list of all users
-class ListUsers(APIView):
-    authentication_classes = [authentication.TokenAuthentication]
+        tx_receipt0 = datacontract.consent_contract.upload_data_consent(estimate)
+        if type(tx_receipt0) is list:
+                datacontract.delete()
+                return custom_exeptions.blockchain_exception(tx_receipt0)
+        tx_receipts.append(tx_receipt0)
+
+        tx_receipt2 = datacontract.deploy_contract()
+
+        if type(tx_receipt2) is list:
+                datacontract.delete()
+                return custom_exeptions.blockchain_exception(tx_receipt2, tx_receipts)
+        tx_receipts.append(tx_receipt2)
+
+
+        tx_receipt3 = datacontract.set_registry_address(LuceRegistry.objects.get(pk=1), estimate)
+        if type(tx_receipt3) is list:
+                datacontract.delete()
+                return custom_exeptions.blockchain_exception(tx_receipt3, tx_receipts)
+        tx_receipts.append(tx_receipt3)
+
+        tx_receipt4 = datacontract.set_consent_address(estimate)
+        if type(tx_receipt4) is list:
+                datacontract.delete()
+                return custom_exeptions.blockchain_exception(tx_receipt4, tx_receipts)
+        tx_receipts.append(tx_receipt4)
+
+        tx_receipt5 = datacontract.publish_dataset(user,link, estimate)
+        if type(tx_receipt5) is list:
+                datacontract.delete()
+                return custom_exeptions.blockchain_exception(tx_receipt5, tx_receipts)
+        tx_receipts.append(tx_receipt5)
     
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "data published successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"] = {}
+        response["data"]["contracts"]= [serializer.data]
+        response["data"]["transaction receipts"] = tx_receipts
+        return Response(response)
+
     def get(self, request, format=None):
-        queryset =  User.objects.all()
-        serializer = PublicUserSerializer(queryset, many = True)
-        return Response(serializer.data)
+        contract_address = request.data.get('contract_address')
+        c = ConsentContract.objects.get(contract_address = contract_address)
+        CCS = ConsentContractSerializer(c)
+        r = c.retrieve_contract_owner()
+        return Response(CCS.data)
 
-class UserView(APIView):
+class RequestDatasetView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, format=None):
+        estimate = request.data.pop("estimate", False)
+        access_time = request.data.pop("access_time", 100000000)
+        purpose_code = request.data.pop("purpuse_code", 1)
+        dataset_addresses = request.data.pop("dataset_addresses", False)
+
+
+        if not dataset_addresses:
+            return Response({"error":"please specify a dataset_contrat"})
+        all_receipts = []
+        
+        for contract in dataset_addresses:
+            print("##################CONTRACT########################")
+            tx_receipts = self.request_access(contract, request, access_time, estimate, purpose_code)
+            if type(tx_receipts) is Response:
+                return tx_receipts
+            all_receipts.append(tx_receipts)
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "data requested successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"] = {}
+        response["data"]["transaction receipts"] = all_receipts
+            
+        return Response(response)
+
+
+    def request_access(self, c_address, request, access_time, estimate, purpose_code):
+        
+        rp_serializer = ResearchPurposeSerializer(data = request.data)
+        if not rp_serializer.is_valid():
+            return Response(rp_serializer.errors)
+        rp = rp_serializer.save()
+
+        if not DataContract.objects.filter(contract_address = c_address).exists():
+            return custom_exeptions.custom_message("dataset was not specified")
+
+
+        if not LuceRegistry.objects.filter(pk=1).exists():
+            return custom_exeptions.custom_message("luce registry was not deployed")
+
+
+        luceregistry = LuceRegistry.objects.get(pk = 1)
+        datacontract = DataContract.objects.get(contract_address = c_address)
+        datacontract.consent_contract.research_purpuse = rp
+        datacontract.save()
+
+        tx_receipts = []
+
+        is_registered = luceregistry.is_registered(request.user, "requester")
+        if is_registered==0:
+            receipt = luceregistry.register_requester(request.user, 1, estimate)
+            if type(receipt) is list:
+                    datacontract.consent_contract.research_purpuse.delete()
+                    return custom_exeptions.blockchain_exception(receipt, tx_receipts)
+            tx_receipts.append(receipt)
+        receipt2 = datacontract.consent_contract.give_research_purpose(rp, request.user, estimate)
+        if type(receipt2) is list:
+                datacontract.consent_contract.research_purpuse.delete()
+                return custom_exeptions.blockchain_exception(receipt2, tx_receipts)
+        tx_receipts.append(receipt2)
+
+        receipt3 = datacontract.add_data_requester(access_time,purpose_code, request.user, estimate)
+        if type(receipt3) is list:
+                datacontract.consent_contract.research_purpuse.delete()
+                return custom_exeptions.blockchain_exception(receipt3, tx_receipts)
+        tx_receipts.append(receipt3)
+        
+        if estimate:
+            return Response({"gas_estimate": receipt+receipt2+receipt3})
+
+        return tx_receipts
+
+
+
+class GetLink(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request, format=None):
-        user = request.user
-        serializer = UserSerializer(user)
+        estimate = request.data.pop("estimate", False)
+        access_time = request.data.pop("access_time", 1000)
+        purpose_code = request.data.pop("purpuse_code", 1)
+        dataset_address = request.data.pop("dataset_address", False)
+        if not DataContract.objects.filter(contract_address = dataset_address).exists():
+            return custom_exeptions.custom_message("dataset was not specified")
+        tx_receipts = []
+        datacontract = DataContract.objects.get(contract_address = dataset_address)
+        link = datacontract.getLink(request.user, estimate)
+        if type(link) is list:
+                datacontract.consent_contract.research_purpuse.delete()
+                return custom_exeptions.blockchain_exception(link, tx_receipts)
+        tx_receipts.append(link)
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "link requested successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"] = {}
+        response["data"]["link"] = link
+        return Response(response)
+
+
+class RetrieveContractByUserIDView(APIView):
+    def get(self, request, id, format=None):
+        if not User.objects.filter(pk = id).exists():
+            return custom_exeptions.custom_message("user does not exist")
+        user = User.objects.get(pk = id)
+        contracts = DataContract.objects.filter(user = id)
+        contracts_serializer = DataContractSerializer(contracts, many=True)
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "contracts retrieved successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"] = {}
+        response["data"]["contracts"] = contracts_serializer.data
+
+        return Response(response)
+
+
+class SearchContract(generics.ListAPIView):
+    serializer_class = DataContract
+    queryset = DataContract.objects.all()
+    serializer_class = DataContractSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['description'] 
+
+
+
+
+    
+
+class LuceRegistryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        if not LuceRegistry.objects.filter(pk=1).exists():
+            return Response({"error":"luce registry was not deployed"}, status=status.HTTP_400_BAD_REQUEST)
+        registry = LuceRegistry.objects.get(pk=1)
+        serializer = RegestryContractSerializer(registry)
         return Response(serializer.data)
 
-class InfluencerSearch(generics.ListAPIView):
-    queryset = User.objects.filter(user_type = 0)
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicUserSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["email", "first_name", "last_name", "ethereum_public_key"]
-class DonorSearch(generics.ListAPIView):
-    queryset = User.objects.filter(user_type = 1)
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicUserSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["email", "first_name", "last_name", "ethereum_public_key"]
-class UserSearch(generics.ListAPIView):
-    queryset = User.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicUserSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["email", "first_name", "last_name", "ethereum_public_key"]
-
-class GroupSearch(generics.ListAPIView):
-    queryset = CauseGroup.objects.all()
-    serializer_class = PublicGroupSerializer
-    permission_classes = [permissions.AllowAny]
-    pagination_class=None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["id"]
-
-class DonorBalanceView(APIView):
     def post(self, request, format=None):
-        if "donor" not in request.data:
-            return Response({"errors":"donor must be specified"})
-        if User.objects.filter(pk = request.data["donor"]).count() != 1:
-            return Response({"errors":"donor id not found"})
-        donor = User.objects.get(pk = request.data["donor"])
-        if donor.user_type != 1:
-            return Response({"errors":"donor id must be of a donor, not influencer"})
-        balance = check_balance(donor)
-        return Response(balance)
-class InfluecerBalanceView(APIView):
-    def post(self, request, format=None):
-        if "influencer" not in request.data:
-            return Response({"errors":"influencer must be specified"})
-        if User.objects.filter(pk = request.data["influencer"]).count() != 1:
-            return Response({"errors":"influencer id not found"})
-        influencer = User.objects.get(pk = request.data["influencer"])
-        if influencer.user_type != 0:
-            return Response({"errors":"influencer id must be of a influencer, not donor"})
-        balance = check_balance_influencer(influencer)
-        return Response(balance)
-
-class ContractGroups(APIView):
-    def post(self, request, format=None):
-        errors = []
-        if "influencer" not in request.data:
-            errors.append("must specify influencer id")  
-        if "group" not in request.data:
-            group = 0 
-        else:
-            if CauseGroup.objects.filter(pk = request.data["group"]).count() !=1:
-                return Response({"errors":"group id not found"})
-            group = CauseGroup.objects.get(pk = request.data["group"])
-            
-        if len(errors) != 0:
-            return Response({"errors":errors})
-        if User.objects.filter(pk = request.data["influencer"]).count() != 1:
-            errors.append("influencer with this id not found")
-            return Response({"errors":errors})
-        influencer = User.objects.get(pk = request.data["influencer"])
-        if influencer.user_type != 0:
-            errors.append("influencer id must be of influencer")
-
-        events = groupCreations(influencer, group)   
-        return Response(events)
-
-
-
-class ContractDonations(APIView):
-    def post(self, request, format=None):
-        errors = []
-        if "influencer" not in request.data:
-            errors.append("influencer id not specified")
-        if User.objects.filter(pk = request.data["influencer"]).count() != 1:
-            errors.append("influencer with this id not found")
-            return Response({"errors":errors})
-
-        if len(errors) != 0:
-            return Response({"errors":errors})
-        influencer = User.objects.get(pk = request.data["influencer"])
-
-        if "user" not in request.data:
-            donor = 0
-        else:
-            if User.objects.filter(pk = request.data["user"]).count() != 1:
-                errors.append("donor with this id not found")
-                return Response({"errors":errors})
-
-            donor = User.objects.get(pk = request.data["user"])
-            if donor.user_type != 1:
-                errors.append("user id must be of donor")
-            
-        if "cause" not in request.data:
-            cause = 0
-        else:
-            if  Cause.objects.filter(pk = request.data["cause"]).count() != 1:
-                errors.append("cause with this id not found")
-                return Response({"errors":errors})
-            cause = Cause.objects.get(pk = request.data["cause"])
-            if cause.creator.id != influencer.id :
-                errors.append("this cause id not from this influencer")
-        if influencer.user_type != 0:
-            errors.append("influecer id must be of influencer")
-        if len(errors) != 0:
-            return Response({"errors":errors})
-            
-        events  = contractDonations(donor, influencer, cause)
-        return Response(events)
-
-
-
-class RegisterGroup(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request, format=None):
-        if "info" not in request.data:
-            return Response({"error":"you must specify a info array"})
-        infodata = request.data.pop("info")
-        request.data["creator"] = request.user.id
-        group_serializer = PublicGroupSerializer(data =  request.data)
-        valid1 = group_serializer.is_valid()
-        if not valid1:
-            return Response({"1":group_serializer.errors})
-        group = group_serializer.save()
-        sum = 0
-        serials = []
-        causes_ids = []
-        splits = []
-        for info in infodata:
-            info["group"] = group.id
-            sum += info["split"]
-            info_serializer = PublicGroupInfoSerializer(data = info)
-            valid2 = info_serializer.is_valid()
-            if not valid2:
-                return Response({"2":info_serializer.errors})
-            serials.append(info_serializer)
-        for serializer in serials:
-            serializer.save()
-            causes_ids.append(serializer.data["cause"])
-            splits.append(serializer.data["split"])
-        if sum != 10000:
-            return Response({"error":"split sum incomplete"})
-        print(createGroup(causes_ids, splits, group.id, request.user))
-        return Response(info_serializer.data)
-        
-
-#APIview for registering a cause
-class RegisterCause(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request, format=None):
-        serializer = CauseSerializer(data = request.data, context = {"request":request})
-        validation = serializer.is_valid()
-        if not validation:
-            return Response(serializer.errors)
-        assign_address_v3(serializer)
-        cause = serializer.save()
-        print(register_cause(cause))
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-class CheckCause(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, format=None):
+        estimate = request.data.get('estimate', False)
         user = request.user
-        errors = {}
-        if "cause_id" not in request.data:
-            errors["cause_id"] = ["This field is required"]
-        if errors:
-            return Response(errors)
-        cause_id = request.data["cause_id"]
-        causeObject = Cause.objects.filter(pk = cause_id)
-        
-        if not causeObject.exists():
-            errors["cause_not_found"] = "no cause found with this id" 
-        if errors:
-            cause = ""
+
+        if user.ethereum_public_key is None or user.ethereum_private_key is None:
+            return custom_exeptions.custom_message("user must connect a wallet first")
+
+        if(estimate):
+            return self.estimated_gas
             
-        cause = check_cause(user, causeObject.first())
+        #get contract if doesn't exist create it
+        if LuceRegistry.objects.filter(pk=1).exists():
+            registry = LuceRegistry.objects.get(pk=1)
+        else:
+            registry = LuceRegistry.objects.create(pk=1, user = user)
 
-        
-        return Response(cause)
-        
-        
-        
+        registry.user = user
+        tx_receipt = registry.deploy_contract()
+        if type(tx_receipt) is list:
+            return custom_exeptions.blockchain_exception(tx_receipt)
 
-class CauseSearch(generics.ListAPIView):
-    queryset = Cause.objects.all()
-    permission_classes = [permissions.AllowAny]
-    pagination_class=None
-    serializer_class = PublicCauseSerializer
-    search_fields = ["title", "description", "ethereum_public_key"]
+        registry.save()
+        serializer = RegestryContractSerializer(registry)
+
+        response = get_initial_response()
+        response["error"]["code"] = 200
+        response["error"]["message"] = "luceRegistry was deployed successfully"
+        response["error"]["status"] = "OK"
+        response["error"]["details"] = ["SUCCESS"]    
+        response["data"] = {}
+        response["data"]["contracts"] = [serializer.data]
+        response["data"]["transaction receipts"] = [tx_receipt]
+
+        return Response(response)
     
-class CauseSearchByInfluencerID(generics.ListAPIView):
-    queryset = Cause.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicCauseSerializer
-    pagination_class=None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=creator__id"]
-    
-class CauseSearchByInfluencer(generics.ListAPIView):
-    queryset = Cause.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicCauseSerializer
-    pagination_class=None 
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["creator__first_name", "creator__last_name", "creator__email"]
     
 
-class CreateDonationToGroup(APIView):
-    authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request, format=None):
-        donor = request.user
-        errors =[]
-        if "group" not in request.data:
-            errors.append("group id must be specified")
-        if "amount" not in request.data:
-            errors.append("amount must be specified")
-        if len(errors) != 0:
-            return Response({"errors":errors})
-        amount = request.data["amount"]
-        group_id = request.data["group"]
-        if CauseGroup.objects.filter(pk = group_id).count() != 1:
-            return Response({"error":"group id not found"})
-        group = CauseGroup.objects.get(pk = group_id)
-        donateToGroup(donor, group, amount)
-        return Response({"success":"donation was successfull"})
-
-class createDonation(APIView):
-    authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request, format=None):
-        if Cause.objects.filter(pk = request.data.get('cause')).count()!=1:
-            return Response({"error":"cause id not found"})
-        user = request.user
-        cause = Cause.objects.get(pk = request.data["cause"])
-        donation_serializer = DonationSerializer(data = request.data, context = {"request":request})
-        valid = donation_serializer.is_valid()
-        if request.data.get('donor') != request.user.id:
-            return Response({"error":"the donor id doesn't correspond to the authenticated user"})
-        if not valid:
-            return Response(donation_serializer.errors)
-        logs = donate(validated_donation_serializer = donation_serializer,  _user = request.user)
-        donation_serializer.save()
-
-        return Response({"donation":donation_serializer.data},status=status.HTTP_201_CREATED) 
-  
-class UserDonations(APIView):
-    def post(self, request, format=None):
-        if "donor_id" not in request.data:
-            return Response({"errors":"donor_id field is required"})
-        donations = Donation.objects.filter(donor_id = request.data["donor_id"])
-        print(donations)
-        donations_data = []
-        for donation in donations:
-            donation_serializer = PublicDonationSerializer(donation , context = {"request":request})
-            donations_data.append(donation_serializer.data)
-        
-        return Response(donations_data)
-class getDonation(APIView):
-      def get(self, request, format=None):
-        if "id" not in request.data:
-            return Response({"errors":"id field is required"})
-        donation = Donation.objects.filter(pk = request.data["id"])
-        if not donation.exists():
-            return Response({"errors":"id not found"})
-        donation_serializer = PublicDonationSerializer(donation.first() , context = {"request":request})
-        creator_id = donation_serializer.data["cause"]["creator"]["id"]
-        donor_id = donation_serializer.data["donor"]["id"]
-
-        creator = User.objects.get(pk = creator_id)
-        donor = User.objects.get(pk = donor_id)
-
-        searchDonations(donor, creator)
-        return Response(donation_serializer.data)
-
-class DonationSearchByCause(generics.ListAPIView):
-    queryset = Donation.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicDonationSerializer
-    pagination_class=None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["cause__title", "cause__description"]
-
-class DonationSearchByCauseID(generics.ListAPIView):
-    queryset = Donation.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicDonationSerializer
-    pagination_class=None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=cause__id"]
-
-class DonationSearchByDonor(generics.ListAPIView):
-    queryset = Donation.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicDonationSerializer
-    pagination_class=None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["donor__email", "donor__first_name", "donor__last_name"]
-class DonationSearchByDonorID(generics.ListAPIView):
-    queryset = Donation.objects.all()
-    permission_classes = [permissions.AllowAny]
-    serializer_class = PublicDonationSerializer
-    pagination_class=None
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["=donor__id"]
-
-#this APIView is used to deploy contract
-class DeployContract(APIView):
-    permission_classes = [permissions.IsAdminUser]
-    def get(self, request, format=None):
-        user_type = request.data.get('user_type')
-        contract_serializer = ContractSerializer(data = request.data)
-        user_serializer = UserSerializer(request.user)
-        validation = contract_serializer.is_valid()
-        if not validation:
-            return Response(contract_serializer.errors)
-        contract_address = deploy_contract_v3(user_serializer.data["ethereum_private_key"], contract_serializer.data["user_type"])
-        return Response({"contract_address": contract_address, "user_type":user_type})
-
-
-class LoginView(FormView):
-    form_class = LoginForm
-    template_name = 'accounts/login.html'
-    success_url = '/'
-
-    def form_valid(self, form):
-        request = self.request
-        next_ = request.GET.get('next')
-        next_post = request.POST.get('next')
-        redirect_path = next_ or next_post or None
-
-
-        email = form.cleaned_data.get("email")
-        password = form.cleaned_data.get("password")
-        user = authenticate(request, username=email, password=password)
-        if user is not None:
-            login(request, user)
-            try:
-                del request.session['guest_email_id']
-            except:
-                pass
-            if is_safe_url(redirect_path, request.get_host()):
-                return redirect(redirect_path)
-            else:
-                return redirect('/')
-        return super(LoginView, self).form_invalid(form)
-
-
-class LoginView_PostReg(FormView):
-    form_class = LoginForm
-    template_name = 'accounts/login_post_reg.html'
-    success_url = '/'
-
-    def form_valid(self, form):
-        request = self.request
-        next_ = request.GET.get('next')
-        next_post = request.POST.get('next')
-        redirect_path = next_ or next_post or None
-
-
-        email = form.cleaned_data.get("email")
-        password = form.cleaned_data.get("password")
-        user = authenticate(request, username=email, password=password)
-        if user is not None:
-            login(request, user)
-            try:
-                del request.session['guest_email_id']
-            except:
-                pass
-            if is_safe_url(redirect_path, request.get_host()):
-                return redirect(redirect_path)
-            else:
-                return redirect('/')
-        return super(LoginView, self).form_invalid(form)
-
-
-# Available scripts:
-# create_wallet_old, fund_wallet, deploy_contract, assign_address
-# assign_address_v3, deploy_contract_v3, publish_data_v3, add_requester_v3, update_contract_v3
-def dev_view(request):
-
-    # For testing make sure the current user has uploaded at least one dataset 
-    dev_user = request.user # obtain current user
-    if len(dev_user.datasets_owned.all()) >= 1:
-        dev_dataset = dev_user.datasets_owned.all()[0] # Use first dataset that was uploaded by current user
-
-    # Assign address & pre-fund
-    if(request.GET.get('assign_address_v3')):
-        # Pass user into web3 script
-        current_user = dev_user
-        # Script does work and passes updated user object back
-        current_user = assign_address_v3(current_user)
-        print(current_user)
-        print(current_user.ethereum_public_key)
-        print("Address was assigned to current user.")
-
-    # Deploy contract
-    if(request.GET.get('deploy_contract_v3')):
-        current_user = dev_user
-        print(current_user.ethereum_private_key)
-        contract_address = deploy_contract_v3(current_user.ethereum_private_key)
-        print(current_user)
-        print("Contract address:", contract_address)
-        # associate dev_dataset with deployed contract
-        dev_dataset.contract_address = contract_address
-        print(dev_dataset.contract_address)
-
-
-    # Publish Data of dev_dataset to Smart Contract
-    if(request.GET.get('publish_data_v3')):
-        current_user = dev_user
-        current_contract = dev_dataset.contract_address
-        # Publish metadata to contract
-        tx_receipt = publish_data_v3(
-                        provider_private_key = current_user.ethereum_private_key, 
-                        contract_address     = current_contract, 
-                        description          = dev_dataset.description, 
-                        license              = dev_dataset.license)
-        print("Transaction receipt:\n", tx_receipt)
-
-
-
-    # Add data requester to Smart Contract
-    if(request.GET.get('add_requester_v3')):
-        current_user = dev_user
-        current_contract = dev_dataset.contract_address
-        # Add data requester
-        tx_receipt = add_requester_v3(
-                        requester_private_key= current_user.ethereum_private_key, 
-                        contract_address     = current_contract,
-                        license              = dev_dataset.license)
-        print("Transaction receipt:\n", tx_receipt)
-
-
-    # Update Smart Contract
-    if(request.GET.get('update_contract_v3')):
-        current_user = dev_user
-        current_contract = dev_dataset.contract_address
-        # Update contract
-        tx_receipt = publish_data_v3(
-                        provider_private_key = current_user.ethereum_private_key, 
-                        contract_address     = current_contract, 
-                        description          = dev_dataset.description)
-        print("Transaction receipt:\n", tx_receipt)
-
-
-
-
-# First iteration functions:
-    if(request.GET.get('assign_address')):
-        # Pass request into web3 script
-
-        current_user = request.user
-        current_user = assign_address(current_user)
-        # Save already takes place while assigning address
-        # current_user.save()
-        print(current_user)
-        print(current_user.ethereum_public_key)
-        print("Address was assigned to current user.")
-
-
-    if(request.GET.get('deploy_contract')):
-        current_user = request.user
-        contract_address = deploy_contract(current_user)
-        print("Contract address:")
-        print(contract_address)   
-
-    if(request.GET.get('create_wallet')):
-        create_wallet_old()
-
-    if(request.GET.get('mybtn')):
-        print("The input value is: ", int(request.GET.get('mytextbox')) ) # or any other function
-
-    context = {}
-    template = 'dev.html'
-    return render(request, template, context)
-    
-"""

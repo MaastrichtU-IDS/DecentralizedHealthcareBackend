@@ -1,35 +1,23 @@
-from accounts.models import User, ConsentContract, Restrictions
+from accounts.models import *
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
-from utils.web3_scripts import *
+import utils.custom_exeptions as custom_exeptions
 
 class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "email", "gender","age", "user_type", "ethereum_public_key"]
+        fields = ["id", "first_name", "last_name", "email", "gender","age", "user_type", "ethereum_public_key", "country", "institution"]
  
+    
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "email", "gender", "age", "password", "user_type", "ethereum_public_key", "ethereum_private_key"]
-    
-    def address_get_or_create(self, instance, validated_data):
-        createWallet = self.context.get("create_wallet")
-        if(createWallet):
-            account = assign_address_v3()
-            instance.ethereum_public_key = account.address
-            instance.ethereum_private_key = account.privateKey.hex()
+        fields = ["id", "first_name", "last_name", "email", "gender", "age", "password", "user_type", "ethereum_public_key", "ethereum_private_key", "country", "institution"]
 
-        else: #otherwise if a key is specified use that one
-            instance.ethereum_public_key = validated_data.get('ethereum_public_public', instance.ethereum_public_key)
-            instance.ethereum_private_key = validated_data.get('ethereum_private_key', instance.ethereum_private_key)
-        return instance
-        
      #override create method because the authomatic token authentication fails 
     def create(self, validated_data):
         validated_data["password"] = make_password(validated_data.get("password"))
         instance = super(UserSerializer, self).create(validated_data)
-        self.address_get_or_create(instance, validated_data)
 
         return instance
 
@@ -40,12 +28,16 @@ class UserSerializer(serializers.ModelSerializer):
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.gender = validated_data.get('gender', instance.gender)
         instance.age = validated_data.get('age', instance.age)
-
+        instance.country = validated_data.get('country', instance.country)
+        instance.institution = validated_data.get('institution', instance.institution)
+        
         instance.password = validated_data.get('password',instance.password) #TODO: change password check.
         instance.user_type = validated_data.get('user_type', instance.user_type) #TODO: is this changable?
-        self.address_get_or_create(instance, validated_data)
         instance.save()
         return instance
+
+    def validate(self, data):
+        return data
 
 
 class RestrictionsSerializer(serializers.ModelSerializer):
@@ -53,125 +45,95 @@ class RestrictionsSerializer(serializers.ModelSerializer):
         model = Restrictions
         fields = ["id", "no_restrictions", "open_to_general_research_and_clinical_care", "open_to_HMB_research", "open_to_population_and_ancestry_research", "open_to_disease_specific"]
 
-    def validate(self, data):
-        required_restrictions = ["no_restrictions","open_to_general_research_and_clinical_care","open_to_HMB_research","open_to_population_and_ancestry_research","open_to_disease_specific"]
-        restrictions = data
-      
-        if(self.restrictions_validator(restrictions)):
-            raise serializers.ValidationError("restrictions selected are ambiguous")
-        return data
+  
    
-
-    def restrictions_validator(self, restrictions):
-        if(restrictions["no_restrictions"] and
-        (
-        not restrictions["open_to_general_research_and_clinical_care"] or
-        not restrictions["open_to_HMB_research"] or 
-        not restrictions["open_to_population_and_ancestry_research"] or
-        not restrictions["open_to_disease_specific"]
-        )):
-            return True
-        return False
     
+class ResearchPurposeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResearchPurpose
+        fields = ["use_for_methods_development", "use_for_reference_or_control_material", "use_for_populations_research", "use_for_ancestry_research", "use_for_HMB_research"]
+    
+ 
 
 class ConsentContractSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(read_only=True)
-    restrictions_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    restrictions = RestrictionsSerializer()
+    DEPLOYMENT_COST = 53000
     class Meta:
         model = ConsentContract
-        fields = ["contract_address", "user_id", "restrictions_id"]
-
+        fields = ["contract_address", "user_id", "restrictions"]
+        
 
     def create(self, validated_data):        
         user = self.context.get("user")
-        tx_receipt = deploy_contract_v3(user)
+        estimate = self.context.get("estimate", False)
         restrictions = RestrictionsSerializer(data = self.context.get("restrictions"))
         if (not restrictions.is_valid()):
             raise serializers.ValidationError(restrictions.errors)
-        restriction = restrictions.save()
-        consentContract = ConsentContract.objects.create(user = user, restrictions = restriction, contract_address=tx_receipt.contractAddress)
-        upload_data(consentContract, restriction, user)
+        restriction =  restrictions.save()
+        
+        consentContract = ConsentContract.objects.create(user = user, restrictions = restriction)
+        """
+        receipt = consentContract.deploy_contract()
+        if type(receipt is ValueError):
+            return receipt
+
+
+        receipt2 = consentContract.upload_data_consent(estimate)
+        if(estimate):
+            consentContract.delete()
+            restriction.delete()
+            return receipt2 + self.DEPLOYMENT_COST
+        consentContract.contract_address = receipt.contractAddress
+        """
         return consentContract
 
-
-
-"""
-class PublicUserSerializer(serializers.ModelSerializer):
+#TODO: change validation to restrict the creation of the contract
+class RegestryContractSerializer(serializers.ModelSerializer):
+    user_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    estimated_gas = 53000
     class Meta:
-        model = User
-        fields = ["id","contract_address", "email", "ethereum_public_key", "first_name", "last_name", "user_type"]
+        model = LuceRegistry
+        fields = ["user_id", "contract_address"]
 
-class UserSerializer(serializers.ModelSerializer):
+
+
+class DataContractSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    consent_contract = ConsentContractSerializer()
+    DEPLOYMENT_COST = 53000
     class Meta:
-        model = User
-        fields = ["id", "email""contract_address", "email", "ethereum_public_key", "ethereum_private_key", "password", "first_name", "last_name", "user_type"]
+        model = DataContract
+        fields = ["id", "user", "description", "licence","contract_address", "consent_contract"]
+   
+   
+    def validate(self, data):
+        user = self.context.get("user")
+        if user.ethereum_public_key is None or user.ethereum_private_key is None:
+            raise serializers.ValidationError({"error":"user must connect a wallet first"})
+        return data
+
 
     def create(self, validated_data):
-        validated_data["password"] = make_password(validated_data.get("password"))
-        user = super(UserSerializer, self).create(validated_data)
-        return user
+        user = self.context.get("user")
+        estimate = self.context.get("estimate", False)
+        description = validated_data.get("description","")
+        
+        
 
-    def validate(self, data):
-        return data
-#This serializer purpose is to validate the contract deployer API route
-class ContractSerializer(serializers.Serializer):
-    user_type = serializers.IntegerField()
-    def validate(self, data):
-        return data
+        dataContract = DataContract.objects.create(user= user)
+        conset_serializer = ConsentContractSerializer(data = validated_data, context = self.context, partial=True)
 
-class CauseSerializer(serializers.ModelSerializer):
-    creator = PublicUserSerializer(read_only=True)
+        if not conset_serializer.is_valid():
+                    raise serializers.ValidationError(conset_serializer.errors)
+        consentContract = conset_serializer.save()
 
-    class Meta: 
-        model = Cause
-        fields = ["id", "title", "description", "ethereum_public_key", "ethereum_private_key", "goal", "percentBPS","creator"]
+        dataContract.description = description
+      
+        dataContract.consent_contract = consentContract
 
-    def create(self, validated_data):
-        user = self.context["request"].user
-        cause = Cause.objects.create( creator = user,  **validated_data)
-        return cause
-    def validate(self,data):
-        user = self.context["request"].user
-        user_serializer = PublicUserSerializer(user)
-        usertype = user_serializer["user_type"].value
+        
+        dataContract.save()
+        
+        return dataContract
 
-        #only influencers can create causes
-        if usertype != 0:   
-            raise serializers.ValidationError({"error":"Donors cannot create causes"})
-        return data
-
-class PublicCauseSerializer(serializers.ModelSerializer):
-    creator = PublicUserSerializer(read_only=True)
-    class Meta:
-        model = Cause
-        fields =  ["id", "title", "description", "ethereum_public_key", "goal", "percentBPS","creator"]
-
-class DonationSerializer(serializers.ModelSerializer):
-    cause = serializers.PrimaryKeyRelatedField(many = False, queryset = Cause.objects.all())
-    donor = serializers.PrimaryKeyRelatedField(many = False, queryset = User.objects.all())
-    
-    class Meta:
-        model = Donation
-        fields = [ "cause", "amount", "donor"]
-
-class PublicDonationSerializer(serializers.ModelSerializer):
-    cause = PublicCauseSerializer(read_only = True)
-    donor = PublicUserSerializer(read_only = True)
-
-    class Meta:
-        model = Donation
-        fields = ["id","cause", "amount", "donor"]
-
-class PublicGroupInfoSerializer(serializers.ModelSerializer):
-    cause = serializers.PrimaryKeyRelatedField(many = False,queryset = Cause.objects.all())
-    class Meta:
-        model = GroupInfo
-        fields = ["cause", "split", "group"]
-
-class PublicGroupSerializer(serializers.ModelSerializer):
-    info = PublicGroupInfoSerializer(many=True, read_only=True)
-    class Meta:
-        model = CauseGroup
-        fields = ["id",'name', 'description', 'info', "creator"]
-
-   """

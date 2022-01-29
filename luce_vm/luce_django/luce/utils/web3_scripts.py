@@ -1,15 +1,33 @@
 from web3 import Web3
 import time
-w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-from web3 import exceptions
+
+###CONNECT TO ETH NETWORK USING HOSTED NODE (infura)##########
+#w3 = Web3(Web3.WebsocketProvider("wss://rinkeby.infura.io/ws/v3/839112f3db884bde86889ebbac153ced"))
+
+###CONNECT TO ETH NETWORK USING LOCAL LIGHT NODE (GETH)##########
+#w3 = Web3(Web3.IPCProvider("/home/vagrant/.ethereum/rinkeby/geth.ipc"))
+
+###CONNECT TO POLYGON NETWORK USING HOSTED NODE##########
+w3 = Web3(Web3.HTTPProvider("https://rpc-mumbai.matic.today"))
+
 
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from web3.middleware import geth_poa_middleware
+w3.middleware_stack.inject(geth_poa_middleware, layer=0)
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/utils/data/"
 # '/vagrant/luce_django/luce'
-SOLIDITY_CONTRACT_FILE = BASE_DIR + '/utils/data/ConsentContract.sol'
+MAIN_CONTRACT_PATH = BASE_DIR + 'Main.sol'
+CONSENT_CONTRACT_PATH = BASE_DIR + 'ConsentCode.sol'
+REGISTRY_CONTRACT_PATH = BASE_DIR + 'LuceRegistry.sol'
 
-CONTRACT_ADDRESS = "" 
+CONTRACT_FILE = "LUCERegistry" 
+LUCEMAIN_CONTRACT = "LuceMain"
+CONSENT_CONTRACT = "ConsentCode"
 
+CHAIN_ID = 80001
+
+DEBUG = True
 
 #### WEB3 HELPER FUNCTIONS ####g
 # Helper functions used to make the code in assign_address_v3 easier to read
@@ -20,36 +38,20 @@ CONTRACT_ADDRESS = ""
 # to Infura the faucet can be replaced with an API call instead.
 
 # Private key (obtained via Ganache interface)
-faucet_privateKey   = "0x4a2cb86c7d3663abebf7ab86a6ddc3900aee399750f35e65a44ecf843ec39116"
+faucet_privateKey   = "52417fb192c8cb46bf2b76e814992a803910d42cd19ca0ae0a83c5de97c6dbd6"
+
 # Establish faucet account
 faucet = w3.eth.account.privateKeyToAccount(faucet_privateKey)
+
 
 def create_wallet():
     eth_account = w3.eth.account.create()
     return (eth_account)
 
-def getContract(user):
-    private_key = user.ethereum_private_key
-    if user.user_type == 0:
-        d = compile_and_extract_interface_influencer()
-    else:
-        d = compile_and_extract_interface_donor()
 
+def send_ether(amount_in_ether, recipient_address, sender_pkey):
+    amount_in_wei = w3.toWei(amount_in_ether,'ether')
 
-    account = w3.eth.account.privateKeyToAccount(private_key)
-    nonce = w3.eth.getTransactionCount(account.address)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-    address = user.contract_address
-    Contract = w3.eth.contract(address=address, abi = d["abi"] )
-    return Contract
-
-def send_ether(amount_in_ether, recipient_address, sender_pkey=faucet.privateKey):
-    amount_in_wei = w3.toWei(amount_in_ether,'ether');
     
     # Obtain sender address from private key
     sender_address = w3.eth.account.privateKeyToAccount(sender_pkey).address
@@ -58,39 +60,25 @@ def send_ether(amount_in_ether, recipient_address, sender_pkey=faucet.privateKey
     # This is required and prevents double-spending.
     # Same name but different from nonce in block mining.
     nonce = w3.eth.getTransactionCount(sender_address)
-    
     # Specify transcation dictionary
     txn_dict = {
+            'from':sender_address,
             'to': recipient_address,
             'value': amount_in_wei,
-            'gas': 2000000,
-            'gasPrice': w3.toWei('40', 'gwei'),
+            'gasPrice': w3.toWei('30', 'Gwei'),
             'nonce': nonce,
-            'chainId': 3
+            'chainId': CHAIN_ID
     }
     
     # IN THIS STEP THE PRIVATE KEY OF THE SENDER IS USED
     # Sign transaction
-    def sign_transaction(txn_dict, sender_pkey):
-        signed_txn = w3.eth.account.signTransaction(txn_dict, sender_pkey)
-        return signed_txn
-    signed_txn      = sign_transaction(txn_dict, sender_pkey)
-    signed_txn_raw = signed_txn.rawTransaction
-    
-    
-    # Send transaction & store transaction hash
-    def send_raw_transaction(raw_transaction):
-        txn_hash = w3.eth.sendRawTransaction(raw_transaction)
-        return txn_hash
-    txn_hash = send_raw_transaction(signed_txn_raw)
+    gas = w3.eth.estimateGas(txn_dict)
+    txn_dict["gas"] = gas
+    txn_receipt = sign_and_send(txn_dict, sender_pkey, "sending ether from faucet to account")
+    return txn_receipt
 
-    # Check if transaction was added to blockchain 
-    # time.sleep(5)     # Not needed on Ganache since our transactions are instantaneous
-    txn_receipt = w3.eth.getTransactionReceipt(txn_hash)
-    return txn_hash
 
-def fund_wallet(recipient, amount = 100):
-    send_ether(amount,recipient)
+
 
 #### ASSIGN ADDRESS ####
 # This script takes a Django user object as input and
@@ -99,20 +87,15 @@ def fund_wallet(recipient, amount = 100):
 
 def assign_address_v3():
     # Establish web3 connection
-    from web3 import Web3
     import time
     from hexbytes import HexBytes
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
     # Create new web3 account
     eth_account = create_wallet()
-    fund_wallet(recipient = eth_account.address, amount = 100)
-    print("Balance:", w3.eth.getBalance(eth_account.address)) # print balance to ensure funding took place
+    txn_receipt = send_ether(amount_in_ether = 0.5, recipient_address = eth_account.address, sender_pkey=faucet.privateKey)
     # Return user, now with wallet associated
-    return eth_account
+    return txn_receipt, eth_account
 
 def check_balance(user):
-    from web3 import Web3
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
    
     balance_contract = w3.eth.getBalance(user.contract_address)
     balance_user = w3.eth.getBalance(user.ethereum_public_key)
@@ -121,300 +104,79 @@ def check_balance(user):
         "address balance": balance_user
     }
     return final
-def check_balance_influencer(influencer):
-    from web3 import Web3
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    contract = getContract(influencer)
-    balance_influ_contract = contract.functions.balance().call()
-    balance_contract = w3.eth.getBalance(influencer.contract_address)
-    balance_user = w3.eth.getBalance(influencer.ethereum_public_key)
-    final = {
-        "contract balance": balance_contract,
-        "address balance": balance_user,
-        "influencer balance in contract": balance_influ_contract
-    }
-    return final
-
-def check_cause(user, cause):
-    from web3 import Web3
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    d = compile_and_extract_interface_influencer()
-    address = cause.creator.contract_address
-    private_key = user.ethereum_private_key
-    abi = d["abi"]
-    contract_instance = w3.eth.contract(address=address, abi=abi)
 
 
-    user = w3.eth.account.privateKeyToAccount(private_key)
-    
-    nonce = w3.eth.getTransactionCount(user.address)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-
-    contract_txn = contract_instance.functions.causes(cause.id).call()
-    if contract_txn[0] == True:
-            
-        final = {
-            "cause_goal" : contract_txn[1],
-            "cause_balance" : contract_txn[2],
-            "cause_PBS" : contract_txn[3],
-            "cause_address" : contract_txn[4]
-        }
-    else:
-        final = {
-            "error":"cause does not exits"
-        }    
-    return final
-
-def add_balance(user, amount):
-    from web3 import Web3
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    if user.user_type == 0:
-        d = compile_and_extract_interface_influencer()
-    else :
-        d = compile_and_extract_interface_donor()
-    abi = d["abi"]
-
-    address = user.contract_address
-    private_key = user.ethereum_private_key
-    contract_instance = w3.eth.contract(address=address, abi=abi)
-    user = w3.eth.account.privateKeyToAccount(private_key)
-    nonce = w3.eth.getTransactionCount(user.address)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'value': amount,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-    try:
-        contract_txn = contract_instance.functions.deposit().buildTransaction(txn_dict)
-        signed_txn = w3.eth.account.signTransaction(contract_txn, private_key)
-        tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-        tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    except ValueError as error:
-        print(type(error))
-        return error
-    print(tx_receipt["cumulativeGasUsed"])
-    return tx_receipt
-
-def upload_data(contract, restrictions, user):
-    from web3 import Web3
-    noRestrictions = restrictions.no_restrictions
-    openToGeneralResearchAndClinicalCare = restrictions.open_to_general_research_and_clinical_care
-    openToHMBResearch = restrictions.open_to_HMB_research
-    openToPopulationAndAncestryResearch = restrictions.open_to_population_and_ancestry_research
-    openToDiseaseSpecific = restrictions.open_to_disease_specific
-
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    d = compile_and_extract_interface()
-    abi = d["abi"]
 
 
-    contract_address = contract.contract_address
-    user_address = user.ethereum_public_key
-    private_key = user.ethereum_private_key
-    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
-    user = w3.eth.account.privateKeyToAccount(private_key)
-    nonce = w3.eth.getTransactionCount(user.address)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-    contract_txn = contract_instance.functions.UploadDataPrimaryCategory(user_address, noRestrictions,openToGeneralResearchAndClinicalCare,openToHMBResearch,openToPopulationAndAncestryResearch,openToDiseaseSpecific).buildTransaction(txn_dict)
-    signed_txn = w3.eth.account.signTransaction(contract_txn, private_key)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    return tx_receipt, contract_address
-
-def createGroup(causes, splits, group_id, user):
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    d = compile_and_extract_interface_influencer()
-    address = user.contract_address
-    private_key = user.ethereum_private_key
-    abi = d["abi"]
-    contract_instance = w3.eth.contract(address=address, abi=abi)
-    eht_account = w3.eth.account.privateKeyToAccount(private_key)
-    nonce = w3.eth.getTransactionCount(eht_account.address)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-    contract_txn = contract_instance.functions.createGroup(causes, splits, group_id).buildTransaction(txn_dict)
-    signed_txn = w3.eth.account.signTransaction(contract_txn, private_key)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    logs = contract_instance.events.GroupCreated().processReceipt(tx_receipt)
-    return logs
-
-def donate(validated_donation_serializer, _user):
-    from web3 import Web3
-    from solcx import compile_source
-
-    
-    # Compile Luce contract and obtain interface
-    d = compile_and_extract_interface_donor()
-    inf = compile_and_extract_interface_influencer()
-    
-    # Establish web3 connection
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    
-    # Obtain user so we know his address for the 'from' field
-    private_key = _user.ethereum_private_key
-    user = w3.eth.account.privateKeyToAccount(private_key)
-    
-    nonce = w3.eth.getTransactionCount(user.address)
-
-    _amount = validated_donation_serializer.validated_data["amount"]
-   # print(nonce)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-
-    donor_contract_address = _user.contract_address
-    _cause_id = validated_donation_serializer.validated_data["cause"].id
-    address = validated_donation_serializer.validated_data["cause"].creator.contract_address
-    donor = w3.eth.contract(address=donor_contract_address, abi = d["abi"] )
-    influencer = w3.eth.contract(address=address, abi = inf["abi"])
-    donor_txn = donor.functions.donate(_cause_id, _amount, address).buildTransaction(txn_dict)
-    signed_txn = w3.eth.account.signTransaction(donor_txn, private_key)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    logs = influencer.events.Donate().processReceipt(tx_receipt)
-    print(logs)
-    return logs
-
-    #uint group_id, uint amount, address influencer_contract_address
-def donateToGroup(donor, group, amount):
-    donorContract = getContract(donor)
-    influencerContract = getContract(group.creator)
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    
-    # Obtain user so we know his address for the 'from' field
-    private_key = donor.ethereum_private_key
-    user = w3.eth.account.privateKeyToAccount(private_key)
-    
-    nonce = w3.eth.getTransactionCount(user.address)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-    donor_txn = donorContract.functions.donateToGroup(group.id, amount, group.creator.contract_address).buildTransaction(txn_dict)
-    signed_txn = w3.eth.account.signTransaction(donor_txn, private_key)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    logs = influencerContract.events.Donate().processReceipt(tx_receipt)
-    print(logs)
-    return logs
 
 
-def groupCreations(influencer, group):
-    influencerContract = getContract(influencer)
-    argument_filters = {}
-    
-    if type(group) is not int:
-        argument_filters["group_id"] = group.id
-    event_filter = influencerContract.events.GroupCreated().createFilter(fromBlock = 0, toBlock= "latest", argument_filters=argument_filters)
-    donations = {}
-    events = event_filter.get_all_entries()
-    counter = 0
-    for event in events:
-        donations[counter] = dict(event["args"])
-        counter += 1
-    return donations
+def deploy_registry(_user):
+    return deploy(_user, REGISTRY_CONTRACT_PATH, CONTRACT_FILE)
 
-    
-def contractDonations(donor, influencer, cause):
-    influencerContract = getContract(influencer)
-    argument_filters={}
-    if type(donor) is not int:
-        argument_filters["donor_address"] = donor.contract_address
-    if type(cause) is not int:
-        argument_filters["cause_address"] = cause.ethereum_public_key
-    event_filter = influencerContract.events.Donate().createFilter(fromBlock = 0, toBlock= "latest", argument_filters=argument_filters)
-    donations = {}
-    events = event_filter.get_all_entries()
-    counter = 0
-    for event in events:
-        donations[counter] = dict(event["args"])
-        counter += 1
-    return donations
+def deploy_contract_main(_user):
+    return deploy(_user, MAIN_CONTRACT_PATH, LUCEMAIN_CONTRACT)
 
-def deploy_contract_v3(_user):
+def deploy_consent(_user):
+    return deploy(_user, CONSENT_CONTRACT_PATH, CONSENT_CONTRACT)
+
+def deploy(_user, contract, interface):
     from solcx import compile_source
     from web3 import Web3
- 
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    private_key = _user.ethereum_private_key
-    contract_address = SOLIDITY_CONTRACT_FILE
-    contract_interface_key = '<stdin>:ConsentCode'
-
-    # Read in LUCE contract code
-    with open(contract_address, 'r') as file: # Adjust file_path for use in Jupyter/Django
-        contract_source_code = file.read()
-    
-    # Compile & Store Compiled source code
-    compiled_sol = compile_source(contract_source_code)
-
-    # Extract full interface as dict from compiled contract
-    contract_interface = compiled_sol[contract_interface_key]
+    contract_interface = compile_and_extract_interface(contract, interface)
 
     # Extract abi and bytecode
     abi = contract_interface['abi']
     bytecode = contract_interface['bin']
-    
+    contract = w3.eth.contract(abi=abi,bytecode=bytecode)
+
     # Obtain contract address & instantiate contract
 
     user_address = _user.ethereum_public_key
+
     private_key = _user.ethereum_private_key
     nonce = w3.eth.getTransactionCount(user_address)
 
-    transaction = {
-    'from': user_address,
-    'gas': 6000000,
-    'data': bytecode,
-    'chainId': 3,
-    'gasPrice': w3.toWei('4', 'gwei'),
-    'nonce': nonce,
-    }
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
 
-    signed_txn = w3.eth.account.signTransaction(transaction, private_key)
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    gas = contract.constructor().estimateGas()*2
+
+    txn_dict["gas"]=gas
+    contract_txn = contract.constructor().buildTransaction(txn_dict)    
+
+    return sign_and_send(contract_txn, private_key, "deployment of "+interface)
+
+
+
     
-    # Sign transaction
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+def compile_and_extract_interface_Consent():
+    return compile_and_extract_interface(CONSENT_CONTRACT_PATH, CONSENT_CONTRACT)
 
-    # Obtain address of freshly deployed contrac   
-    return tx_receipt
+def compile_and_extract_interface_Registry():
+    return compile_and_extract_interface(REGISTRY_CONTRACT_PATH, CONTRACT_FILE)
 
+def compile_and_extract_interface_Main():
+    return compile_and_extract_interface(MAIN_CONTRACT_PATH, LUCEMAIN_CONTRACT)
 
-
-
-def compile_and_extract_interface():
+def compile_and_extract_interface(contract, interface):
+    import solcx
     from solcx import compile_source
     
     # Read in LUCE contract code
-    with open(SOLIDITY_CONTRACT_FILE, 'r') as file: # Adjust file_path for use in Jupyter/Django
+    with open(contract, 'r') as file: # Adjust file_path for use in Jupyter/Django
         contract_source_code = file.read()
-        
-    # Compile & Store Compiled source code
-    compiled_sol = compile_source(contract_source_code)
 
+    # Compile & Store Compiled source code
+    
+
+    compiled_sol = compile_source(contract_source_code,  solc_version="0.6.2")
+  
     # Extract full interface as dict from compiled contract
-    contract_interface = compiled_sol['<stdin>:ConsentCode']
+    contract_interface = compiled_sol['<stdin>:'+interface]
 
     # Extract abi and bytecode
     abi = contract_interface['abi']
@@ -423,232 +185,405 @@ def compile_and_extract_interface():
     # Create dictionary with interface
     d = dict()
     d['abi']      = abi
-    d['bytecode'] = bytecode
+    d['bin'] = bytecode
     d['full_interface'] = contract_interface
     return(d)
 
-    def compile_and_extract_interface():
-        from solcx import compile_source
+def upload_data_consent(consent_obj, estimate):
+    from web3 import Web3
+    restrictions = consent_obj.restrictions
+    user = consent_obj.user
+    contract_address = consent_obj.contract_address
+    noRestrictions = restrictions.no_restrictions
+    openToGeneralResearchAndClinicalCare = restrictions.open_to_general_research_and_clinical_care
+    openToHMBResearch = restrictions.open_to_HMB_research
+    openToPopulationAndAncestryResearch = restrictions.open_to_population_and_ancestry_research
+    openToDiseaseSpecific = restrictions.open_to_disease_specific
+
+    d = compile_and_extract_interface_Consent()
+    abi = d["abi"]
+
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+    user = w3.eth.account.privateKeyToAccount(private_key)
+
+    nonce = w3.eth.getTransactionCount(user_address)
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
+    gas = contract_instance.functions.UploadDataPrimaryCategory(user_address, noRestrictions,openToGeneralResearchAndClinicalCare,openToHMBResearch,openToPopulationAndAncestryResearch,openToDiseaseSpecific).estimateGas(txn_dict)
+    if estimate:
+        return gas
+    contract_txn = contract_instance.functions.UploadDataPrimaryCategory(user_address, noRestrictions,openToGeneralResearchAndClinicalCare,openToHMBResearch,openToPopulationAndAncestryResearch,openToDiseaseSpecific).buildTransaction(txn_dict)
+    
+    return sign_and_send(contract_txn, private_key, "upload consent statements to ConsentContract")
+
+
+def give_research_purpose(consentContract, rp, user, estimate):
+    from web3 import Web3
+    contract_address = consentContract.contract_address
+  
+
+    d = compile_and_extract_interface_Consent()
+    abi = d["abi"]
+
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+    user = w3.eth.account.privateKeyToAccount(private_key)
+    nonce = w3.eth.getTransactionCount(user_address)
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
+    gas = contract_instance.functions.giveResearchPurpose(user_address, rp.use_for_methods_development, rp.use_for_reference_or_control_material, rp.use_for_populations_research, rp.use_for_ancestry_research, rp.use_for_HMB_research).estimateGas()
+
+    txn_dict["gas"]=gas
+
+    if estimate:
+        return gas
         
-        # Read in LUCE contract code
-        with open(SOLIDITY_CONTRACT_FILE, 'r') as file: # Adjust file_path for use in Jupyter/Django
-            contract_source_code = file.read()
-            
-        # Compile & Store Compiled source code
-        compiled_sol = compile_source(contract_source_code)
+    contract_txn = contract_instance.functions.giveResearchPurpose(user_address, rp.use_for_methods_development, rp.use_for_reference_or_control_material, rp.use_for_populations_research, rp.use_for_ancestry_research, rp.use_for_HMB_research).buildTransaction(txn_dict)
+    return sign_and_send(contract_txn, private_key, "setting research purpuse in the consent contract")
 
-        # Extract full interface as dict from compiled contract
-        contract_interface = compiled_sol['<stdin>:Influencer']
 
-        # Extract abi and bytecode
-        abi = contract_interface['abi']
-        bytecode = contract_interface['bin']
+
+def set_registry_address(datacontract, registry_address ,estimate):
+    from web3 import Web3
+    d = compile_and_extract_interface_Main()
+    abi = d["abi"]
+    contract_address = datacontract.contract_address
+
+    user = datacontract.user
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+    user = w3.eth.account.privateKeyToAccount(private_key)
+    nonce = w3.eth.getTransactionCount(user_address)
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
+    
+    gas = contract_instance.functions.setRegistryAddress(registry_address).estimateGas(txn_dict)
+    txn_dict["gas"]=gas
+
+    if estimate:
+        return gas
+    
+    contract_txn =  contract_instance.functions.setRegistryAddress(registry_address).buildTransaction(txn_dict)
+    return sign_and_send(contract_txn, private_key, "setting registry address in Dataset contract" )
+
+def is_registered(luceregistry, user, usertype):
+    from web3 import Web3
+    d = compile_and_extract_interface_Registry()
+    abi = d["abi"]
+    contract_address = luceregistry.contract_address        
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+    user = w3.eth.account.privateKeyToAccount(private_key)
+    nonce = w3.eth.getTransactionCount(user_address)
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
+    if usertype == "requester":
+        isRegistered = contract_instance.functions.checkUser(user_address).call()#returns a int (user exist if int != 0)
+    else:
+        isRegistered = contract_instance.functions.checkProvider(user_address).call()#returns a boolean
+
+    return isRegistered
+
+
+def set_consent_address(datacontract, consent_address ,estimate):
+    from web3 import Web3
+    d = compile_and_extract_interface_Main()
+    abi = d["abi"]
+    contract_address = datacontract.contract_address
+
+    user = datacontract.user
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+    user = w3.eth.account.privateKeyToAccount(private_key)
+    nonce = w3.eth.getTransactionCount(user_address)
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
+    
+    gas = contract_instance.functions.setConsentAddress(consent_address).estimateGas(txn_dict)
+    txn_dict["gas"]=gas
+
+    if estimate:
+        return gas
+    
+    contract_txn =  contract_instance.functions.setConsentAddress(consent_address).buildTransaction(txn_dict)
+    return sign_and_send(contract_txn, private_key, "setting consent address in Dataset contract" )
+
+def register_provider(registry, user, estimate):
+    d = compile_and_extract_interface_Registry()
+    abi = d["abi"]
+    contract_address = registry.contract_address
+    user = user
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+    user = w3.eth.account.privateKeyToAccount(private_key)
+    nonce = w3.eth.getTransactionCount(user_address)
+
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
         
-        # Create dictionary with interface
-        d = dict()
-        d['abi']      = abi
-        d['bytecode'] = bytecode
-        d['full_interface'] = contract_interface
-        return(d)
+    gas = contract_instance.functions.newDataProvider(user_address).estimateGas()
+    txn_dict["gas"]=gas
 
+    if estimate:
+        return gas
+    
+    contract_txn =  contract_instance.functions.newDataProvider(user_address).buildTransaction(txn_dict)
+    return sign_and_send(contract_txn,private_key, "registering dataprovider in the LuceRegistry contract" )
 
-def publish_data_v3(provider_private_key, contract_address, description="Description", license=3, link="void"):
-    from web3 import Web3
-    
-    # Compile Luce contract and obtain interface
-    d = compile_and_extract_interface()
-    
-    # Establish web3 connection
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    
-    # Obtain user so we know his address for the 'from' field
-    private_key = provider_private_key
+def register_requester(registry, user, license, estimate):
+    d = compile_and_extract_interface_Registry()
+    abi = d["abi"]
+    contract_address = registry.contract_address
+    user = user
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
     user = w3.eth.account.privateKeyToAccount(private_key)
-    
-    # Obtain contract address & instantiate contract
-    contract_address = contract_address
-    luce = w3.eth.contract(address=contract_address, abi=d['abi'])
-    
-    # Construct raw transaction
-    nonce = w3.eth.getTransactionCount(user.address)
+    nonce = w3.eth.getTransactionCount(user_address)
+
     txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-    
-    luce_txn = luce.functions.publishData(description,link,license).buildTransaction(txn_dict)
-    
-    # Sign transaction
-    signed_txn = w3.eth.account.signTransaction(luce_txn, private_key)
-    
-    # Deploy
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    
-    # Wait for the transaction to be mined, and get the transaction receipt
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    
-    return tx_receipt
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
+        
+    gas = contract_instance.functions.registerNewUser(user_address, license).estimateGas()
+    txn_dict["gas"]=gas
 
-def add_requester_v3(requester_private_key, contract_address, license=3, purpose_code=3):
-    from web3 import Web3
+    if estimate:
+        return gas
     
+    contract_txn =  contract_instance.functions.registerNewUser(user_address,1).buildTransaction(txn_dict)
+    return sign_and_send(contract_txn, private_key, "registering data requester in LuceRegistry contract")
 
-    # Compile Luce contract and obtain interface
-    d = compile_and_extract_interface()
-    
-    # Establish web3 connection
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    
-    # Obtain user so we know his address for the 'from' field
-    private_key = requester_private_key
+def publish_dataset(datacontract, user, link, estimate):
+
+    description = datacontract.description
+    licence = datacontract.licence
+    d = compile_and_extract_interface_Main()
+    abi = d["abi"]
+    contract_address = datacontract.contract_address
+    user = user
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
     user = w3.eth.account.privateKeyToAccount(private_key)
-    
-    # Obtain contract address & instantiate contract
-    contract_address = contract_address
-    luce = w3.eth.contract(address=contract_address, abi=d['abi'])
-    
-    # Construct raw transaction
-    nonce = w3.eth.getTransactionCount(user.address)
-    txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
-    
-    license_type = license
-    # Obtain license from smart contract
-    license_type = luce.functions.getLicence().call()
-    luce_txn = luce.functions.addDataRequester(purpose_code,license_type).buildTransaction(txn_dict)
-    
-    # Sign transaction
-    signed_txn = w3.eth.account.signTransaction(luce_txn, private_key)
-    
-    # Deploy
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    
-    # Wait for the transaction to be mined, and get the transaction receipt
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    
-    return tx_receipt
+    nonce = w3.eth.getTransactionCount(user_address)
 
-def update_contract_v3(provider_private_key, contract_address, description="Updated Description", link="void"):
-    from web3 import Web3
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
+        
+    gas = 650432#contract_instance.functions.publishData(description, link, licence).estimateGas(txn_dict)
+    txn_dict["gas"]=gas
+
+    if estimate:
+        return gas
     
-    # Compile Luce contract and obtain interface
-    d = compile_and_extract_interface()
+    contract_txn =  contract_instance.functions.publishData(description, link, licence).buildTransaction(txn_dict)
+    return sign_and_send(contract_txn, private_key, "calling publishData function in Dataset Contract")
+
+def get_link(datacontract, user, estimate):
+    d = compile_and_extract_interface_Main()
+    abi = d["abi"]
+    contract_address = datacontract.contract_address
     
-    # Establish web3 connection
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
-    
-    # Obtain user so we know his address for the 'from' field
-    private_key = provider_private_key
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
     user = w3.eth.account.privateKeyToAccount(private_key)
-    
-    # Obtain contract address & instantiate contract
-    contract_address = contract_address
-    luce = w3.eth.contract(address=contract_address, abi=d['abi'])
-    
-    # Construct raw transaction
-    nonce = w3.eth.getTransactionCount(user.address)
+    nonce = w3.eth.getTransactionCount(user_address)
+
     txn_dict = {
-    'gas': 2000000,
-    'chainId': 3,
-    'gasPrice': w3.toWei('40', 'gwei'),
-    'nonce': nonce,
-    }
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'nonce': nonce,
+        }
+
     
-    luce_txn = luce.functions.updateData(description,link).buildTransaction(txn_dict)
+    contract_txn =  contract_instance.functions.getLink().call(txn_dict)
+    return contract_txn
+
+
+def add_data_requester(datacontract, access_time, purpose_code, user, estimate):
+    d = compile_and_extract_interface_Main()
+    abi = d["abi"]
+    contract_address = datacontract.contract_address
+    user_address = user.ethereum_public_key
+    private_key = user.ethereum_private_key
+    contract_instance = w3.eth.contract(address=contract_address, abi=abi)
+    user = w3.eth.account.privateKeyToAccount(private_key)
+    nonce = w3.eth.getTransactionCount(user_address)
+
+    txn_dict = {
+        'from': user_address,
+        'chainId': CHAIN_ID,
+        'gasPrice': w3.toWei('20', 'gwei'),
+        'nonce': nonce,
+        }
     
-    # Sign transaction
-    signed_txn = w3.eth.account.signTransaction(luce_txn, private_key)
-    
-    # Deploy
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    
-    # Wait for the transaction to be mined, and get the transaction receipt
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    
-    return tx_receipt
+
+    cost =  contract_instance.functions.expectedCosts().call()
+    txn_dict['value'] = cost
+  
+    gas = contract_instance.functions.addDataRequester(1,access_time).estimateGas(txn_dict)
+    txn_dict["gas"]=gas
+
+    if estimate:
+        return gas
+
+
+    contract_txn =  contract_instance.functions.addDataRequester(1, access_time).buildTransaction(txn_dict)
+    tx = sign_and_send(contract_txn, private_key, "add data requester to the LuceMain contract")
+    return tx
+
+def receipt_to_dict(tx_receipt, name):
+    receipt = {}
+    receipt["blockHash"] = tx_receipt.blockHash.hex()
+    receipt["blockNumber"] = tx_receipt.blockNumber
+    receipt["contractAddress"] = tx_receipt.contractAddress
+    receipt["cumulativeGasUsed"] = tx_receipt.cumulativeGasUsed
+    receipt["effectiveGasPrice"] = w3.toInt(hexstr = tx_receipt.effectiveGasPrice)
+    receipt["from"] = tx_receipt["from"]
+    receipt["gasUsed"] = tx_receipt.gasUsed
+    #receipt["logs"] = tx_receipt.logs
+    receipt["logsBloom"] = tx_receipt.logsBloom.hex()
+    receipt["status"] = tx_receipt.status
+    receipt["to"] = tx_receipt.to
+    receipt["transactionHash"] = tx_receipt.transactionHash.hex()
+    receipt["transactionIndex"] = tx_receipt.transactionIndex
+    receipt["type"] = tx_receipt.type
+    receipt["fees"] =  receipt["effectiveGasPrice"] * receipt["gasUsed"]
+    receipt["transaction name"] = name
+
+    return receipt
+
+def sign_and_send(contract_txn, private_key, name):
+    try:
+
+        signed_txn = w3.eth.account.signTransaction(contract_txn, private_key)
+        tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+        tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+        transaction = receipt_to_dict(tx_receipt, name)
+    except ValueError as e:
+        if DEBUG:
+            print()
+            print(e)
+        return [e,name] 
+    if DEBUG:
+        print("======================================================")
+        print(transaction)
+    return transaction
 
 
 
+"""
+OLD CODE I KEEP FOR REFERENCES 
 
-#### Initial Implementations
-# These implementations make use of the Ganache pre-funded
-# accounts. This is conveninent but doesn't scale well.
-# To smoothen the later transition to a hosted node like Infura
-# and using the official Ethereum testnet it it is preferable
-# to have full control over the accounts.
 
-def assign_address(user):
-    # Establish web3 connection
-    from web3 import Web3
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
+# Not used in Django Frontend anymore - kept for testing and reference
+def create_wallet_old():
+    print("This message comes from within my custom script")
+    
+    class EthAccount():
+        address = None
+        pkey = None
+
+    def create_wallet():
+        eth_account = EthAccount()
+        eth_account_raw = w3.eth.account.create()
+        eth_account.address = eth_account_raw.address
+        eth_account.pkey = eth_account_raw.privateKey
+        return (eth_account)
+
+    eth_account = create_wallet()
+
+    # Extract default accounts created by ganache
     accounts = w3.eth.accounts
-    # Obtain user model
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    # Obtain user count
-    # The user count is used as a 'global counter'
-    # to ensure each new user that registers is assigned
-    # a new one of the pre-generated ganache acounts
-    # I use this workaround as a proxy to track the
-    # 'global state' of how many accounts are already
-    # asigned.
-    user_count = len(User.objects.all())
-    idx = user_count-1
-    # Assign web3 account to user
-    current_user = user
-    current_user.ethereum_public_key = accounts[idx]
-    current_user.save()
-    # Return user with address associated
-    return current_user
 
+    # Instantiate faucet object
+    faucet = EthAccount()
 
-
-def deploy_contract(user):
-    from solcx import compile_source
-    from web3 import Web3
     
-    # Read in LUCE contract code
-    with open(SOLIDITY_CONTRACT_FILE, 'r') as file:
-        contract_source_code = file.read()
+
+    def send_ether(amount_in_ether, recipient_address, sender_address = faucet.address, sender_pkey=faucet.pkey):
+        amount_in_wei = w3.toWei(amount_in_ether,'ether')
+
+        # How many transactions have been made by wallet?
+        # This is required and prevents double-spending.
+        # Different from nonce in block mining.
+        nonce = w3.eth.getTransactionCount(sender_address)
         
-    # Compile & Store Compiled source code
-    compiled_sol = compile_source(contract_source_code)
+        # Specify transcation dictionary
+        txn_dict = {
+                'to': recipient_address,
+                'value': amount_in_wei,
+                'gas': 2000000,
+                'gasPrice': w3.toWei('1', 'wei'),
+                'nonce': nonce,
+                'chainId': CHAIN_ID
+        }
+        
+        # Sign transaction
+        signed_txn = w3.eth.account.signTransaction(txn_dict, sender_pkey)
 
-    # Extract full interface as dict from compiled contract
-    contract_interface = compiled_sol['<stdin>:Dataset']
+        # Send transaction & store transaction hash
+        txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
-    # Extract abi and bytecode
-    abi = contract_interface['abi']
-    bytecode = contract_interface['bin']
-    
-    # Establish web3 connection
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
+        # Check if transaction was added to blockchain
+        # time.sleep(0.5)
+        txn_receipt = w3.eth.getTransactionReceipt(txn_hash)
+        return txn_hash
 
-    # Obtain user
-    current_user = user
-    
-    # Set sender
-    w3.eth.defaultAccount = current_user.ethereum_public_key
+    # Send ether and store transaction hash
+    txn_hash = send_ether(1.5,eth_account.address)
 
-    # Create contract blueprint
-    Luce = w3.eth.contract(abi=abi, bytecode=bytecode)
+    # Show balance
+    print("The balance of the new account is:\n")
+    print(w3.eth.getBalance(eth_account.address))
 
-    # Submit the transaction that deploys the contract
-    tx_hash = Luce.constructor().transact()
-    
-    # Wait for the transaction to be mined, and get the transaction receipt
-    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-    
-    # Obtain address of freshly deployed contract
-    contractAddress = tx_receipt.contractAddress
+    import os
+ 
+    dirpath = os.getcwd()
+    print("current directory is : " + dirpath)
+    foldername = os.path.basename(dirpath)
+    print("Directory name is : " + foldername)
 
-    return contractAddress
 
 
 def deploy_contract_with_data(user, description, license, link=""):
@@ -670,7 +605,6 @@ def deploy_contract_with_data(user, description, license, link=""):
     bytecode = contract_interface['bin']
     
     # Establish web3 connection
-    w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
 
     # Obtin user
     current_user = user
@@ -700,76 +634,38 @@ def deploy_contract_with_data(user, description, license, link=""):
     tx_hash = luce.functions.publishData(description, link, license).transact()
     
     return contract_address
-	
-# Not used in Django Frontend anymore - kept for testing and reference
-def create_wallet_old():
-    print("This message comes from within my custom script")
-    
-    class EthAccount():
-        address = None
-        pkey = None
 
-    def create_wallet():
-        eth_account = EthAccount()
-        eth_account_raw = w3.eth.account.create()
-        eth_account.address = eth_account_raw.address
-        eth_account.pkey = eth_account_raw.privateKey
-        return (eth_account)
+#### Initial Implementations
+# These implementations make use of the Ganache pre-funded
+# accounts. This is conveninent but doesn't scale well.
+# To smoothen the later transition to a hosted node like Infura
+# and using the official Ethereum testnet it it is preferable
+# to have full control over the accounts.
 
-    eth_account = create_wallet()
-
-    # Extract default accounts created by ganache
+def assign_address(user):
+    # Establish web3 connection
     accounts = w3.eth.accounts
+    # Obtain user model
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    # Obtain user count
+    # The user count is used as a 'global counter'
+    # to ensure each new user that registers is assigned
+    # a new one of the pre-generated ganache acounts
+    # I use this workaround as a proxy to track the
+    # 'global state' of how many accounts are already
+    # asigned.
+    user_count = len(User.objects.all())
+    idx = user_count-1
+    # Assign web3 account to user
+    current_user = user
+    current_user.ethereum_public_key = accounts[idx]
+    current_user.save()
+    # Return user with address associated
+    return current_user
+	
 
-    # Instantiate faucet object
-    faucet = EthAccount()
 
-    # Wallet address
-    faucet.address       = "0x92D44e8579620F2Db88A12E70FE38e8CDB3541BA"
-    # Private key (from Ganache interface)
-    faucet.pkey   = "0x4a2cb86c7d3663abebf7ab86a6ddc3900aee399750f35e65a44ecf843ec39116"
+"""
 
-    # Define a function to send ether
 
-    def send_ether(amount_in_ether, recipient_address, sender_address = faucet.address, sender_pkey=faucet.pkey):
-        amount_in_wei = w3.toWei(amount_in_ether,'ether');
-
-        # How many transactions have been made by wallet?
-        # This is required and prevents double-spending.
-        # Different from nonce in block mining.
-        nonce = w3.eth.getTransactionCount(sender_address)
-        
-        # Specify transcation dictionary
-        txn_dict = {
-                'to': recipient_address,
-                'value': amount_in_wei,
-                'gas': 2000000,
-                'gasPrice': w3.toWei('40', 'gwei'),
-                'nonce': nonce,
-                'chainId': 3
-        }
-        
-        # Sign transaction
-        signed_txn = w3.eth.account.signTransaction(txn_dict, sender_pkey)
-
-        # Send transaction & store transaction hash
-        txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-
-        # Check if transaction was added to blockchain
-        # time.sleep(0.5)
-        txn_receipt = w3.eth.getTransactionReceipt(txn_hash)
-        return txn_hash
-
-    # Send ether and store transaction hash
-    txn_hash = send_ether(1.5,eth_account.address)
-
-    # Show balance
-    print("The balance of the new account is:\n")
-    print(w3.eth.getBalance(eth_account.address))
-
-    import os
- 
-    dirpath = os.getcwd()
-    print("current directory is : " + dirpath)
-    foldername = os.path.basename(dirpath)
-    print("Directory name is : " + foldername)

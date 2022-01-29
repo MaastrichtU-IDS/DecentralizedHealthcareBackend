@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 from .views import *
-from rest_framework.authtoken import views
 
 
 # Import settings to access environment variables 
@@ -21,9 +20,14 @@ urlpatterns = [
     path('user/authenticated/', PrivateUserInfoView.as_view()),
     path('user/authenticated/update/', UserUpdateView.as_view()),
     path('user/all/', UserListView.as_view()),
-    path('user/login/', views.obtain_auth_token),
-
-    path('deployContract/', ContractView.as_view())
+    path('user/login/', ObtainAuthToken.as_view()),
+    path('admin/deployRegistry/', LuceRegistryView.as_view()),
+    path('contract/all/', ContractsListView.as_view()),
+    path('contract/dataUpload/', UploadDataView.as_view()),
+    path('contract/requestAccess/', RequestDatasetView.as_view()),
+    path('contract/getLink/', GetLink.as_view()),
+    path('contract/<int:id>/', RetrieveContractByUserIDView.as_view()),
+    path('contract/search/', SearchContract.as_view()),
     ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
