@@ -1,7 +1,10 @@
+from pyexpat import model
 from accounts.models import *
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 import utils.custom_exeptions as custom_exeptions
+from rest_framework.response import Response
+
 
 class PublicUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,14 +48,55 @@ class RestrictionsSerializer(serializers.ModelSerializer):
         model = Restrictions
         fields = ["id", "no_restrictions", "open_to_general_research_and_clinical_care", "open_to_HMB_research", "open_to_population_and_ancestry_research", "open_to_disease_specific"]
 
-  
-   
-    
+class GeneralResearchPurposeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GeneralResearchPurpose
+        fields = ["use_for_methods_development", "use_for_reference_or_control_material", "use_for_research_concerning_populations", "use_for_research_ancestry", "use_for_biomedical_research"]
+
+class HMBResearchPurposeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HMBResearchPurpose
+        fields = ["use_for_research_concerning_fundamental_biology", "use_for_research_concerning_genetics", "use_for_research_concerning_drug_development", "use_for_research_concerning_any_disease", "use_for_research_concerning_age_categories","use_for_research_concerning_gender_categories"]
+
+class ClinicalPurposeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClinicalPurpose
+        fields = ["use_for_decision_support", "use_for_disease_support"]  
+
 class ResearchPurposeSerializer(serializers.ModelSerializer):
+    general_research_purpose = GeneralResearchPurposeSerializer()
+    HMB_research_purpose = HMBResearchPurposeSerializer()
+    clinical_purpose = ClinicalPurposeSerializer()
     class Meta:
         model = ResearchPurpose
-        fields = ["use_for_methods_development", "use_for_reference_or_control_material", "use_for_populations_research", "use_for_ancestry_research", "use_for_HMB_research"]
+        fields = ["general_research_purpose", "HMB_research_purpose", "clinical_purpose"]
     
+    def create(self, validated_data):
+        print(0.5)
+        general_research_purpose = validated_data.get("general_research_purpose", {})
+        HMB_research_purpose = validated_data.get("HMB_research_purpose",{})
+        clinical_purpose = validated_data.get("clinical_purpose",{})
+
+        GRP_serializer = GeneralResearchPurposeSerializer(data = general_research_purpose)
+        if not GRP_serializer.is_valid():
+            return custom_exeptions.validation_exeption(GRP_serializer)
+        GRP_purpose = GRP_serializer.save()
+    
+        HMB_serializer = HMBResearchPurposeSerializer(data = HMB_research_purpose)
+        if not HMB_serializer.is_valid():
+            return custom_exeptions.validation_exeption(HMB_serializer)
+        HMB_purpose = HMB_serializer.save()
+      
+
+        clinical_serializer = ClinicalPurposeSerializer(data = clinical_purpose)
+        if not clinical_serializer.is_valid():
+            custom_exeptions.validation_exeption(clinical_serializer)
+            return custom_exeptions.validation_exeption(clinical_serializer)
+        clinical_purpose_obj = clinical_serializer.save()
+
+        rp = ResearchPurpose.objects.create(general_research_purpose = GRP_purpose, HMB_research_purpose = HMB_purpose, clinical_purpose=clinical_purpose_obj)
+
+        return rp
  
 
 class ConsentContractSerializer(serializers.ModelSerializer):
@@ -73,19 +117,6 @@ class ConsentContractSerializer(serializers.ModelSerializer):
         restriction =  restrictions.save()
         
         consentContract = ConsentContract.objects.create(user = user, restrictions = restriction)
-        """
-        receipt = consentContract.deploy_contract()
-        if type(receipt is ValueError):
-            return receipt
-
-
-        receipt2 = consentContract.upload_data_consent(estimate)
-        if(estimate):
-            consentContract.delete()
-            restriction.delete()
-            return receipt2 + self.DEPLOYMENT_COST
-        consentContract.contract_address = receipt.contractAddress
-        """
         return consentContract
 
 #TODO: change validation to restrict the creation of the contract

@@ -270,167 +270,14 @@ contract ConsentCode{
         return (DataRequesterAcc);
     }
 
-
-    /**
-    This methods allows users to check if a set of requirements and restrictions matches before sending the request
-    (which costs fees) for interpretability I left at the end of the contract the old version of the method and a table
-    with the indeces.
-    */
-    function CheckAccess(bool[49] memory params) pure public returns(bool){
-
-        /// **Data provider primary categories
-        
-        /// NoRestrictions Block           
-        if(params[0]==true) {
-                return true;
-            }
-            /// GeneralResearch and ClinicalCare block
-            else if(((params[1] == true && 
-            (params[2]== true || 
-            params[3] == true || 
-            params[4] == false ||
-            params[5] == true ||
-            params[6] == true) || params[7] ==true)||
-            
-            /// HMB research block
-            (params[8] == true && 
-            (params[9]== true || 
-            params[10] == true || 
-            params[11] == true || 
-            params[12]   == false || 
-            params[13] == true || 
-            params[14] == true) || params[15] == true)||
-            
-            /// Population and Ancestry research block
-            (params[16] == true &&
-            (params[17] == true || 
-            params[18] == true) || params[7]==true)||
-            
-            /// Disease specific research Block
-            (params[19] == true &&
-            (params[20] == true) || params[15]==true)) &&
-            
-            /// **Data provider secondary categories
-            
-            /// Research specific restriction Block
-            ((params[21] == true && params[3]== false) || 
-             (params[21] == false && (params[3]== true || params[3]== false))) &&
-            
-            /// research use only Block
-            ((params[22] == true && params[4] == false) ||
-            (params[22] == false && (params[4] == true || params[4] == false))) &&
-           
-            /// Genetics study Block
-            ((params[23]==true && params[24] == true) ||
-            (params[23]==false && (params[24] == false || params[24] == true))) &&
-            
-            /// No general method research block
-            ((params[25]==true && params[2] == false) ||
-            (params[25]==false && (params[2] == true || params[2] == false)))  &&
-            
-            /// **Data provider requirements
-            
-            /// Profit block
-            ((params[26] == true && (params[27] == true && params[28] == false &&
-            params[29] == false)) || 
-            (params[26] == false && (params[27] == false || params[27] == true || params[28] == true || params[28] == false ||
-            params[29] == true || params[29] == false))) &&
-            
-            
-            /// Publication required
-            ((params[30] == true && params[31] == false) ||
-            (params[30] == false && (params[31] == true || params[31] == false))) &&
-            
-            /// Geographical restrictions
-            ((params[32] == true && params[33] == true) ||
-            (params[32] == false && (params[33] == false || params[33] == true))) &&
-              
-            /// Time limit restrictions
-            ((params[34] == true && params[35] == false) ||
-            (params[34] == false && (params[35] == true || params[35] == false))) &&
-             
-            /// Collaboration required
-            ((params[36] == true && params[37] == false) ||
-            (params[36] == false && (params[37] == true || params[37] == false))) &&
-            
-            /// Ethics approval required
-            ((params[38] == true && params[39] == false) ||
-            (params[38] == false && (params[39] == true || params[39] == false))) &&
-            
-            /// Data security measures required
-            ((params[40] == true && params[41] == false  && params[42] == false && params[43] == false && params[44] == false && params[45] == false && params[46] == false) ||
-            (params[40] == false && ((params[41] == true  || params[42] == true || params[43] == true || params[44] == true || params[45] == true || params[46] == true) || (params[41] == false  || params[42] == false || params[43] == false || params[44] == false || params[45] == false || params[46] == false)))) &&
-            
-            /// Cost on Use
-            ((params[47] == true && params[48] == false) || 
-            (params[47] == false && (params[48] == true || params[48] == false)))) 
-            {
-            return true;
-        } else{
-            return false;
-        }
-    }
-
+    
     
     // AccessData function implements the logic of compliance between the consent and purpose statement
     function AccessData (address _address1,address _address2) view public returns (bool) { 
-        return CheckAccess([
-            objects[_address1].NoRestrictions,
-            objects[_address1].OpenToGeneralResearchAndClinicalCare,
-            researchpurpose[_address2].UseForMethodsDevelopment,
-            researchpurpose[_address2].UseForReferenceOrControlMaterial,
-            researchpurpose[_address2].UseForHMBResearch,
-            researchpurpose[_address2].UseForPopulationsResearch,
-            researchpurpose[_address2].UseForAncestryResearch,
-            person[_address2].UseByAcademicProfessionals,
-            objects[_address1].OpenToHMBResearch,
-            hmbresearchpurpose[_address2].UseForFundamentalBioResearch,
-            hmbresearchpurpose[_address2].UseForGeneticsResearch,
-            hmbresearchpurpose[_address2].UseForDrugDevelopmentResearch,
-            hmbresearchpurpose[_address2].UseForAnyDiseaseResearch,
-            hmbresearchpurpose[_address2].UseForAgeCategoriesResearch,
-            hmbresearchpurpose[_address2].UseForGenderCategoriesResearch,
-            person[_address2].UseByClinicalProfessionals,
-            objects[_address1].OpenToPopulationAndAncestryResearch,
-            researchpurpose[_address2].UseForPopulationsResearch,
-            researchpurpose[_address2].UseForAncestryResearch,
-            objects[_address1].OpenToDiseaseSpecific,
-            hmbresearchpurpose[_address2].UseForAnyDiseaseResearch,
-            objects1[_address1].ResearchSpecificRestrictions,
-            objects1[_address1].OpenToResearchUseOnly,
-            objects1[_address1].OpenToGeneticStudiesOnly,
-            hmbresearchpurpose[_address2].UseForGeneticsResearch,
-            objects1[_address1].NoGeneralMethodResearch,
-            objects2[_address1].OpenToNonProfitUseOnly,
-            profit[_address2].UseForNonProfitPurpose,
-            profit[_address2].UseForProfitPurpose,
-            person[_address2].UseByProfitMakingProfessionals,
-            objects2[_address1].PublicationRequired,
-            datarequesterterms[_address2].NoPublicationRequired,
-            objects2[_address1].GeographicSpecificRestriction,
-            geographicrestriction[_address2].UseBySpecifiedCountries,
-            objects2[_address1].TimeLimitOnUse,
-            datarequesterterms[_address2].NoTimelineRestrictions,
-            objects2[_address1].CollaborationRequired,
-            datarequesterterms[_address2].NoCollaborationRequired,
-            objects2[_address1].EthicsApprovalrequired,
-            datarequesterterms[_address2].NoFormalApprovalRequired,
-            objects2[_address1].DataSecurityMeasuresRequired,
-            datarequesterterms[_address2].NoDataSecurityMeasures,
-            datarequesterterms[_address2].NoDataDestructionRequired,
-            datarequesterterms[_address2].NoLinkingOfAccessedRecords,
-            datarequesterterms[_address2].NoRecontactingDataSubjects,
-            datarequesterterms[_address2].NoIntellectualPropertyClaims,
-            datarequesterterms[_address2].NoUseOfAccessedResources,
-            objects2[_address1].CostOnUse,
-            datarequesterterms[_address2].NoFeesForAccess
-        ]); 
-    }
-}
-/*-----------------CONSENT LOGIC-----------------------------------------------*/
-
-/**
-/// NoRestrictions Block           
+        
+        /// **Data provider primary categories
+        
+        /// NoRestrictions Block           
         if(objects[_address1].NoRestrictions==true) {
                 return true;
             }
@@ -440,7 +287,7 @@ contract ConsentCode{
             researchpurpose[_address2].UseForReferenceOrControlMaterial == true || 
             researchpurpose[_address2].UseForHMBResearch == false ||
             researchpurpose[_address2].UseForPopulationsResearch == true ||
-            researchpurpose[_address2].UseForAncestryResearch == true) || person[_address2].UseByAcademicProfessionals==true)||
+            researchpurpose[_address2].UseForAncestryResearch == true) && person[_address2].UseByAcademicProfessionals==true)||
             
             /// HMB research block
             (objects[_address1].OpenToHMBResearch == true && 
@@ -449,16 +296,16 @@ contract ConsentCode{
             hmbresearchpurpose[_address2].UseForDrugDevelopmentResearch == true || 
             hmbresearchpurpose[_address2].UseForAnyDiseaseResearch == false || 
             hmbresearchpurpose[_address2].UseForAgeCategoriesResearch == true || 
-            hmbresearchpurpose[_address2].UseForGenderCategoriesResearch == true) || person[_address2].UseByClinicalProfessionals==true)||
+            hmbresearchpurpose[_address2].UseForGenderCategoriesResearch == true) && person[_address2].UseByClinicalProfessionals==true)||
             
             /// Population and Ancestry research block
             (objects[_address1].OpenToPopulationAndAncestryResearch == true &&
             (researchpurpose[_address2].UseForPopulationsResearch == true || 
-            researchpurpose[_address2].UseForAncestryResearch == true) || person[_address2].UseByAcademicProfessionals==true)||
+            researchpurpose[_address2].UseForAncestryResearch == true) && person[_address2].UseByAcademicProfessionals==true)||
             
             /// Disease specific research Block
             (objects[_address1].OpenToDiseaseSpecific == true &&
-            (hmbresearchpurpose[_address2].UseForAnyDiseaseResearch == true) || person[_address2].UseByClinicalProfessionals==true)) &&
+            (hmbresearchpurpose[_address2].UseForAnyDiseaseResearch == true) && person[_address2].UseByClinicalProfessionals==true)) &&
             
             /// **Data provider secondary categories
             
@@ -519,68 +366,5 @@ contract ConsentCode{
         } else{
             return false;
         } 
-        
-/*----------------------------CONSENT INDECES------------------------------------
-
-no restrictions  				        [0]
-OpenToGeneralResearchAndClinicalCare 	[1]
-UseForMethodsDevelopment 			    [2]
-UseForReferenceOrControlMaterial 		[3]
-UseForHMBResearch				        [4]
-UseForPopulationsResearch			    [5]
-UseForAncestryResearch				    [6]
-UseByAcademicProfessionals			    [7]
-
-OpenToHMBResearch				        [8]
-UseForFundamentalBioResearch			[9]
-UseForGeneticsResearch				    [10]
-UseForDrugDevelopmentResearch			[11]
-UseForAnyDiseaseResearch			    [12]
-UseForAgeCategoriesResearch 			[13]
-UseForGenderCategoriesResearch			[14]
-UseByClinicalProfessionals			    [15]
-
-OpenToPopulationAndAncestryResearch		[16]
-UseForPopulationsResearch			    [17]
-UseForAncestryResearch				    [18]
-
-OpenToDiseaseSpecific				    [19]
-UseForAnyDiseaseResearch			    [20]
-
-ResearchSpecificRestrictions			[21]
-OpenToResearchUseOnly				    [22]
-OpenToGeneticStudiesOnly			    [23]
-UseForGeneticsResearch				    [24]
-NoGeneralMethodResearch				    [25]
-
-OpenToNonProfitUseOnly				    [26]
-UseForNonProfitPurpose				    [27]
-UseForProfitPurpose				        [28]
-UseByProfitMakingProfessionals			[29]
-
-PublicationRequired				        [30]
-NoPublicationRequired				    [31]
-
-GeographicSpecificRestriction			[32]
-UseBySpecifiedCountries				    [33]
-
-TimeLimitOnUse					        [34]
-NoTimelineRestrictions				    [35]
-
-CollaborationRequired				    [36]
-NoCollaborationRequired				    [37]
-
-EthicsApprovalrequired				    [38]
-NoFormalApprovalRequired			    [39]
-
-DataSecurityMeasuresRequired			[40]
-NoDataSecurityMeasures				    [41]
-NoDataDestructionRequired			    [42]
-NoLinkingOfAccessedRecords			    [43]
-NoRecontactingDataSubjects			    [44]	
-NoIntellectualPropertyClaims			[45]
-NoUseOfAccessedResources			    [46]
-
-CostOnUse					            [47]
-NoFeesForAccess					        [48]
-*/
+    }
+}

@@ -196,18 +196,36 @@ class Restrictions(models.Model):
     open_to_population_and_ancestry_research = models.BooleanField()
     open_to_disease_specific = models.BooleanField()
 
+
+class GeneralResearchPurpose(models.Model):
+    use_for_methods_development = models.BooleanField(default = False)
+    use_for_reference_or_control_material = models.BooleanField(default = False)
+    use_for_research_concerning_populations = models.BooleanField(default = False)
+    use_for_research_ancestry = models.BooleanField(default = False)
+    use_for_biomedical_research = models.BooleanField(default = False)
+
+class HMBResearchPurpose(models.Model):
+    use_for_research_concerning_fundamental_biology = models.BooleanField(default = False)
+    use_for_research_concerning_genetics = models.BooleanField(default = False)
+    use_for_research_concerning_drug_development = models.BooleanField(default = False)
+    use_for_research_concerning_any_disease = models.BooleanField(default = False)
+    use_for_research_concerning_age_categories = models.BooleanField(default = False)
+    use_for_research_concerning_gender_categories = models.BooleanField(default = False)
+
+class ClinicalPurpose(models.Model):
+    use_for_decision_support = models.BooleanField(default = False)
+    use_for_disease_support = models.BooleanField(default = False)
+
 class ResearchPurpose(models.Model):
-    use_for_methods_development = models.BooleanField()
-    use_for_reference_or_control_material = models.BooleanField() 
-    use_for_populations_research = models.BooleanField()
-    use_for_ancestry_research = models.BooleanField()
-    use_for_HMB_research = models.BooleanField()
+    general_research_purpose = models.ForeignKey(GeneralResearchPurpose, on_delete=models.CASCADE, null = True)
+    HMB_research_purpose = models.ForeignKey(HMBResearchPurpose, on_delete=models.CASCADE, null = True)
+    clinical_purpose = models.ForeignKey(ClinicalPurpose, on_delete=models.CASCADE, null = True)
 
 class ConsentContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
-    research_purpuse = models.ForeignKey(ResearchPurpose, on_delete=models.CASCADE, null =True)
+    research_purpose = models.ForeignKey(ResearchPurpose, on_delete=models.CASCADE, null =True)
 
     def upload_data_consent(self, estimate):
         return web3.upload_data_consent(self, estimate)
@@ -223,9 +241,18 @@ class ConsentContract(models.Model):
         self.save()
         return tx_receipt
 
-    def give_research_purpose(self, rp, user, estimate):
-        tx = web3.give_research_purpose(self, rp, user, estimate)
+    def give_clinical_research_purpose(self, user, estimate):
+        tx = web3.give_clinical_research_purpose(self, user, estimate)
         return tx
+
+    def give_HMB_research_purpose(self, user, estimate):
+        tx = web3.give_HMB_research_purpose(self, user, estimate)
+        return tx
+
+    def give_general_research_purpose(self, user, estimate):
+        tx = web3.give_general_research_purpose(self, user, estimate)
+        return tx
+
 
 
 
@@ -262,6 +289,9 @@ class DataContract(models.Model):
     def getLink(self, user, estimate):
         link = web3.get_link(self, user, estimate)
         return link
+    def checkAccess(self, user, researchpurpose):
+        hasAccess = web3.checkAccess(self,user, researchpurpose)
+        return hasAccess
 
 
 class LuceRegistry(models.Model):
