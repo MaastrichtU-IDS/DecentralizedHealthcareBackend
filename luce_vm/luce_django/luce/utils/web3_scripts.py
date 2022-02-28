@@ -2,8 +2,8 @@ from web3 import Web3
 import time
 
 ###CONNECT TO ETH NETWORK USING HOSTED NODE (infura)##########
-w3 = Web3(Web3.WebsocketProvider("wss://rinkeby.infura.io/ws/v3/839112f3db884bde86889ebbac153ced"))
-CHAIN_ID = 4
+#w3 = Web3(Web3.WebsocketProvider("wss://rinkeby.infura.io/ws/v3/839112f3db884bde86889ebbac153ced"))
+#CHAIN_ID = 4
 
 ###CONNECT TO ETH NETWORK USING LOCAL LIGHT NODE (GETH)##########
 #w3 = Web3(Web3.IPCProvider("/home/vagrant/.ethereum/rinkeby/geth.ipc"))
@@ -11,8 +11,8 @@ CHAIN_ID = 4
 
 
 ###CONNECT TO POLYGON NETWORK USING HOSTED NODE##########
-#w3 = Web3(Web3.HTTPProvider("https://rpc-mumbai.matic.today"))
-#CHAIN_ID = 80001
+w3 = Web3(Web3.HTTPProvider("https://rpc-mumbai.matic.today"))
+CHAIN_ID = 80001
 
 
 
@@ -230,7 +230,7 @@ def upload_data_consent(consent_obj, estimate):
     gas = transact_function(contract_instance.functions.UploadDataPrimaryCategory(user_address, noRestrictions,openToGeneralResearchAndClinicalCare,openToHMBResearch,openToPopulationAndAncestryResearch,openToDiseaseSpecific).estimateGas,txn_dict, "estimating gas for: upload consent statements to ConsentContract" )
     if type(gas) is list:
         return gas
-    if estimate:
+    if estimate is True:
         return gas
 
     txn_dict['gas']= gas
@@ -262,7 +262,7 @@ def give_clinical_research_purpose(consentContract,  user, estimate):
     if type(gas) is list:
         return gas
     txn_dict["gas"]=gas
-    if estimate:
+    if estimate is True:
         return gas
     contract_txn = transact_function(contract_instance.functions.giveClinicalPurpose(user_address, rp.use_for_decision_support, rp.use_for_disease_support).buildTransaction, txn_dict, "building transaction: setting clinical purpose in the consent contract")
     if type(contract_txn) is list:
@@ -291,7 +291,7 @@ def give_HMB_research_purpose(consentContract,  user, estimate):
     if type(gas) is list:
         return gas
     txn_dict["gas"]=gas
-    if estimate:
+    if estimate is True:
         return gas
     contract_txn = transact_function(contract_instance.functions.giveHMBPurpose(user_address, rp.use_for_research_concerning_fundamental_biology, rp.use_for_research_concerning_genetics, rp.use_for_research_concerning_drug_development, rp.use_for_research_concerning_any_disease, rp.use_for_research_concerning_age_categories,rp.use_for_research_concerning_gender_categories).buildTransaction, txn_dict, "building transaction: setting HMB research purpose in the consent contract")
     if type(contract_txn) is list:
@@ -320,7 +320,7 @@ def give_general_research_purpose(consentContract,  user, estimate):
     if type(gas) is list:
         return gas
     txn_dict["gas"]=gas
-    if estimate:
+    if estimate is True:
         return gas
     contract_txn = transact_function(contract_instance.functions.giveResearchPurpose(user_address, rp.use_for_methods_development, rp.use_for_reference_or_control_material, rp.use_for_research_concerning_populations, rp.use_for_research_ancestry, rp.use_for_biomedical_research).buildTransaction, txn_dict, "building transaction: setting general research purpose in the consent contract")
     if type(contract_txn) is list:
@@ -349,13 +349,14 @@ def set_registry_address(datacontract, registry_address ,estimate):
     
     gas = transact_function(contract_instance.functions.setRegistryAddress(registry_address).estimateGas, txn_dict, "estimating gas for setting registry address in Dataset contract")
     if type(gas) is list:
+        print("-----------")
         return gas
-
     txn_dict["gas"]=gas
-    if estimate:
+    if estimate is True:
+        print("####################")
         return gas
-    
     contract_txn = transact_function(contract_instance.functions.setRegistryAddress(registry_address).buildTransaction, txn_dict, "building transaction: setting registry address in Dataset contract")
+    print(contract_txn)
     return sign_and_send(contract_txn, private_key, "sending transaction: setting registry address in Dataset contract" )
 
 def is_registered(luceregistry, user, usertype):
@@ -405,7 +406,7 @@ def set_consent_address(datacontract, consent_address ,estimate):
     if type(gas) is list:
         return gas
     txn_dict["gas"]=gas
-    if estimate:
+    if estimate is True:
         return gas
     
     contract_txn =  transact_function(contract_instance.functions.setConsentAddress(consent_address).buildTransaction,txn_dict, "building transaction: setting consent address in Dataset contract" )
@@ -436,7 +437,7 @@ def register_provider(registry, user, estimate):
         return gas    
     txn_dict["gas"]=gas
 
-    if estimate:
+    if estimate is True:
         return gas
     
     contract_txn =  transact_function(contract_instance.functions.newDataProvider(user_address).buildTransaction,txn_dict, "building transaction: registering dataprovider in the LuceRegistry contract" )
@@ -467,7 +468,7 @@ def register_requester(registry, user, license, estimate):
         return gas    
     txn_dict["gas"]=gas
 
-    if estimate:
+    if estimate is True:
         return gas
         
     contract_txn =  transact_function(contract_instance.functions.registerNewUser(user_address,license).buildTransaction,txn_dict, "building transaction: registering data requester in LuceRegistry contract" )
@@ -475,7 +476,7 @@ def register_requester(registry, user, license, estimate):
         return contract_txn
     return sign_and_send(contract_txn, private_key, "registering data requester in LuceRegistry contract")
 
-def publish_dataset(datacontract, user, link, estimate):
+def publish_dataset(datacontract, user, link, key, estimate):
 
     description = datacontract.description
     licence = datacontract.licence
@@ -495,17 +496,23 @@ def publish_dataset(datacontract, user, link, estimate):
         'gasPrice': w3.toWei('20', 'gwei'),
         'nonce': nonce,
         }
+
+    print(txn_dict)
         
-    #gas = 650432#contract_instance.functions.publishData(description, link, licence).estimateGas(txn_dict)
-    gas = transact_function(contract_instance.functions.publishData(description, link, licence).estimateGas,txn_dict,"estimating gas for: publishData function in Dataset Contract")
+    gas = 650432#contract_instance.functions.publishData(description, link, licence).estimateGas(txn_dict)
+    print(link)
+    print(key)
+    #gas = transact_function(contract_instance.functions.publishData(description, link, key, licence).estimateGas,txn_dict,"estimating gas for: publishData function in Dataset Contract")
     if type(gas) is list:
+            print("dfj")
             return gas
 
     txn_dict["gas"]=gas
-
-    if estimate:
+    if estimate is True:
         return gas
-    contract_txn =  transact_function(contract_instance.functions.publishData(description, link, licence).buildTransaction,txn_dict, "building transaction: publishData function in Dataset Contract" )
+
+    print("somethin weird")
+    contract_txn =  transact_function(contract_instance.functions.publishData(description, link,key, licence).buildTransaction,txn_dict, "building transaction: publishData function in Dataset Contract" )
     if type(contract_txn) is list:
         return contract_txn
     return sign_and_send(contract_txn, private_key, "sending transaction: publishData function in Dataset Contract")
@@ -529,6 +536,8 @@ def get_link(datacontract, user, estimate):
 
     
     contract_txn =  contract_instance.functions.getLink().call(txn_dict)
+    print("^^^^^^^^^^^^^^")
+    print(contract_txn)
     return contract_txn
 
 
@@ -559,7 +568,7 @@ def add_data_requester(datacontract, access_time, purpose_code, user, estimate):
     txn_dict["gas"]=gas
 
 
-    if estimate:
+    if estimate is True:
         return gas
 
 
@@ -647,6 +656,7 @@ def receipt_to_dict(tx_receipt, name):
 
 def sign_and_send(contract_txn, private_key, name):
     try:
+        print("transacting function "+name)
         signed_txn = w3.eth.account.signTransaction(contract_txn, private_key)
         tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
         tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
@@ -655,6 +665,7 @@ def sign_and_send(contract_txn, private_key, name):
         if DEBUG:
             print()
             print(e)
+      
         return [e,name] 
     if DEBUG:
         print("======================================================")
@@ -663,8 +674,10 @@ def sign_and_send(contract_txn, private_key, name):
 
 def transact_function(func, dictionary, name):
     try:
+        print("transacting function")
         return func(dictionary)
     except ValueError as e:
+        print(e)
         return [e, name]
 
 

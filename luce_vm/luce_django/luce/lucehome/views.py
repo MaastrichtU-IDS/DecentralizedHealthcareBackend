@@ -8,8 +8,10 @@ import utils.custom_exeptions as custom_exeptions
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import HttpResponse
 from .serializers import *
 from utils.web3_scripts import *
+from utils.fileController import *
 from utils.utils import get_initial_response
 
 
@@ -221,14 +223,15 @@ class UploadDataView(APIView):
     def post(self, request, format=None):
         user = request.user
         estimate = request.data.get("estimate", False)
-        link = request.data.get("link", False)
-
+        file = request.FILES.get("file")
+        response, key = uploadFile(file)
+        
+        #link = request.data.get("link", False)
+        request.data["link"] = response["Hash"]
+        request.data["key"] = key
+        print(request.data["key"])
         if user.ethereum_public_key is None:
             response = custom_exeptions.custom_message("user needs to have a wallet connected")
-            return Response(response["body"], response["status"]) 
-
-        if not link:
-            response = custom_exeptions.custom_message("link field is required")
             return Response(response["body"], response["status"]) 
 
         tx_receipts = []
@@ -281,7 +284,6 @@ class UploadDataView(APIView):
                 return Response(response["body"], response["status"]) 
         tx_receipts.append(tx_receipt2)
 
-
         tx_receipt3 = datacontract.set_registry_address(LuceRegistry.objects.get(pk=1), estimate)
         if type(tx_receipt3) is list:
                 datacontract.delete()
@@ -296,13 +298,13 @@ class UploadDataView(APIView):
                 return Response(response["body"], response["status"]) 
         tx_receipts.append(tx_receipt4)
 
-        tx_receipt5 = datacontract.publish_dataset(user,link, estimate)
+        tx_receipt5 = datacontract.publish_dataset(user,request.data["link"],request.data["key"], estimate)
         if type(tx_receipt5) is list:
                 datacontract.delete()
                 response = custom_exeptions.blockchain_exception(tx_receipt5, tx_receipts)
                 return Response(response["body"], response["status"]) 
         tx_receipts.append(tx_receipt5)
-    
+
         response = get_initial_response()
         response["error"]["code"] = 200
         response["error"]["message"] = "data published successfully"
@@ -423,10 +425,12 @@ class RequestDatasetView(APIView):
 class GetLink(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request, format=None):
+        print(request.data)
         estimate = request.data.pop("estimate", False)
         access_time = request.data.pop("access_time", 1000)
         purpose_code = request.data.pop("purpose_code", 1)
-        dataset_address = request.data.pop("dataset_address", False)
+        dataset_address = request.data.pop("dataset_address", "0xDa6e1aC11eC46B903e5F1C01b864C31D5baC2284")
+        print(dataset_address)
         if not DataContract.objects.filter(contract_address = dataset_address).exists():
             response = custom_exeptions.custom_message("dataset was not specified")
             return Response(response["body"], response["status"])
@@ -434,11 +438,16 @@ class GetLink(APIView):
         tx_receipts = []
         datacontract = DataContract.objects.get(contract_address = dataset_address)
         link = datacontract.getLink(request.user, estimate)
-        if type(link) is list:
-                datacontract.consent_contract.research_purpose.delete()
-                response = custom_exeptions.blockchain_exception(link, tx_receipts) 
-                return Response(response["body"], response["status"])
-        tx_receipts.append(link)
+        file = getFile(link[0], link[1])
+        print(file)
+        print(link)
+        
+        #tx_receipts.append(link)
+        file = open("tempfile.csv", "r")
+        response = HttpResponse(file, content_type='application/force-download')
+        file.close()
+        response['Content-Disposition'] = 'attachment; filename="%s"' % 'tempfile.csv'
+        return response
 
         response = get_initial_response()
         response["error"]["code"] = 200
@@ -471,7 +480,7 @@ class RetrieveContractByUserIDView(APIView):
 
 class SearchContract(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def get(self, request, format = None):
+    def post(self, request, format = None):
         user = request.user
         searchparam = request.data.pop("search_content", "")
         

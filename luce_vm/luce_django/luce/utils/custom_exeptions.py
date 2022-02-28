@@ -29,7 +29,6 @@ def custom_exception_handler(exc, context):
         response["error"]["details"]= [details]
         _response = {"body":response, "status": response["error"]["code"]}
 
-    print(_response)
     return _response
 
 def blockchain_exception(tx_receipt, receipts = [None]):
@@ -40,7 +39,6 @@ def blockchain_exception(tx_receipt, receipts = [None]):
     response["error"]["status"] = "ERROR"
     response["error"]["details"] = error   
     response["data"]["transaction receipts"] = receipts
-    print(response)
     return {"body":response, "status":response["error"]["code"]}
 
 def validation_exeption(serializer):

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # This script starts the jupyter and ganache server processes in the background
-
 # Gently shutdown old processes
 tmux kill-session -t "jupyter_ganache_django" 2> /dev/null
 
@@ -31,6 +30,13 @@ tmux send-keys -t jupyter_ganache_django.2 'conda activate luce_vm' ENTER
 tmux send-keys -t jupyter_ganache_django.2 'pip install -r /vagrant/luce_django/luce/requirements.txt' ENTER
 tmux send-keys -t jupyter_ganache_django.2 'python /vagrant/luce_django/luce/manage.py migrate' ENTER
 tmux send-keys -t jupyter_ganache_django.2 'python /vagrant/luce_django/luce/manage.py runserver 0.0.0.0:8000 --noreload' ENTER
+
+tmux split-window -v
+tmux send-keys -t jupyter_ganache_django.3 'ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080' ENTER
+tmux send-keys -t jupyter_ganache_django.3 'ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001' ENTER
+tmux send-keys -t jupyter_ganache_django.3 'ipfs daemon' ENTER
+
+
 
 
 

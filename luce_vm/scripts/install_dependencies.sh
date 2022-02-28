@@ -1,0 +1,1 @@
+pip install -r ../luce_django/luce/requirements.txt

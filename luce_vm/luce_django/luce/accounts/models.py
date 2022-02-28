@@ -263,6 +263,7 @@ class DataContract(models.Model):
     description = models.CharField(max_length=255, null = True)
     licence = models.IntegerField(default=1)
     link = models.CharField(max_length=255, null = True)
+    key = models.CharField(max_length=255, null = True)
 
     def deploy_contract(self):
         tx_receipt = web3.deploy_contract_main(self.user)
@@ -277,8 +278,8 @@ class DataContract(models.Model):
     def set_consent_address(self, estimate):
         tx_receipt = web3.set_consent_address(self, self.consent_contract.contract_address, estimate)
         return tx_receipt
-    def publish_dataset(self, user,link, estimate):
-        tx = web3.publish_dataset(self, user, link, estimate)
+    def publish_dataset(self, user,link, key, estimate):
+        tx = web3.publish_dataset(self, user, link, key, estimate)
         return tx
     def retreive_info(self):
         tx_receipt = web3.retreive_dataset_info(self)
@@ -288,6 +289,7 @@ class DataContract(models.Model):
         return tx
     def getLink(self, user, estimate):
         link = web3.get_link(self, user, estimate)
+        print(link)
         return link
     def checkAccess(self, user, researchpurpose):
         hasAccess = web3.checkAccess(self,user, researchpurpose)

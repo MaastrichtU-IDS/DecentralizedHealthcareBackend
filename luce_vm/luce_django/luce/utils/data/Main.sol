@@ -18,6 +18,7 @@ pragma solidity ^0.6.2;
         address public dataProvider;
         uint public license;
         string private link;
+        string private key;
         string public dataDescription = "default"; //this needs to become a struct when the consent contract is integrated.
         bool internal unpublished;
         
@@ -108,8 +109,8 @@ pragma solidity ^0.6.2;
          * @param _link sets the link to the dataset, which may be shared to Users through tokens.
          * @param _license sets the license which is needed to get access to the dataset.
          */
-        function publishData(string memory _description, string memory _link, uint _license) public onlyOwner providerGasCost {
-            require(unpublished == true, "1");
+        function publishData(string memory _description, string memory _link, string memory _key, uint _license) public onlyOwner providerGasCost {
+            require(unpublished == true);
             
             LUCERegistry c = LUCERegistry(registry);
             ConsentCode cc = ConsentCode(consent);
@@ -118,11 +119,12 @@ pragma solidity ^0.6.2;
             require(dataSubjects.length != 0, "2");
 
             bool registered = c.checkProvider(msg.sender);
-            require(registered, "3");
+            require(registered, "1");
 
             dataDescription = _description;
             license = _license;
             link = _link;
+            key = _key;
             emit publishedDataset(msg.sender, _description, license); // Triggering event
             unpublished = false;
         }
@@ -132,15 +134,15 @@ pragma solidity ^0.6.2;
          * @dev Public function to return the link of the dataset, callable only by the dataProvider or authorized data requesters.
          * This function should become more or less obsolete once we implement the checksum for data access.
          */
-        function getLink() public view returns(string memory) {
+        function getLink() public view returns(string memory, string memory) {
             if (msg.sender==dataProvider){
-                return link;
+                return (link, key);
             }
             require (requesterCompliance[msg.sender], "1");
             uint tokenId = mappedUsers[msg.sender];
             require (userOf(tokenId) == msg.sender, "2");
             require (tokens[tokenId.sub(1)].accessTime > now,"3");
-            return link;
+            return (link, key);
         }
     
     
@@ -327,17 +329,17 @@ pragma solidity ^0.6.2;
          * to this value, the function will set a standard 2 weeks accessTime. This parameter is mainly for testing purposes. 
          */
         function addDataRequester(uint purposeCode, uint accessTime) public payable returns(uint){
-            require(unpublished==false, "1");
+            require(unpublished==false);
             LUCERegistry c = LUCERegistry(registry);
             
             uint userLicense = c.checkUser(msg.sender);
     
             // Make sure the requester's license matches with the provider's requirements
-            require(license == userLicense, "2");
+            require(license == userLicense);
             // Make sure the requester's purpose matches the 'requirements' (this is where the consent contract will interface)
             require(purposeCode <= 20, "3");
             // Make sure the requester doesn't have a token yet.
-            require(mappedUsers[msg.sender]==0, "already have token");
+            require(mappedUsers[msg.sender]==0);
     
             ConsentCode cc = ConsentCode(consent);
             bool accessGranted = cc.AccessData(dataProvider,msg.sender);
@@ -348,7 +350,7 @@ pragma solidity ^0.6.2;
             // Calculate the amount an individual requester must pay in order to receive access and make sure their transferred value matches.
             if(scenario > 1) {
                 uint individualCost = currentCost.mul(costMult).div(costDiv);
-                require(msg.value == individualCost, "6");
+                require(msg.value == individualCost);
     
                 // Adjust the true contract cost by subtracting the value this requester transferred.
                 if(currentCost < individualCost) { // Values smaller than 0 are not allowed in solidity.

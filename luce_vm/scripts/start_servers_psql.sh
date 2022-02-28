@@ -31,6 +31,7 @@ tmux send-keys -t jupyter_ganache_django.2 'conda activate luce_vm' ENTER
 tmux send-keys -t jupyter_ganache_django.2 'export DJANGO_USE_PSQL=true' ENTER # This activates the psql server instead of sqlite
 tmux send-keys -t jupyter_ganache_django.2 'python /vagrant/luce_django/luce/manage.py runserver 0.0.0.0:8000 --noreload' ENTER
 
+
 echo
 printf "The Jupyter, Ganache and Django servers have been started..\n\n"
 

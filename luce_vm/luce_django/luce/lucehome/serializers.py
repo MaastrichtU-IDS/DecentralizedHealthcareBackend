@@ -135,7 +135,7 @@ class DataContractSerializer(serializers.ModelSerializer):
     DEPLOYMENT_COST = 53000
     class Meta:
         model = DataContract
-        fields = ["id", "user", "description", "licence","contract_address", "consent_contract"]
+        fields = ["id", "key", "user", "description", "licence","contract_address", "consent_contract"]
    
    
     def validate(self, data):
