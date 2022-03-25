@@ -260,6 +260,7 @@ class UploadDataView(APIView):
         datacontract = serializer.save()
         
         tx_receipt = datacontract.consent_contract.deploy_contract()
+        print(tx_receipt)
         if type(tx_receipt) is list:
                 datacontract.delete()
                 response = custom_exeptions.blockchain_exception(tx_receipt) 
@@ -422,7 +423,7 @@ class RequestDatasetView(APIView):
 
 class GetLink(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         estimate = request.data.pop("estimate", False)
         access_time = request.data.pop("access_time", 1000)
         purpose_code = request.data.pop("purpose_code", 1)
@@ -435,8 +436,8 @@ class GetLink(APIView):
         datacontract = DataContract.objects.get(contract_address = dataset_address)
         link = datacontract.getLink(request.user, estimate)
         if type(link) is list:
-                datacontract.consent_contract.research_purpose.delete()
-                response = custom_exeptions.blockchain_exception(link, tx_receipts) 
+                #datacontract.consent_contract.research_purpose.delete()
+                response = custom_exeptions.custom_message("no access") 
                 return Response(response["body"], response["status"])
         tx_receipts.append(link)
 
@@ -471,7 +472,7 @@ class RetrieveContractByUserIDView(APIView):
 
 class SearchContract(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def get(self, request, format = None):
+    def post(self, request, format = None):
         user = request.user
         searchparam = request.data.pop("search_content", "")
         

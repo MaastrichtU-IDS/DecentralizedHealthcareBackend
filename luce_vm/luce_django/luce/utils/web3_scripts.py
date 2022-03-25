@@ -1,9 +1,11 @@
 from web3 import Web3
 import time
+ganache=False
 
 ###CONNECT TO ETH NETWORK USING HOSTED NODE (infura)##########
-w3 = Web3(Web3.WebsocketProvider("wss://rinkeby.infura.io/ws/v3/839112f3db884bde86889ebbac153ced"))
-CHAIN_ID = 4
+#w3 = Web3(Web3.HTTPProvider("https://rinkeby.infura.io/v3/374de38210c343f1921a77b45822edf9"))
+#CHAIN_ID = 4
+
 
 ###CONNECT TO ETH NETWORK USING LOCAL LIGHT NODE (GETH)##########
 #w3 = Web3(Web3.IPCProvider("/home/vagrant/.ethereum/rinkeby/geth.ipc"))
@@ -11,9 +13,13 @@ CHAIN_ID = 4
 
 
 ###CONNECT TO POLYGON NETWORK USING HOSTED NODE##########
-#w3 = Web3(Web3.HTTPProvider("https://rpc-mumbai.matic.today"))
-#CHAIN_ID = 80001
+w3 = Web3(Web3.HTTPProvider("https://rpc-mumbai.matic.today"))
+CHAIN_ID = 80001
 
+###CONNECT TO GANACHE LOCAL NETWORK##########
+#w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:8545'))
+#CHAIN_ID = 1337
+#ganache = True
 
 
 
@@ -46,6 +52,8 @@ DEBUG = True
 # Private key (obtained via Ganache interface)
 faucet_privateKey   = "52417fb192c8cb46bf2b76e814992a803910d42cd19ca0ae0a83c5de97c6dbd6"
 
+if ganache:
+    faucet_privateKey = "0x4a2cb86c7d3663abebf7ab86a6ddc3900aee399750f35e65a44ecf843ec39116"
 # Establish faucet account
 faucet = w3.eth.account.privateKeyToAccount(faucet_privateKey)
 
@@ -99,7 +107,7 @@ def assign_address_v3():
     from hexbytes import HexBytes
     # Create new web3 account
     eth_account = create_wallet()
-    txn_receipt = send_ether(amount_in_ether = 0.5, recipient_address = eth_account.address, sender_pkey=faucet.privateKey)
+    txn_receipt = send_ether(amount_in_ether = 1.5, recipient_address = eth_account.address, sender_pkey=faucet.privateKey)
     # Return user, now with wallet associated
     return txn_receipt, eth_account
 
@@ -148,11 +156,9 @@ def deploy(_user, contract, interface):
         'gasPrice': w3.toWei('20', 'gwei'),
         'nonce': nonce,
         }
-
     gas = transact_function(contract.constructor().estimateGas,{}, "estimating gas for: "+interface+" constructor" )*2
     if type(gas) is list:
         return gas
-
     txn_dict["gas"]=gas
 
     gas = transact_function(contract.constructor().buildTransaction,txn_dict, "building transactino: deployment of "+interface)
@@ -527,8 +533,11 @@ def get_link(datacontract, user, estimate):
         'nonce': nonce,
         }
 
-    
-    contract_txn =  contract_instance.functions.getLink().call(txn_dict)
+    try:
+        contract_txn =  contract_instance.functions.getLink().call(txn_dict)
+    except ValueError as e:
+        contract_txn = [e]
+        print(e)
     return contract_txn
 
 
@@ -630,7 +639,6 @@ def receipt_to_dict(tx_receipt, name):
     receipt["blockNumber"] = tx_receipt.blockNumber
     receipt["contractAddress"] = tx_receipt.contractAddress
     receipt["cumulativeGasUsed"] = tx_receipt.cumulativeGasUsed
-    receipt["effectiveGasPrice"] = w3.toInt(hexstr = tx_receipt.effectiveGasPrice)
     receipt["from"] = tx_receipt["from"]
     receipt["gasUsed"] = tx_receipt.gasUsed
     #receipt["logs"] = tx_receipt.logs
@@ -639,8 +647,6 @@ def receipt_to_dict(tx_receipt, name):
     receipt["to"] = tx_receipt.to
     receipt["transactionHash"] = tx_receipt.transactionHash.hex()
     receipt["transactionIndex"] = tx_receipt.transactionIndex
-    receipt["type"] = tx_receipt.type
-    receipt["fees"] =  receipt["effectiveGasPrice"] * receipt["gasUsed"]
     receipt["transaction name"] = name
 
     return receipt
