@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework.authtoken',
 
-    #rest framework
+    # rest framework
     'rest_framework',
 
     'corsheaders'
@@ -64,7 +64,7 @@ REST_FRAMEWORK = {
 
 }
 
-AUTH_USER_MODEL = 'accounts.User' # changes the built-in user model
+AUTH_USER_MODEL = 'accounts.User'  # changes the built-in user model
 
 
 MIDDLEWARE = [
@@ -101,7 +101,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lucehome.wsgi.application'
 
-ALLOWED_HOSTS=['*']
+ALLOWED_HOSTS = ['*']
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ORIGIN_ALLOW_ALL = True
 # Database
@@ -109,10 +109,21 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # Use sqlite by default (only one VM required, less resources)
 # Can switch to Postgresql via environment variable (see code at the very bottom)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'lucedb',
+        'USER': 'vagrant',
+        'PASSWORD': 'luce',
+        'HOST': 'localhost',
+        'PORT': '5433',
     }
 }
 
@@ -126,7 +137,7 @@ DATABASES = {
 #         'HOST': '192.168.72.3',
 #         'PORT': '5432',
 #     }
-#f }
+# f }
 
 
 # Password validation
@@ -159,14 +170,15 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+# USE_TZ = True
 
 
 # ==== SETUP STATIC FILE DIRECTORIES ====
 
 # Simulate a CDN locally:
 # This path is outside django project, usually a CDN like AWS S3
-LOCAL_STATIC_CDN_PATH = os.path.join(os.path.dirname(BASE_DIR), 'luce_static_files/static_cdn_local')
+LOCAL_STATIC_CDN_PATH = os.path.join(os.path.dirname(
+    BASE_DIR), 'luce_static_files/static_cdn_local')
 
 # Static files (CSS, JavaScript, Images)
 STATIC_ROOT = os.path.join(LOCAL_STATIC_CDN_PATH, 'static')
@@ -188,4 +200,3 @@ STATICFILES_DIRS = [BASE_DIR + '/lucehome/static_files/']
 # Override variables in this settings file if DJANGO_USE_PSQL env variable is set
 if os.environ.get('DJANGO_USE_PSQL') is not None:
     from lucehome.settings_psql import *
-

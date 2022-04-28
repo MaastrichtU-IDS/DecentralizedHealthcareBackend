@@ -1,25 +1,25 @@
 version: '3'
 services:
 
-  ganache_db:
-    image: trufflesuite/ganache-cli
-    restart: unless-stopped
-    command: --mnemonic luce --db /ganache_db --networkId 72 --host 0.0.0.0 --accounts 10 --defaultBalanceEther 1000000 --account "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3,1000000000000000000000000" --account "0xad740a17686169082f3148dcec143e4730fc69a636d710cb8e4e23ef966feadd,1000000000000000000000000" --account "0xdd11160def74259a8cfcb0282702ab65c1388cf4e0265f567fe0a3707957d810,1000000000000000000000000"
-    ports:
-      - 8545:8545
-    environment:
-      - VIRTUAL_PORT=8545
-      - VIRTUAL_HOST=ganache.luce.137.120.31.102.nip.io
-      - LETSENCRYPT_HOST=ganache.luce.137.120.31.102.nip.io
-    volumes: 
-      - ${STORAGE_PATH:-./data}/ganache_db:/ganache_db
+  # ganache_db:
+  #   image: trufflesuite/ganache-cli
+  #   restart: unless-stopped
+  #   command: --mnemonic luce --db /ganache_db --networkId 72 --host 0.0.0.0 --port 8544 --accounts 10 --defaultBalanceEther 1000000 --account "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3,1000000000000000000000000" --account "0xad740a17686169082f3148dcec143e4730fc69a636d710cb8e4e23ef966feadd,1000000000000000000000000" --account "0xdd11160def74259a8cfcb0282702ab65c1388cf4e0265f567fe0a3707957d810,1000000000000000000000000"
+  #   ports:
+  #     - 8545:8545
+  #   environment:
+  #     - VIRTUAL_PORT=8545
+  #     - VIRTUAL_HOST=ganache.luce.137.120.31.102.nip.io
+  #     - LETSENCRYPT_HOST=ganache.luce.137.120.31.102.nip.io
+  #   volumes: 
+  #     - ${STORAGE_PATH:-./data}/ganache_db:/ganache_db
 
 
   postgres_db:
     image: postgres
     restart: unless-stopped
-    depends_on: 
-      - ganache_db
+    # depends_on: 
+    #   - ganache_db
     ports:
       - 5433:5432
     environment:
@@ -58,19 +58,19 @@ services:
   #     - REQUESTER_USER=requester@luce.com
   #     - REQUESTER_PASSWORD=requester
 
-  jupyterlab:
-    # image: jupyter/base-notebook
-    build: ./luce_vm/jupyter
-    restart: unless-stopped
-    user: root
-    ports:
-      - 8888:8888
-    volumes:
-      - ./luce_vm/jupyter:/home/jovyan/work
-    environment:
-      - JUPYTER_TOKEN=password
-      - GRANT_SUDO=yes
-      - JUPYTER_ENABLE_LAB=yes
+  # jupyterlab:
+  #   # image: jupyter/base-notebook
+  #   build: ./luce_vm/jupyter
+  #   restart: unless-stopped
+  #   user: root
+  #   ports:
+  #     - 8888:8888
+  #   volumes:
+  #     - ./luce_vm/jupyter:/home/jovyan/work
+  #   environment:
+  #     - JUPYTER_TOKEN=password
+  #     - GRANT_SUDO=yes
+  #     - JUPYTER_ENABLE_LAB=yes
 
 
   # ethereum-node:

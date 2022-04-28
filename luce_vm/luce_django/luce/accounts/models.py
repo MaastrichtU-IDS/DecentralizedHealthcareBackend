@@ -9,11 +9,11 @@ import utils.web3_scripts as web3
 from django.dispatch import receiver
 
 
-
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser
 )
 from django.conf import settings
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, gender, age, first_name, last_name, user_type=None, password=None, ethereum_private_key=None, ethereum_public_key=None, contract_address=None, is_staff=False,  is_admin=False):
@@ -27,8 +27,8 @@ class UserManager(BaseUserManager):
         if not last_name:
             raise ValueError('Users must have a last_name')
         if not password:
-        	raise ValueError('Users must have a password')
-     
+            raise ValueError('Users must have a password')
+
         user = self.model(
             email=self.normalize_email(email),
         )
@@ -36,8 +36,8 @@ class UserManager(BaseUserManager):
         user.gender = gender
         user.staff = is_staff
         user.set_password(password)
-        user.first_name 	= first_name
-        user.last_name 		= last_name
+        user.first_name = first_name
+        user.last_name = last_name
         user.admin = is_admin
         user.ethereum_private_key = ethereum_private_key
         user.ethereum_public_key = ethereum_public_key
@@ -61,9 +61,9 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, first_name, last_name, password, 
-                        ethereum_public_key  = "0x43e196c418b4b7ebf71ba534042cc8907bd39dc9", 
-                        ethereum_private_key = "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"):
+    def create_superuser(self, email, first_name, last_name, password,
+                         ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
+                         ethereum_private_key="0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"):
         """
         Creates and saves a superuser.
         """
@@ -72,8 +72,8 @@ class UserManager(BaseUserManager):
             first_name,
             last_name,
             password=password,
-            ethereum_public_key = "0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
-            ethereum_private_key = "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
+            ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
+            ethereum_private_key="0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
         )
         user.staff = True
         user.admin = True
@@ -89,61 +89,97 @@ class UserManager(BaseUserManager):
 
 # Our custom user class
 class User(AbstractBaseUser):
-	# id, 
-	# password and 
-	# last_login are automatically inherited AbstractBaseUser
-	# The other model fields we define ourselves
+    # id,
+    # password and
+    # last_login are automatically inherited AbstractBaseUser
+    # The other model fields we define ourselves
     email = models.EmailField(
         verbose_name='email address',
         max_length=255,
         unique=True,
     )
 
-    country = models.CharField(max_length=25, null=True)
-    institution = models.CharField(max_length=255, null=True)
+    country = models.CharField(
+        max_length=25,
+        null=True
+    )
 
+    institution = models.CharField(
+        max_length=255,
+        null=True
+    )
 
-    ethereum_private_key = models.CharField(max_length=255, blank=True, null=True)
-    ethereum_public_key = models.CharField(max_length=255, blank=True, null=True)
+    ethereum_private_key = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    ethereum_public_key = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
 
     # Make these fields compulsory?
-    first_name 	= 	models.CharField(max_length=255, blank=True, null=True)
-    last_name 	= 	models.CharField(max_length=255, blank=True, null=True)
+    first_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
 
-    # Can use this later to activate certain features only 
+    last_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    # Can use this later to activate certain features only
     # once ethereum address is associated
-    is_approved =  models.BooleanField(default=True, null=True, blank=True) # True for now while developing..
+    # True for now while developing..
+    is_approved = models.BooleanField(
+        default=True,
+        null=True,
+        blank=True
+    )
 
     # user_type is used to know if the user is a Data Provider(0) or a data requester(1)
     user_type = models.IntegerField(
-        choices = [(0,"Data Provider"), (1, "Data Requester")]
-     )
+        choices=[
+            (0, "Data Provider"),
+            (1, "Data Requester")
+        ]
+    )
 
     # active user? -> can login
     active = models.BooleanField(default=True)
-    staff = models.BooleanField(default=False) # a admin user; non super-user
 
-    admin = models.BooleanField(default=False) # a superuser
+    # a admin user; non super-user
+    staff = models.BooleanField(default=False)
+
+    # a superuser
+    admin = models.BooleanField(default=False)
+    
     # notice the absence of a "Password field", that's built in.
 
-    #gender of the user
+    # gender of the user
     gender = models.CharField(
-        choices=[(0, 'Male'), (1,'Female')],
-        max_length=6, 
-        null = True
-        )
+        choices=[
+            (0, 'Male'),
+            (1, 'Female')
+        ],
+        max_length=6,
+        null=True
+    )
 
-
-        
-    
-    age = models.IntegerField(null = True)
+    age = models.IntegerField(null=True)
 
     # Define which field should be the username for login
     USERNAME_FIELD = 'email'
 
     # USERNAME_FIELD & Password are required by default
     # Add additional required fields here:
-    REQUIRED_FIELDS = ['first_name', 'last_name'] 
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     objects = UserManager()
 
@@ -189,8 +225,9 @@ class User(AbstractBaseUser):
         "Is the user active?"
         return self.active
 
+
 class Restrictions(models.Model):
-    no_restrictions =  models.BooleanField()
+    no_restrictions = models.BooleanField()
     open_to_general_research_and_clinical_care = models.BooleanField()
     open_to_HMB_research = models.BooleanField()
     open_to_population_and_ancestry_research = models.BooleanField()
@@ -198,34 +235,48 @@ class Restrictions(models.Model):
 
 
 class GeneralResearchPurpose(models.Model):
-    use_for_methods_development = models.BooleanField(default = False)
-    use_for_reference_or_control_material = models.BooleanField(default = False)
-    use_for_research_concerning_populations = models.BooleanField(default = False)
-    use_for_research_ancestry = models.BooleanField(default = False)
-    use_for_biomedical_research = models.BooleanField(default = False)
+    use_for_methods_development = models.BooleanField(default=False)
+    use_for_reference_or_control_material = models.BooleanField(default=False)
+    use_for_research_concerning_populations = models.BooleanField(
+        default=False)
+    use_for_research_ancestry = models.BooleanField(default=False)
+    use_for_biomedical_research = models.BooleanField(default=False)
+
 
 class HMBResearchPurpose(models.Model):
-    use_for_research_concerning_fundamental_biology = models.BooleanField(default = False)
-    use_for_research_concerning_genetics = models.BooleanField(default = False)
-    use_for_research_concerning_drug_development = models.BooleanField(default = False)
-    use_for_research_concerning_any_disease = models.BooleanField(default = False)
-    use_for_research_concerning_age_categories = models.BooleanField(default = False)
-    use_for_research_concerning_gender_categories = models.BooleanField(default = False)
+    use_for_research_concerning_fundamental_biology = models.BooleanField(
+        default=False)
+    use_for_research_concerning_genetics = models.BooleanField(default=False)
+    use_for_research_concerning_drug_development = models.BooleanField(
+        default=False)
+    use_for_research_concerning_any_disease = models.BooleanField(
+        default=False)
+    use_for_research_concerning_age_categories = models.BooleanField(
+        default=False)
+    use_for_research_concerning_gender_categories = models.BooleanField(
+        default=False)
+
 
 class ClinicalPurpose(models.Model):
-    use_for_decision_support = models.BooleanField(default = False)
-    use_for_disease_support = models.BooleanField(default = False)
+    use_for_decision_support = models.BooleanField(default=False)
+    use_for_disease_support = models.BooleanField(default=False)
+
 
 class ResearchPurpose(models.Model):
-    general_research_purpose = models.ForeignKey(GeneralResearchPurpose, on_delete=models.CASCADE, null = True)
-    HMB_research_purpose = models.ForeignKey(HMBResearchPurpose, on_delete=models.CASCADE, null = True)
-    clinical_purpose = models.ForeignKey(ClinicalPurpose, on_delete=models.CASCADE, null = True)
+    general_research_purpose = models.ForeignKey(
+        GeneralResearchPurpose, on_delete=models.CASCADE, null=True)
+    HMB_research_purpose = models.ForeignKey(
+        HMBResearchPurpose, on_delete=models.CASCADE, null=True)
+    clinical_purpose = models.ForeignKey(
+        ClinicalPurpose, on_delete=models.CASCADE, null=True)
+
 
 class ConsentContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
-    research_purpose = models.ForeignKey(ResearchPurpose, on_delete=models.CASCADE, null =True)
+    research_purpose = models.ForeignKey(
+        ResearchPurpose, on_delete=models.CASCADE, null=True)
 
     def upload_data_consent(self, estimate):
         return web3.upload_data_consent(self, estimate)
@@ -254,15 +305,14 @@ class ConsentContract(models.Model):
         return tx
 
 
-
-
 class DataContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    consent_contract = models.ForeignKey(ConsentContract, on_delete=models.CASCADE, null = True)
-    description = models.CharField(max_length=255, null = True)
+    consent_contract = models.ForeignKey(
+        ConsentContract, on_delete=models.CASCADE, null=True)
+    description = models.CharField(max_length=255, null=True)
     licence = models.IntegerField(default=1)
-    link = models.CharField(max_length=255, null = True)
+    link = models.CharField(max_length=255, null=True)
 
     def deploy_contract(self):
         tx_receipt = web3.deploy_contract_main(self.user)
@@ -271,26 +321,36 @@ class DataContract(models.Model):
         self.contract_address = tx_receipt["contractAddress"]
         self.save()
         return tx_receipt
+
     def set_registry_address(self, registry, estimate):
-        tx_receipt = web3.set_registry_address(self, registry.contract_address, estimate)
+        tx_receipt = web3.set_registry_address(
+            self, registry.contract_address, estimate)
         return tx_receipt
+
     def set_consent_address(self, estimate):
-        tx_receipt = web3.set_consent_address(self, self.consent_contract.contract_address, estimate)
+        tx_receipt = web3.set_consent_address(
+            self, self.consent_contract.contract_address, estimate)
         return tx_receipt
-    def publish_dataset(self, user,link, estimate):
+
+    def publish_dataset(self, user, link, estimate):
         tx = web3.publish_dataset(self, user, link, estimate)
         return tx
+
     def retreive_info(self):
         tx_receipt = web3.retreive_dataset_info(self)
         return tx_receipt
-    def add_data_requester(self, access_time,purpose_code, user, estimate):
-        tx = web3.add_data_requester(self, access_time,purpose_code, user, estimate)
+
+    def add_data_requester(self, access_time, purpose_code, user, estimate):
+        tx = web3.add_data_requester(
+            self, access_time, purpose_code, user, estimate)
         return tx
+
     def getLink(self, user, estimate):
         link = web3.get_link(self, user, estimate)
         return link
+
     def checkAccess(self, user, researchpurpose):
-        hasAccess = web3.checkAccess(self,user, researchpurpose)
+        hasAccess = web3.checkAccess(self, user, researchpurpose)
         return hasAccess
 
 
@@ -304,21 +364,18 @@ class LuceRegistry(models.Model):
             return tx_receipt
         self.contract_address = tx_receipt["contractAddress"]
         return tx_receipt
-    
+
     def is_registered(self, user, usertype):
         isregistered = web3.is_registered(self, user, usertype)
         return isregistered
 
     def register_provider(self, user, estimate):
-        tx = web3.register_provider(self,user,estimate)
+        tx = web3.register_provider(self, user, estimate)
         return tx
 
     def register_requester(self, user, license, estimate):
         tx = web3.register_requester(self, user, license, estimate)
         return tx
-
-
-
 
 
 """

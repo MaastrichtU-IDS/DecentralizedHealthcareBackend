@@ -9,7 +9,7 @@ DATABASES = {
         'NAME': 'lucedb',
         'USER': 'vagrant',
         'PASSWORD': 'luce',
-        'HOST': '192.168.72.3',
-        'PORT': '5432',
+        'HOST': 'localhost',
+        'PORT': '5433',
     }
 }

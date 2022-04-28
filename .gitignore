@@ -1,6 +1,12 @@
 # Ignore MacOS files
 .DS_Store
 
+# Ignore logs
+*.log
+
+.idea
+data
+
 # Ignore database and migrations
 luce_vm/luce_django/luce/db.sqlite3
 luce_vm/luce_django/luce/accounts/migrations/*
