@@ -8,7 +8,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 import utils.web3_scripts as web3
 from django.dispatch import receiver
 
-
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser
 )
@@ -16,7 +15,9 @@ from django.conf import settings
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, gender, age, first_name, last_name, user_type=None, password=None, ethereum_private_key=None, ethereum_public_key=None, contract_address=None, is_staff=False,  is_admin=False):
+    def create_user(self, email, gender, age, first_name, last_name, user_type=None, password=None,
+                    ethereum_private_key=None, ethereum_public_key=None, contract_address=None, is_staff=False,
+                    is_admin=False):
         """
         Creates and saves a User with the given arguments and password.
         """
@@ -159,7 +160,7 @@ class User(AbstractBaseUser):
 
     # a superuser
     admin = models.BooleanField(default=False)
-    
+
     # notice the absence of a "Password field", that's built in.
 
     # gender of the user

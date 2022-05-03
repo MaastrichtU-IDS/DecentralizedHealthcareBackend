@@ -17,12 +17,14 @@ from ..accounts.models import LuceRegistry
 
 logger = set_logger(__file__)
 
+
 # APIview for registering donors and influencers.
 class UserRegistration(APIView):
     def post(self, request, format=None):
         createWallet = request.data.get("create_wallet")
-        # logging.info("test")
-        # logging.info(request.data)
+
+        logger.info("Register a new user: ")
+        logger.info(request.data)
 
         serializer = UserSerializer(
             data=request.data,
@@ -31,11 +33,12 @@ class UserRegistration(APIView):
             }
         )
 
-
         # serializer validation
         if not serializer.is_valid():
             response = custom_exeptions.validation_exeption(serializer)
+            logger.error("Register failed: " + response["error"]["message"])
             return Response(response["body"], response["status"])
+
         instance = serializer.save()
 
         tx_receipt = self.address_get_or_create(instance, createWallet)
@@ -56,7 +59,7 @@ class UserRegistration(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
     def address_get_or_create(self, instance, createWallet):
-        if(createWallet):
+        if (createWallet):
             # User
             tx_receipt = instance.create_wallet()
             instance.save()
@@ -120,7 +123,7 @@ class ObtainAuthToken(APIView):
 
     def post(self, request, *args, **kwargs):
         logger.debug("Login information:" + str(request.data))
-        
+
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             response = custom_exeptions.validation_exeption(serializer)
@@ -147,7 +150,7 @@ class UserUpdateView(APIView):
         instance = user
         createWallet = request.data.get("create_wallet")
         serializer = UserSerializer(user, data=request.data, context={
-                                    "create_wallet": createWallet}, partial=True)
+            "create_wallet": createWallet}, partial=True)
 
         if not serializer.is_valid():
             response = custom_exeptions.validation_exeption(serializer)
@@ -169,7 +172,7 @@ class UserUpdateView(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
     def address_get_or_create(self, instance, createWallet):
-        if(createWallet):
+        if (createWallet):
             tx_receipt = instance.create_wallet()
 
             if tx_receipt:
@@ -257,25 +260,26 @@ class UploadDataView(APIView):
             response = custom_exeptions.custom_message(
                 "user needs to have a wallet connected")
 
-            # logging.error()
+            logger.error("no public key for current user")
             return Response(response["body"], response["status"])
 
         if not link:
             response = custom_exeptions.custom_message(
                 "link field is required")
+
+            logger.error("Link field is invalid (empty?)")
             return Response(response["body"], response["status"])
 
         tx_receipts = []
-
-        # print("260")
 
         if not LuceRegistry.objects.filter(pk=1).exists():
             response = custom_exeptions.custom_message(
                 "luce registry was not deployed"
             )
+
+            logger.error("Luce registry was not deployed!")
             return Response(response["body"], response["status"])
 
-        # print("265")
         luceregistry = LuceRegistry.objects.get(pk=1)
 
         serializer = DataContractSerializer(
@@ -288,15 +292,11 @@ class UploadDataView(APIView):
             partial=True
         )
         restriction_serializer = RestrictionsSerializer(data=request.data)
-        # print("here")
         # check that user is registered in LuceRegistry, if not register him
         is_registered = luceregistry.is_registered(request.user, "provider")
-        print("hello, luce")
-        print(is_registered)
+
         if not is_registered:
-            cost = LuceRegistry.objects.get(
-                pk=1
-            ).register_provider(user, estimate)
+            cost = LuceRegistry.objects.get(pk=1).register_provider(user, estimate)
 
             if type(cost) is list:
                 response = custom_exeptions.blockchain_exception(cost)
@@ -490,7 +490,7 @@ class RequestDatasetView(APIView):
         tx_receipts.append(receipt5)
 
         if estimate:
-            return Response({"gas_estimate": receipt+receipt2+receipt3+receipt5+receipt5})
+            return Response({"gas_estimate": receipt + receipt2 + receipt3 + receipt5 + receipt5})
 
         return tx_receipts
 
@@ -565,7 +565,7 @@ class SearchContract(APIView):
         contracts = DataContract.objects.filter(
             description__contains=searchparam)
         for contract in contracts:
-            if(contract.checkAccess(user, researchPurpose)):
+            if (contract.checkAccess(user, researchPurpose)):
                 final_result.append(contract)
         contracts = DataContractSerializer(final_result, many=True)
 
@@ -604,7 +604,7 @@ class LuceRegistryView(APIView):
                 "user must connect a wallet first")
             return Response(response["body"], response["status"])
 
-        if(estimate):
+        if (estimate):
             return self.estimated_gas
 
         # get contract if doesn't exist create it
