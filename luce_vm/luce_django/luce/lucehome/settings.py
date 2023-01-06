@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 
     'django_filters',
     'accounts',
+    'luceview',
 
     'django_extensions',
     'rest_framework.authtoken',
@@ -120,8 +121,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'lucedb',
-        'USER': 'vagrant',
-        'PASSWORD': 'luce',
+        'USER': 'luce',
+        'PASSWORD': 'luce123456',
         'HOST': 'localhost',
         'PORT': '5433',
     }

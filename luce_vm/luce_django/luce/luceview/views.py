@@ -5,15 +5,15 @@ from rest_framework.compat import coreapi, coreschema
 from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from ..accounts.models import User, DataContract
-from ..utils import custom_exeptions as custom_exeptions
+from accounts.models import User, DataContract
+from utils import custom_exeptions as custom_exeptions
 
 from rest_framework.response import Response
 from .serializers import *
-from ..utils.web3_scripts import *
-from ..utils.utils import get_initial_response, set_logger
+from utils.web3_scripts import *
+from utils.utils import get_initial_response, set_logger
 
-from ..accounts.models import LuceRegistry
+from accounts.models import LuceRegistry
 
 logger = set_logger(__file__)
 
@@ -296,7 +296,8 @@ class UploadDataView(APIView):
         is_registered = luceregistry.is_registered(request.user, "provider")
 
         if not is_registered:
-            cost = LuceRegistry.objects.get(pk=1).register_provider(user, estimate)
+            cost = LuceRegistry.objects.get(
+                pk=1).register_provider(user, estimate)
 
             if type(cost) is list:
                 response = custom_exeptions.blockchain_exception(cost)
