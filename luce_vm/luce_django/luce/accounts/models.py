@@ -15,9 +15,20 @@ from django.conf import settings
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, gender, age, first_name, last_name, user_type=None, password=None,
-                    ethereum_private_key=None, ethereum_public_key=None, contract_address=None, is_staff=False,
-                    is_admin=False):
+    def create_user(
+            self,
+            email,
+            gender,
+            age,
+            first_name,
+            last_name,
+            user_type=None,
+            password=None,
+            ethereum_private_key=None,
+            ethereum_public_key=None,
+            contract_address=None,
+            is_staff=False,
+            is_admin=False):
         """
         Creates and saves a User with the given arguments and password.
         """
