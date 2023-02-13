@@ -13,6 +13,8 @@ from django.contrib.auth.models import (
 )
 from django.conf import settings
 
+# from brownie import LUCERegistry
+
 
 class UserManager(BaseUserManager):
     def create_user(
@@ -22,8 +24,8 @@ class UserManager(BaseUserManager):
             age,
             first_name,
             last_name,
+            password,
             user_type=None,
-            password=None,
             ethereum_private_key=None,
             ethereum_public_key=None,
             contract_address=None,
@@ -160,7 +162,8 @@ class User(AbstractBaseUser):
         choices=[
             (0, "Data Provider"),
             (1, "Data Requester")
-        ]
+        ],
+        null=True
     )
 
     # active user? -> can login
@@ -316,15 +319,30 @@ class ConsentContract(models.Model):
         tx = web3.give_general_research_purpose(self, user, estimate)
         return tx
 
-
 class DataContract(models.Model):
-    contract_address = models.CharField(max_length=255, null=True, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    contract_address = models.CharField(
+        max_length=255, 
+        null=True, 
+        unique=True)
+
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE)
+
     consent_contract = models.ForeignKey(
-        ConsentContract, on_delete=models.CASCADE, null=True)
-    description = models.CharField(max_length=255, null=True)
+        ConsentContract, 
+        on_delete=models.CASCADE, 
+        null=True)
+
+    description = models.CharField(
+        max_length=255, 
+        null=True)
+
     licence = models.IntegerField(default=1)
-    link = models.CharField(max_length=255, null=True)
+
+    link = models.CharField(
+        max_length=255, 
+        null=True)
 
     def deploy_contract(self):
         tx_receipt = web3.deploy_contract_main(self.user)
@@ -370,6 +388,14 @@ class LuceRegistry(models.Model):
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def deploy(self):
+        result = LUCERegistry.deploy({'from': self.user.ethereum_public_key})
+        if result.tx is None:
+            print("Deploy LUCERegistry contract failed")
+            return result.tx
+        self.contract_address = result.address
+        return result.tx
+
     def deploy_contract(self):
         tx_receipt = web3.deploy_registry(self.user)
         if type(tx_receipt) is list:
@@ -388,7 +414,6 @@ class LuceRegistry(models.Model):
     def register_requester(self, user, license, estimate):
         tx = web3.register_requester(self, user, license, estimate)
         return tx
-
 
 """
 

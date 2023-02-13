@@ -6,4 +6,4 @@ p = project.load("../brownie")
 p.load_config()
 network.connect()
 
-run("scripts/deploy_LUCERegistry.py")
+# run("scripts/deploy_LUCERegistry.py")

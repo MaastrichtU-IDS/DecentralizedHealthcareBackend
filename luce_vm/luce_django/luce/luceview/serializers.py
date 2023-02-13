@@ -15,10 +15,24 @@ class PublicUserSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "email", "gender", "age", "password", "user_type", "ethereum_public_key", "ethereum_private_key", "country", "institution"]
+        fields = [
+            "id", 
+            "first_name", 
+            "last_name", 
+            "email", 
+            "gender", 
+            "age", 
+            "password", 
+            "user_type", 
+            "ethereum_public_key", 
+            "ethereum_private_key", 
+            "country", 
+            "institution"
+            ]
 
      #override create method because the authomatic token authentication fails 
     def create(self, validated_data):
+
         validated_data["password"] = make_password(validated_data.get("password"))
         instance = super(UserSerializer, self).create(validated_data)
 

@@ -5,11 +5,12 @@ from rest_framework.compat import coreapi, coreschema
 from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.authtoken.models import Token
 from accounts.models import User, DataContract
 from utils import custom_exeptions as custom_exeptions
 
 from rest_framework.response import Response
-from .serializers import *
+from .serializers import UserSerializer
 from utils.web3_scripts import *
 from utils.utils import get_initial_response, set_logger
 
@@ -20,6 +21,8 @@ logger = set_logger(__file__)
 
 # APIview for registering donors and influencers.
 class UserRegistration(APIView):
+    """
+    """
     def post(self, request, format=None):
         createWallet = request.data.get("create_wallet")
 
@@ -33,12 +36,17 @@ class UserRegistration(APIView):
             }
         )
 
+        # print(serializer.is_valid())
+
         # serializer validation
         if not serializer.is_valid():
+            print(serializer.errors)
             response = custom_exeptions.validation_exeption(serializer)
-            logger.error("Register failed: " + response["error"]["message"])
+            logger.error(
+                "Register failed: " + response['body']["error"]["message"]
+            )
             return Response(response["body"], response["status"])
-
+        
         instance = serializer.save()
 
         tx_receipt = self.address_get_or_create(instance, createWallet)
@@ -122,7 +130,7 @@ class ObtainAuthToken(APIView):
         return self.serializer_class(*args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        logger.debug("Login information:" + str(request.data))
+        logger.info("Login information:" + str(request.data))
 
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():

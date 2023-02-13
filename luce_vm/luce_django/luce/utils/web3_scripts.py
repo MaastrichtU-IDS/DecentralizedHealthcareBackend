@@ -1,4 +1,4 @@
-from web3.middleware import geth_poa_middleware
+# from web3.middleware import geth_poa_middleware
 import os
 from web3 import Web3
 import time
@@ -20,11 +20,11 @@ ganache = False
 
 ###CONNECT TO GANACHE LOCAL NETWORK##########
 w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
-CHAIN_ID = 5777
+CHAIN_ID = 1337
 ganache = True
 
 
-w3.middleware_stack.inject(geth_poa_middleware, layer=0)
+# w3.middleware_stack.inject(geth_poa_middleware, layer=0)
 
 BASE_DIR = os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))) + "/utils/data/"
@@ -53,7 +53,7 @@ faucet_privateKey = "52417fb192c8cb46bf2b76e814992a803910d42cd19ca0ae0a83c5de97c
 # faucet_privateKey = "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
 
 if ganache:
-    faucet_privateKey = "03a145ddc40d45271e85ebc38e894f9d1d3e5bebd602c28be91a645e0c8b314c"
+    faucet_privateKey = "b356d1535a220da23f91437f3c954b8f53663f28f1d861a2f54dc5b50bfb40d7"
 # Establish faucet account
 faucet = w3.eth.account.privateKeyToAccount(faucet_privateKey)
 

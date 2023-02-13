@@ -1,4 +1,10 @@
-from brownie import *
+# from brownie import *
+from brownie import LUCERegistry, accounts
 
-def main():
-    result = LUCERegistry.deploy({'from': accounts[0]})
+def main(_owner):
+    
+    _owner = accounts[0]
+    result = LUCERegistry.deploy({"from": _owner})
+    # print(type(result))
+    print(dir(result))
+    print(result.address)
