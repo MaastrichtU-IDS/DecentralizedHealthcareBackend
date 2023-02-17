@@ -8,29 +8,35 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 import utils.web3_scripts as web3
 from django.dispatch import receiver
 
-from django.contrib.auth.models import (
-    BaseUserManager, AbstractBaseUser
-)
+from django.contrib.auth.models import (BaseUserManager, AbstractBaseUser)
 from django.conf import settings
 
 # from brownie import LUCERegistry
+from brownie import project
+from brownie import network
+from brownie import accounts
+
+luce_project = project.load(
+    "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/brownie"
+)
+luce_project.load_config()
+network.connect()
 
 
 class UserManager(BaseUserManager):
-    def create_user(
-            self,
-            email,
-            gender,
-            age,
-            first_name,
-            last_name,
-            password,
-            user_type=None,
-            ethereum_private_key=None,
-            ethereum_public_key=None,
-            contract_address=None,
-            is_staff=False,
-            is_admin=False):
+    def create_user(self,
+                    email,
+                    gender,
+                    age,
+                    first_name,
+                    last_name,
+                    password,
+                    user_type=None,
+                    ethereum_private_key=None,
+                    ethereum_public_key=None,
+                    contract_address=None,
+                    is_staff=False,
+                    is_admin=False):
         """
         Creates and saves a User with the given arguments and password.
         """
@@ -43,9 +49,7 @@ class UserManager(BaseUserManager):
         if not password:
             raise ValueError('Users must have a password')
 
-        user = self.model(
-            email=self.normalize_email(email),
-        )
+        user = self.model(email=self.normalize_email(email), )
 
         user.gender = gender
         user.staff = is_staff
@@ -75,9 +79,15 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, first_name, last_name, password,
-                         ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
-                         ethereum_private_key="0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"):
+    def create_superuser(
+        self,
+        email,
+        first_name,
+        last_name,
+        password,
+        ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
+        ethereum_private_key="0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
+    ):
         """
         Creates and saves a superuser.
         """
@@ -87,7 +97,8 @@ class UserManager(BaseUserManager):
             last_name,
             password=password,
             ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
-            ethereum_private_key="0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
+            ethereum_private_key=
+            "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
         )
         user.staff = True
         user.admin = True
@@ -113,58 +124,32 @@ class User(AbstractBaseUser):
         unique=True,
     )
 
-    country = models.CharField(
-        max_length=25,
-        null=True
-    )
+    country = models.CharField(max_length=25, null=True)
 
-    institution = models.CharField(
-        max_length=255,
-        null=True
-    )
+    institution = models.CharField(max_length=255, null=True)
 
-    ethereum_private_key = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
+    ethereum_private_key = models.CharField(max_length=255,
+                                            blank=True,
+                                            null=True)
 
-    ethereum_public_key = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
+    ethereum_public_key = models.CharField(max_length=255,
+                                           blank=True,
+                                           null=True)
 
     # Make these fields compulsory?
-    first_name = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
+    first_name = models.CharField(max_length=255, blank=True, null=True)
 
-    last_name = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
+    last_name = models.CharField(max_length=255, blank=True, null=True)
 
     # Can use this later to activate certain features only
     # once ethereum address is associated
     # True for now while developing..
-    is_approved = models.BooleanField(
-        default=True,
-        null=True,
-        blank=True
-    )
+    is_approved = models.BooleanField(default=True, null=True, blank=True)
 
     # user_type is used to know if the user is a Data Provider(0) or a data requester(1)
-    user_type = models.IntegerField(
-        choices=[
-            (0, "Data Provider"),
-            (1, "Data Requester")
-        ],
-        null=True
-    )
+    user_type = models.IntegerField(choices=[(0, "Data Provider"),
+                                             (1, "Data Requester")],
+                                    null=True)
 
     # active user? -> can login
     active = models.BooleanField(default=True)
@@ -178,14 +163,9 @@ class User(AbstractBaseUser):
     # notice the absence of a "Password field", that's built in.
 
     # gender of the user
-    gender = models.CharField(
-        choices=[
-            (0, 'Male'),
-            (1, 'Female')
-        ],
-        max_length=6,
-        null=True
-    )
+    gender = models.CharField(choices=[(0, 'Male'), (1, 'Female')],
+                              max_length=6,
+                              null=True)
 
     age = models.IntegerField(null=True)
 
@@ -278,26 +258,53 @@ class ClinicalPurpose(models.Model):
 
 
 class ResearchPurpose(models.Model):
-    general_research_purpose = models.ForeignKey(
-        GeneralResearchPurpose, on_delete=models.CASCADE, null=True)
-    HMB_research_purpose = models.ForeignKey(
-        HMBResearchPurpose, on_delete=models.CASCADE, null=True)
-    clinical_purpose = models.ForeignKey(
-        ClinicalPurpose, on_delete=models.CASCADE, null=True)
+    general_research_purpose = models.ForeignKey(GeneralResearchPurpose,
+                                                 on_delete=models.CASCADE,
+                                                 null=True)
+    HMB_research_purpose = models.ForeignKey(HMBResearchPurpose,
+                                             on_delete=models.CASCADE,
+                                             null=True)
+    clinical_purpose = models.ForeignKey(ClinicalPurpose,
+                                         on_delete=models.CASCADE,
+                                         null=True)
 
 
 class ConsentContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
-    research_purpose = models.ForeignKey(
-        ResearchPurpose, on_delete=models.CASCADE, null=True)
+    research_purpose = models.ForeignKey(ResearchPurpose,
+                                         on_delete=models.CASCADE,
+                                         null=True)
+
+    def update_data_consent(self):
+        transaction_dict = {
+            'from': accounts.add(private_key=self.user.ethereum_private_key)
+        }
+        transaction_receipt = luce_project.ConsentCode.at(
+            self.contract_address).UploadDataPrimaryCategory(
+                self.user.ethereum_public_key,
+                self.restrictions.no_restrictions,
+                self.restrictions.open_to_general_research_and_clinical_care,
+                self.restrictions.open_to_HMB_research,
+                self.restrictions.open_to_population_and_ancestry_research,
+                self.restrictions.open_to_disease_specific, transaction_dict)
+
+        return transaction_receipt.status
 
     def upload_data_consent(self, estimate):
         return web3.upload_data_consent(self, estimate)
 
     def retrieve_contract_owner(self):
         return web3.retrieve_contract_owner(self)
+
+    def deploy(self):
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+        contract = luce_project.ConsentCode.deploy({'from': new_account})
+
+        self.contract_address = contract.address
+        self.save()
 
     def deploy_contract(self):
         tx_receipt = web3.deploy_consent(self.user)
@@ -319,32 +326,34 @@ class ConsentContract(models.Model):
         tx = web3.give_general_research_purpose(self, user, estimate)
         return tx
 
+
 class DataContract(models.Model):
-    contract_address = models.CharField(
-        max_length=255, 
-        null=True, 
-        unique=True)
+    contract_address = models.CharField(max_length=255, null=True, unique=True)
 
-    user = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    consent_contract = models.ForeignKey(
-        ConsentContract, 
-        on_delete=models.CASCADE, 
-        null=True)
+    consent_contract = models.ForeignKey(ConsentContract,
+                                         on_delete=models.CASCADE,
+                                         null=True)
 
-    description = models.CharField(
-        max_length=255, 
-        null=True)
+    description = models.CharField(max_length=255, null=True)
 
     licence = models.IntegerField(default=1)
 
-    link = models.CharField(
-        max_length=255, 
-        null=True)
+    link = models.CharField(max_length=255, null=True)
+
+    def deploy(self):
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+        # print(accounts.at())
+        contract = luce_project.LuceMain.deploy({'from': new_account})
+
+        self.contract_address = contract.address
+        self.save()
 
     def deploy_contract(self):
+        # self.deploy()
+
         tx_receipt = web3.deploy_contract_main(self.user)
         if type(tx_receipt) is list:
             return tx_receipt
@@ -352,27 +361,57 @@ class DataContract(models.Model):
         self.save()
         return tx_receipt
 
-    def set_registry_address(self, registry, estimate):
-        tx_receipt = web3.set_registry_address(
-            self, registry.contract_address, estimate)
-        return tx_receipt
+    def set_registry_address(self, registry_address):
+        transaction_dict = {
+            'from': accounts.add(private_key=self.user.ethereum_private_key)
+        }
 
-    def set_consent_address(self, estimate):
-        tx_receipt = web3.set_consent_address(
-            self, self.consent_contract.contract_address, estimate)
-        return tx_receipt
+        transaction_receipt = luce_project.LuceMain.at(
+            self.contract_address).setRegistryAddress(registry_address,
+                                                      transaction_dict)
 
-    def publish_dataset(self, user, link, estimate):
-        tx = web3.publish_dataset(self, user, link, estimate)
-        return tx
+        return transaction_receipt.status
+
+    # def set_registry_address(self, registry, estimate):
+    #     tx_receipt = web3.set_registry_address(self, registry.contract_address,
+    #                                            estimate)
+    #     return tx_receipt
+
+    def set_consent_address(self):
+        transaction_dict = {
+            'from': accounts.add(private_key=self.user.ethereum_private_key)
+        }
+
+        transaction_receipt = luce_project.LuceMain.at(
+            self.contract_address).setConsentAddress(
+                self.consent_contract.contract_address, transaction_dict)
+
+        return transaction_receipt.status
+
+        # tx_receipt = web3.set_consent_address(
+        #     self, self.consent_contract.contract_address, estimate)
+        # return tx_receipt
+
+    def publish_dataset(self, link):
+        transaction_dict = {
+            'from': accounts.add(private_key=self.user.ethereum_private_key)
+        }
+
+        transaction_receipt = luce_project.LuceMain.at(
+            self.contract_address).publishData(self.description, link,
+                                               self.licence, transaction_dict)
+
+        return transaction_receipt.status
+        # tx = web3.publish_dataset(self, user, link)
+        # return tx
 
     def retreive_info(self):
         tx_receipt = web3.retreive_dataset_info(self)
         return tx_receipt
 
     def add_data_requester(self, access_time, purpose_code, user, estimate):
-        tx = web3.add_data_requester(
-            self, access_time, purpose_code, user, estimate)
+        tx = web3.add_data_requester(self, access_time, purpose_code, user,
+                                     estimate)
         return tx
 
     def getLink(self, user, estimate):
@@ -414,6 +453,7 @@ class LuceRegistry(models.Model):
     def register_requester(self, user, license, estimate):
         tx = web3.register_requester(self, user, license, estimate)
         return tx
+
 
 """
 

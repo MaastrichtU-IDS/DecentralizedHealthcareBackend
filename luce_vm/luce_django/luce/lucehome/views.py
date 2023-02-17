@@ -5,43 +5,38 @@ from rest_framework.compat import coreapi, coreschema
 from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework.authtoken.models import Token
-from accounts.models import User, DataContract
-from utils import custom_exeptions as custom_exeptions
+from ..accounts.models import User, DataContract
+from ..utils import custom_exeptions as custom_exeptions
 
 from rest_framework.response import Response
-# from .serializers import UserSerializer, RegestryContractSerializer
-# from .serializers import DataContractSerializer
 from .serializers import *
-from utils.web3_scripts import *
-from utils.utils import get_initial_response, set_logger
+from ..utils.web3_scripts import *
+from ..utils.utils import get_initial_response, set_logger
 
-from accounts.models import LuceRegistry
+from ..accounts.models import LuceRegistry
 
 logger = set_logger(__file__)
 
 
 # APIview for registering donors and influencers.
 class UserRegistration(APIView):
-    """
-    """
     def post(self, request, format=None):
         createWallet = request.data.get("create_wallet")
 
         logger.info("Register a new user: ")
         logger.info(request.data)
 
-        serializer = UserSerializer(data=request.data,
-                                    context={"create_wallet": createWallet})
-
-        # print(serializer.is_valid())
+        serializer = UserSerializer(
+            data=request.data,
+            context={
+                "create_wallet": createWallet
+            }
+        )
 
         # serializer validation
         if not serializer.is_valid():
-            print(serializer.errors)
             response = custom_exeptions.validation_exeption(serializer)
-            logger.error("Register failed: " +
-                         response['body']["error"]["message"])
+            logger.error("Register failed: " + response["error"]["message"])
             return Response(response["body"], response["status"])
 
         instance = serializer.save()
@@ -84,7 +79,9 @@ class ObtainAuthToken(APIView):
         parsers.MultiPartParser,
         parsers.JSONParser,
     )
-    renderer_classes = (renderers.JSONRenderer, )
+    renderer_classes = (
+        renderers.JSONRenderer,
+    )
     serializer_class = AuthTokenSerializer
 
     if coreapi_schema.is_enabled():
@@ -109,6 +106,7 @@ class ObtainAuthToken(APIView):
                     ),
                 ),
             ],
+
             encoding="application/json",
         )
 
@@ -124,7 +122,7 @@ class ObtainAuthToken(APIView):
         return self.serializer_class(*args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        logger.info("Login information:" + str(request.data))
+        logger.debug("Login information:" + str(request.data))
 
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
@@ -133,6 +131,8 @@ class ObtainAuthToken(APIView):
 
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
+
+        print(token)
 
         response = get_initial_response()
         response["error"]["code"] = 200
@@ -151,10 +151,8 @@ class UserUpdateView(APIView):
         user = self.request.user
         instance = user
         createWallet = request.data.get("create_wallet")
-        serializer = UserSerializer(user,
-                                    data=request.data,
-                                    context={"create_wallet": createWallet},
-                                    partial=True)
+        serializer = UserSerializer(user, data=request.data, context={
+            "create_wallet": createWallet}, partial=True)
 
         if not serializer.is_valid():
             response = custom_exeptions.validation_exeption(serializer)
@@ -192,8 +190,7 @@ class PublicUserInfoView(APIView):
 
         response = get_initial_response()
         response["error"]["code"] = 200
-        response["error"][
-            "message"] = "user public data retrieved successfully"
+        response["error"]["message"] = "user public data retrieved successfully"
         response["error"]["status"] = "OK"
         response["error"]["details"] = ["SUCCESS"]
         response["data"]["users"] = [serializer.data]
@@ -216,8 +213,7 @@ class PrivateUserInfoView(APIView):
 
         response = get_initial_response()
         response["error"]["code"] = 200
-        response["error"][
-            "message"] = "user private data retrieved successfully"
+        response["error"]["message"] = "user private data retrieved successfully"
         response["error"]["status"] = "OK"
         response["error"]["details"] = ["SUCCESS"]
         response["data"]["users"] = [serializer.data]
@@ -280,30 +276,29 @@ class UploadDataView(APIView):
 
         if not LuceRegistry.objects.filter(pk=1).exists():
             response = custom_exeptions.custom_message(
-                "luce registry was not deployed")
+                "luce registry was not deployed"
+            )
 
             logger.error("Luce registry was not deployed!")
             return Response(response["body"], response["status"])
 
         luceregistry = LuceRegistry.objects.get(pk=1)
 
-        logger.info("LUCE Registry done")
-
-        serializer = DataContractSerializer(data=request.data,
-                                            context={
-                                                "estimate": estimate,
-                                                "restrictions": request.data,
-                                                "user": request.user
-                                            },
-                                            partial=True)
-
+        serializer = DataContractSerializer(
+            data=request.data,
+            context={
+                "estimate": estimate,
+                "restrictions": request.data,
+                "user": request.user
+            },
+            partial=True
+        )
         restriction_serializer = RestrictionsSerializer(data=request.data)
         # check that user is registered in LuceRegistry, if not register him
         is_registered = luceregistry.is_registered(request.user, "provider")
 
         if not is_registered:
-            cost = LuceRegistry.objects.get(pk=1).register_provider(
-                user, estimate)
+            cost = LuceRegistry.objects.get(pk=1).register_provider(user, estimate)
 
             if type(cost) is list:
                 response = custom_exeptions.blockchain_exception(cost)
@@ -312,7 +307,8 @@ class UploadDataView(APIView):
 
         if not restriction_serializer.is_valid():
             response = custom_exeptions.validation_exeption(
-                restriction_serializer)
+                restriction_serializer
+            )
             return Response(response["body"], response["status"])
 
         if not serializer.is_valid():
@@ -320,12 +316,14 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
 
         datacontract = serializer.save()
-        print("###########")
+
         # tx_receipt = datacontract.consent_contract.deploy_contract()
         tx_receipt = datacontract.consent_contract.deploy()
+        print("##################")
+        print(tx_receipt)
 
-        # print(tx_receipt)
-
+        
+        
         # logger.info(type(tx_receipt))
         if type(tx_receipt) is list:
             datacontract.delete()
@@ -333,20 +331,15 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt)
 
-        # tx_receipt0 = datacontract.consent_contract.upload_data_consent(
-        #     estimate)
-
-        tx_receipt0 = datacontract.consent_contract.update_data_consent()
-
+        tx_receipt0 = datacontract.consent_contract.upload_data_consent(
+            estimate)
         if type(tx_receipt0) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(tx_receipt0)
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt0)
 
-        # tx_receipt2 = datacontract.deploy_contract()
-        tx_receipt2 = datacontract.deploy()
-
+        tx_receipt2 = datacontract.deploy_contract()
         if type(tx_receipt2) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(
@@ -354,13 +347,8 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt2)
 
-        registry_address = LuceRegistry.objects.get(pk=1).contract_address
-
-        # tx_receipt3 = datacontract.set_registry_address(
-        #     LuceRegistry.objects.get(pk=1), estimate)
-
-        tx_receipt3 = datacontract.set_registry_address(registry_address)
-
+        tx_receipt3 = datacontract.set_registry_address(
+            LuceRegistry.objects.get(pk=1), estimate)
         if type(tx_receipt3) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(
@@ -368,7 +356,7 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt3)
 
-        tx_receipt4 = datacontract.set_consent_address()
+        tx_receipt4 = datacontract.set_consent_address(estimate)
         if type(tx_receipt4) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(
@@ -376,7 +364,7 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt4)
 
-        tx_receipt5 = datacontract.publish_dataset(link)
+        tx_receipt5 = datacontract.publish_dataset(user, link, estimate)
         if type(tx_receipt5) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(
@@ -384,9 +372,6 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt5)
 
-        print(tx_receipts)
-
-        print("###########")
         response = get_initial_response()
         response["error"]["code"] = 200
         response["error"]["message"] = "data published successfully"
@@ -424,8 +409,8 @@ class RequestDatasetView(APIView):
 
         for contract in dataset_addresses:
             print("##################CONTRACT########################")
-            tx_receipts = self.request_access(contract, request, access_time,
-                                              estimate, purpose_code)
+            tx_receipts = self.request_access(
+                contract, request, access_time, estimate, purpose_code)
             if type(tx_receipts) is Response:
                 return tx_receipts
             all_receipts.append(tx_receipts)
@@ -440,8 +425,7 @@ class RequestDatasetView(APIView):
 
         return Response(response)
 
-    def request_access(self, c_address, request, access_time, estimate,
-                       purpose_code):
+    def request_access(self, c_address, request, access_time, estimate, purpose_code):
 
         rp_serializer = ResearchPurposeSerializer(data=request.data)
         if not rp_serializer.is_valid():
@@ -449,8 +433,7 @@ class RequestDatasetView(APIView):
             return Response(response["body"], response["status"])
         rp = rp_serializer.save()
 
-        if not DataContract.objects.filter(
-                contract_address=c_address).exists():
+        if not DataContract.objects.filter(contract_address=c_address).exists():
             response = custom_exeptions.custom_message(
                 "dataset was not specified")
             return Response(response["body"], response["status"])
@@ -469,8 +452,8 @@ class RequestDatasetView(APIView):
 
         is_registered = luceregistry.is_registered(request.user, "requester")
         if is_registered == 0:
-            receipt = luceregistry.register_requester(request.user, 1,
-                                                      estimate)
+            receipt = luceregistry.register_requester(
+                request.user, 1, estimate)
             if type(receipt) is list:
                 datacontract.consent_contract.research_purpose.delete()
                 response = custom_exeptions.blockchain_exception(
@@ -505,8 +488,8 @@ class RequestDatasetView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(receipt4)
 
-        receipt5 = datacontract.add_data_requester(access_time, purpose_code,
-                                                   request.user, estimate)
+        receipt5 = datacontract.add_data_requester(
+            access_time, purpose_code, request.user, estimate)
         if type(receipt5) is list:
             datacontract.consent_contract.research_purpose.delete()
             response = custom_exeptions.blockchain_exception(
@@ -515,10 +498,7 @@ class RequestDatasetView(APIView):
         tx_receipts.append(receipt5)
 
         if estimate:
-            return Response({
-                "gas_estimate":
-                receipt + receipt2 + receipt3 + receipt5 + receipt5
-            })
+            return Response({"gas_estimate": receipt + receipt2 + receipt3 + receipt5 + receipt5})
 
         return tx_receipts
 
@@ -531,8 +511,7 @@ class GetLink(APIView):
         access_time = request.data.pop("access_time", 1000)
         purpose_code = request.data.pop("purpose_code", 1)
         dataset_address = request.data.pop("dataset_address", False)
-        if not DataContract.objects.filter(
-                contract_address=dataset_address).exists():
+        if not DataContract.objects.filter(contract_address=dataset_address).exists():
             response = custom_exeptions.custom_message(
                 "dataset was not specified")
             return Response(response["body"], response["status"])
@@ -609,16 +588,16 @@ class SearchContract(APIView):
 
 
 class LuceRegistryView(APIView):
-    """
-    While deploying LUCERegistry contract, the request should be handled
-    by Django first (in case of failure), and then blockchain.
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
         if not LuceRegistry.objects.filter(pk=1).exists():
-            return Response({"error": "luce registry was not deployed"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "error": "luce registry was not deployed"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         registry = LuceRegistry.objects.get(pk=1)
         serializer = RegestryContractSerializer(registry)

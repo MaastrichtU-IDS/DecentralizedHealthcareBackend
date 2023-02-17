@@ -117,6 +117,8 @@ CORS_ORIGIN_ALLOW_ALL = True
 #     }
 # }
 
+
+# connect to database: psql -U luce --port 5433 -d lucedb
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

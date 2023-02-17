@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AFL-3.0
 pragma solidity ^0.6.2;
 
-import "/vagrant/luce_django/luce/utils/data/LuceRegistry.sol";
-import "/vagrant/luce_django/luce/utils/data/Token.sol";
+import "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/luce_django/luce/utils/data/LuceRegistry.sol";
+
+import "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/luce_django/luce/utils/data/Token.sol";
 
 contract Dataset is ERC721 {
     // Contract testing variables
