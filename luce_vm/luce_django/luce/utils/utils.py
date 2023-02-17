@@ -5,7 +5,7 @@ import os
 
 def set_logger(file):
     logger = logging.getLogger(file)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     # set two handlers
     log_file = "{}.log".format(file)
@@ -58,8 +58,8 @@ def format_errors(errors):
 def format_error_blockchain(errors):
 
     error = str(errors[0]).replace("\'", "\"")
-    print("====")
-    print(error)
+    # print("====")
+    # print(error)
     error = json.loads(error)
     error["when"] = errors[1]
     final = error["message"]+" when "+error["when"]

@@ -1,0 +1,12 @@
+@startuml
+
+class LUCEBlockchain {
+    - Project project
+    - Unknown config
+    - Unknown network_status
+
+    __init__(self, project_path)
+    + Deploy_LUCERegiwtry(self, script_path)
+}
+
+@enduml

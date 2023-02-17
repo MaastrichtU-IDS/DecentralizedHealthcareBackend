@@ -1,18 +1,17 @@
-from web3.middleware import geth_poa_middleware
+# from web3.middleware import geth_poa_middleware
 import os
 from web3 import Web3
 import time
+
 ganache = False
 
 ###CONNECT TO ETH NETWORK USING HOSTED NODE (infura)##########
 #w3 = Web3(Web3.HTTPProvider("https://rinkeby.infura.io/v3/374de38210c343f1921a77b45822edf9"))
 #CHAIN_ID = 4
 
-
 ###CONNECT TO ETH NETWORK USING LOCAL LIGHT NODE (GETH)##########
 #w3 = Web3(Web3.IPCProvider("/home/vagrant/.ethereum/rinkeby/geth.ipc"))
 #CHAIN_ID = 4
-
 
 ###CONNECT TO POLYGON NETWORK USING HOSTED NODE##########
 # w3 = Web3(Web3.HTTPProvider("https://rpc-mumbai.matic.today"))
@@ -20,11 +19,10 @@ ganache = False
 
 ###CONNECT TO GANACHE LOCAL NETWORK##########
 w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
-CHAIN_ID = 5777
+CHAIN_ID = 1337
 ganache = True
 
-
-w3.middleware_stack.inject(geth_poa_middleware, layer=0)
+# w3.middleware_stack.inject(geth_poa_middleware, layer=0)
 
 BASE_DIR = os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))) + "/utils/data/"
@@ -36,7 +34,6 @@ REGISTRY_CONTRACT_PATH = BASE_DIR + 'LuceRegistry.sol'
 CONTRACT_FILE = "LUCERegistry"
 LUCEMAIN_CONTRACT = "LuceMain"
 CONSENT_CONTRACT = "ConsentCode"
-
 
 DEBUG = True
 
@@ -53,7 +50,7 @@ faucet_privateKey = "52417fb192c8cb46bf2b76e814992a803910d42cd19ca0ae0a83c5de97c
 # faucet_privateKey = "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
 
 if ganache:
-    faucet_privateKey = "03a145ddc40d45271e85ebc38e894f9d1d3e5bebd602c28be91a645e0c8b314c"
+    faucet_privateKey = "00c24ab59eb79796c49e475153a49e54b9034b65baf53cce7cae9ddd4c098f3b"
 # Establish faucet account
 faucet = w3.eth.account.privateKeyToAccount(faucet_privateKey)
 
@@ -76,7 +73,7 @@ def send_ether(amount_in_ether, recipient_address, sender_pkey):
         'from': sender_address,
         'to': recipient_address,
         'value': amount_in_wei,
-        'gasPrice': w3.toWei('30', 'Gwei'),
+        'gasPrice': w3.toWei('10', 'Gwei'),
         'nonce': nonce,
         'chainId': CHAIN_ID
     }
@@ -91,8 +88,10 @@ def send_ether(amount_in_ether, recipient_address, sender_pkey):
 
     txn_dict["gas"] = gas
 
-    txn_receipt = sign_and_send(
-        txn_dict, sender_pkey, "sending ether from faucet to account")
+    # print(txn_dict)
+
+    txn_receipt = sign_and_send(txn_dict, sender_pkey,
+                                "sending ether from faucet to account")
     return txn_receipt
 
 
@@ -101,17 +100,16 @@ def send_ether(amount_in_ether, recipient_address, sender_pkey):
 # creates a fresh ethereum account for the user.
 # It will also pre-fund the new account with some ether.
 
+
 def assign_address_v3():
     # Establish web3 connection
     import time
     from hexbytes import HexBytes
     # Create new web3 account
     eth_account = create_wallet()
-    txn_receipt = send_ether(
-        amount_in_ether=1.5,
-        recipient_address=eth_account.address,
-        sender_pkey=faucet.privateKey
-    )
+    txn_receipt = send_ether(amount_in_ether=1.5,
+                             recipient_address=eth_account.address,
+                             sender_pkey=faucet.privateKey)
     # Return user, now with wallet associated
     return txn_receipt, eth_account
 
@@ -160,29 +158,26 @@ def deploy(_user, contract, interface):
     }
 
     gas = transact_function(
-        contract.constructor().estimateGas,
-        {},
-        "estimating gas for: "+interface+" constructor"
-    )*2
+        contract.constructor().estimateGas, {},
+        "estimating gas for: " + interface + " constructor") * 2
 
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
 
-    gas = transact_function(
-        contract.constructor().buildTransaction,
-        txn_dict,
-        "building transactino: deployment of "+interface
-    )
+    gas = transact_function(contract.constructor().buildTransaction, txn_dict,
+                            "building transactino: deployment of " + interface)
     if type(gas) is list:
         return gas
     contract_txn = contract.constructor().buildTransaction(txn_dict)
 
-    return sign_and_send(contract_txn, private_key, "sending transaction: deployment of "+interface)
+    return sign_and_send(contract_txn, private_key,
+                         "sending transaction: deployment of " + interface)
 
 
 def compile_and_extract_interface_Consent():
-    return compile_and_extract_interface(CONSENT_CONTRACT_PATH, CONSENT_CONTRACT)
+    return compile_and_extract_interface(CONSENT_CONTRACT_PATH,
+                                         CONSENT_CONTRACT)
 
 
 def compile_and_extract_interface_Registry():
@@ -198,15 +193,16 @@ def compile_and_extract_interface(contract, interface):
     from solcx import compile_source
 
     # Read in LUCE contract code
-    with open(contract, 'r') as file:  # Adjust file_path for use in Jupyter/Django
+    with open(contract,
+              'r') as file:  # Adjust file_path for use in Jupyter/Django
         contract_source_code = file.read()
 
     # Compile & Store Compiled source code
 
-    compiled_sol = compile_source(contract_source_code,  solc_version="0.6.2")
+    compiled_sol = compile_source(contract_source_code, solc_version="0.6.2")
 
     # Extract full interface as dict from compiled contract
-    contract_interface = compiled_sol['<stdin>:'+interface]
+    contract_interface = compiled_sol['<stdin>:' + interface]
 
     # Extract abi and bytecode
     abi = contract_interface['abi']
@@ -217,7 +213,7 @@ def compile_and_extract_interface(contract, interface):
     d['abi'] = abi
     d['bin'] = bytecode
     d['full_interface'] = contract_interface
-    return(d)
+    return (d)
 
 
 def upload_data_consent(consent_obj, estimate):
@@ -225,6 +221,7 @@ def upload_data_consent(consent_obj, estimate):
     restrictions = consent_obj.restrictions
     user = consent_obj.user
     contract_address = consent_obj.contract_address
+
     noRestrictions = restrictions.no_restrictions
     openToGeneralResearchAndClinicalCare = restrictions.open_to_general_research_and_clinical_care
     openToHMBResearch = restrictions.open_to_HMB_research
@@ -236,6 +233,8 @@ def upload_data_consent(consent_obj, estimate):
 
     user_address = user.ethereum_public_key
     private_key = user.ethereum_private_key
+
+    # Here, we get a `ConsnetCode` contract
     contract_instance = w3.eth.contract(address=contract_address, abi=abi)
     user = w3.eth.account.privateKeyToAccount(private_key)
 
@@ -246,8 +245,13 @@ def upload_data_consent(consent_obj, estimate):
         'gasPrice': w3.toWei('20', 'gwei'),
         'nonce': nonce,
     }
-    gas = transact_function(contract_instance.functions.UploadDataPrimaryCategory(user_address, noRestrictions, openToGeneralResearchAndClinicalCare, openToHMBResearch,
-                            openToPopulationAndAncestryResearch, openToDiseaseSpecific).estimateGas, txn_dict, "estimating gas for: upload consent statements to ConsentContract")
+    gas = transact_function(
+        contract_instance.functions.UploadDataPrimaryCategory(
+            user_address, noRestrictions, openToGeneralResearchAndClinicalCare,
+            openToHMBResearch, openToPopulationAndAncestryResearch,
+            openToDiseaseSpecific).estimateGas, txn_dict,
+        "estimating gas for: upload consent statements to ConsentContract")
+
     if type(gas) is list:
         return gas
     if estimate:
@@ -255,14 +259,20 @@ def upload_data_consent(consent_obj, estimate):
 
     txn_dict['gas'] = gas
 
-    contract_txn = transact_function(contract_instance.functions.UploadDataPrimaryCategory(user_address, noRestrictions, openToGeneralResearchAndClinicalCare, openToHMBResearch,
-                                     openToPopulationAndAncestryResearch, openToDiseaseSpecific).buildTransaction, txn_dict, "building transaction: upload consent statements to ConsentContract")
+    contract_txn = transact_function(
+        contract_instance.functions.UploadDataPrimaryCategory(
+            user_address, noRestrictions, openToGeneralResearchAndClinicalCare,
+            openToHMBResearch, openToPopulationAndAncestryResearch,
+            openToDiseaseSpecific).buildTransaction, txn_dict,
+        "building transaction: upload consent statements to ConsentContract")
     if type(contract_txn) is list:
         return gas
-    return sign_and_send(contract_txn, private_key, "sending transactin: upload consent statements to ConsentContract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "sending transactin: upload consent statements to ConsentContract")
 
 
-def give_clinical_research_purpose(consentContract,  user, estimate):
+def give_clinical_research_purpose(consentContract, user, estimate):
     from web3 import Web3
     contract_address = consentContract.contract_address
     rp = consentContract.research_purpose.clinical_purpose
@@ -280,21 +290,31 @@ def give_clinical_research_purpose(consentContract,  user, estimate):
         'gasPrice': w3.toWei('20', 'gwei'),
         'nonce': nonce,
     }
-    gas = transact_function(contract_instance.functions.giveClinicalPurpose(user_address, rp.use_for_decision_support,
-                            rp.use_for_disease_support).estimateGas, {}, "estimating gas for setting clinical purpose in the consent contract")
+    gas = transact_function(
+        contract_instance.functions.giveClinicalPurpose(
+            user_address, rp.use_for_decision_support,
+            rp.use_for_disease_support).estimateGas, {},
+        "estimating gas for setting clinical purpose in the consent contract")
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
     if estimate:
         return gas
-    contract_txn = transact_function(contract_instance.functions.giveClinicalPurpose(user_address, rp.use_for_decision_support,
-                                     rp.use_for_disease_support).buildTransaction, txn_dict, "building transaction: setting clinical purpose in the consent contract")
+    contract_txn = transact_function(
+        contract_instance.functions.giveClinicalPurpose(
+            user_address, rp.use_for_decision_support,
+            rp.use_for_disease_support).buildTransaction, txn_dict,
+        "building transaction: setting clinical purpose in the consent contract"
+    )
     if type(contract_txn) is list:
         return contract_txn
-    return sign_and_send(contract_txn, private_key, "sending transaction: setting clinical purpose in the consent contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "sending transaction: setting clinical purpose in the consent contract"
+    )
 
 
-def give_HMB_research_purpose(consentContract,  user, estimate):
+def give_HMB_research_purpose(consentContract, user, estimate):
     from web3 import Web3
     contract_address = consentContract.contract_address
     rp = consentContract.research_purpose.HMB_research_purpose
@@ -312,21 +332,40 @@ def give_HMB_research_purpose(consentContract,  user, estimate):
         'gasPrice': w3.toWei('20', 'gwei'),
         'nonce': nonce,
     }
-    gas = transact_function(contract_instance.functions.giveHMBPurpose(user_address, rp.use_for_research_concerning_fundamental_biology, rp.use_for_research_concerning_genetics, rp.use_for_research_concerning_drug_development,
-                            rp.use_for_research_concerning_any_disease, rp.use_for_research_concerning_age_categories, rp.use_for_research_concerning_gender_categories).estimateGas, {}, "estimating gas for setting HMB ch purpose in the consent contract")
+    gas = transact_function(
+        contract_instance.functions.giveHMBPurpose(
+            user_address, rp.use_for_research_concerning_fundamental_biology,
+            rp.use_for_research_concerning_genetics,
+            rp.use_for_research_concerning_drug_development,
+            rp.use_for_research_concerning_any_disease,
+            rp.use_for_research_concerning_age_categories,
+            rp.use_for_research_concerning_gender_categories).estimateGas, {},
+        "estimating gas for setting HMB ch purpose in the consent contract")
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
     if estimate:
         return gas
-    contract_txn = transact_function(contract_instance.functions.giveHMBPurpose(user_address, rp.use_for_research_concerning_fundamental_biology, rp.use_for_research_concerning_genetics, rp.use_for_research_concerning_drug_development,
-                                     rp.use_for_research_concerning_any_disease, rp.use_for_research_concerning_age_categories, rp.use_for_research_concerning_gender_categories).buildTransaction, txn_dict, "building transaction: setting HMB research purpose in the consent contract")
+    contract_txn = transact_function(
+        contract_instance.functions.giveHMBPurpose(
+            user_address, rp.use_for_research_concerning_fundamental_biology,
+            rp.use_for_research_concerning_genetics,
+            rp.use_for_research_concerning_drug_development,
+            rp.use_for_research_concerning_any_disease,
+            rp.use_for_research_concerning_age_categories,
+            rp.use_for_research_concerning_gender_categories).buildTransaction,
+        txn_dict,
+        "building transaction: setting HMB research purpose in the consent contract"
+    )
     if type(contract_txn) is list:
         return contract_txn
-    return sign_and_send(contract_txn, private_key, "sending transaction: setting HMB research purpose in the consent contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "sending transaction: setting HMB research purpose in the consent contract"
+    )
 
 
-def give_general_research_purpose(consentContract,  user, estimate):
+def give_general_research_purpose(consentContract, user, estimate):
     from web3 import Web3
     contract_address = consentContract.contract_address
     rp = consentContract.research_purpose.general_research_purpose
@@ -344,18 +383,35 @@ def give_general_research_purpose(consentContract,  user, estimate):
         'gasPrice': w3.toWei('20', 'gwei'),
         'nonce': nonce,
     }
-    gas = transact_function(contract_instance.functions.giveResearchPurpose(user_address, rp.use_for_methods_development, rp.use_for_reference_or_control_material, rp.use_for_research_concerning_populations,
-                            rp.use_for_research_ancestry, rp.use_for_biomedical_research).estimateGas, {}, "estimating gas for setting general research purpose in the consent contract")
+    gas = transact_function(
+        contract_instance.functions.giveResearchPurpose(
+            user_address, rp.use_for_methods_development,
+            rp.use_for_reference_or_control_material,
+            rp.use_for_research_concerning_populations,
+            rp.use_for_research_ancestry,
+            rp.use_for_biomedical_research).estimateGas, {},
+        "estimating gas for setting general research purpose in the consent contract"
+    )
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
     if estimate:
         return gas
-    contract_txn = transact_function(contract_instance.functions.giveResearchPurpose(user_address, rp.use_for_methods_development, rp.use_for_reference_or_control_material, rp.use_for_research_concerning_populations,
-                                     rp.use_for_research_ancestry, rp.use_for_biomedical_research).buildTransaction, txn_dict, "building transaction: setting general research purpose in the consent contract")
+    contract_txn = transact_function(
+        contract_instance.functions.giveResearchPurpose(
+            user_address, rp.use_for_methods_development,
+            rp.use_for_reference_or_control_material,
+            rp.use_for_research_concerning_populations,
+            rp.use_for_research_ancestry,
+            rp.use_for_biomedical_research).buildTransaction, txn_dict,
+        "building transaction: setting general research purpose in the consent contract"
+    )
     if type(contract_txn) is list:
         return contract_txn
-    return sign_and_send(contract_txn, private_key, "sending transaction: setting general research purpose in the consent contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "sending transaction: setting general research purpose in the consent contract"
+    )
 
 
 def set_registry_address(datacontract, registry_address, estimate):
@@ -377,8 +433,10 @@ def set_registry_address(datacontract, registry_address, estimate):
         'nonce': nonce,
     }
 
-    gas = transact_function(contract_instance.functions.setRegistryAddress(
-        registry_address).estimateGas, txn_dict, "estimating gas for setting registry address in Dataset contract")
+    gas = transact_function(
+        contract_instance.functions.setRegistryAddress(
+            registry_address).estimateGas, txn_dict,
+        "estimating gas for setting registry address in Dataset contract")
     if type(gas) is list:
         return gas
 
@@ -386,9 +444,13 @@ def set_registry_address(datacontract, registry_address, estimate):
     if estimate:
         return gas
 
-    contract_txn = transact_function(contract_instance.functions.setRegistryAddress(
-        registry_address).buildTransaction, txn_dict, "building transaction: setting registry address in Dataset contract")
-    return sign_and_send(contract_txn, private_key, "sending transaction: setting registry address in Dataset contract")
+    contract_txn = transact_function(
+        contract_instance.functions.setRegistryAddress(
+            registry_address).buildTransaction, txn_dict,
+        "building transaction: setting registry address in Dataset contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "sending transaction: setting registry address in Dataset contract")
 
 
 def is_registered(luceregistry, user, usertype):
@@ -436,19 +498,25 @@ def set_consent_address(datacontract, consent_address, estimate):
         'nonce': nonce,
     }
 
-    gas = transact_function(contract_instance.functions.setConsentAddress(
-        consent_address).estimateGas, txn_dict, "estimating gas for: setting consent address in Dataset contract")
+    gas = transact_function(
+        contract_instance.functions.setConsentAddress(
+            consent_address).estimateGas, txn_dict,
+        "estimating gas for: setting consent address in Dataset contract")
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
     if estimate:
         return gas
 
-    contract_txn = transact_function(contract_instance.functions.setConsentAddress(
-        consent_address).buildTransaction, txn_dict, "building transaction: setting consent address in Dataset contract")
+    contract_txn = transact_function(
+        contract_instance.functions.setConsentAddress(
+            consent_address).buildTransaction, txn_dict,
+        "building transaction: setting consent address in Dataset contract")
     if type(contract_txn) is list:
         return contract_txn
-    return sign_and_send(contract_txn, private_key, "sending transaction: setting consent address in Dataset contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "sending transaction: setting consent address in Dataset contract")
 
 
 def register_provider(registry, user, estimate):
@@ -469,8 +537,11 @@ def register_provider(registry, user, estimate):
         'nonce': nonce,
     }
 
-    gas = transact_function(contract_instance.functions.newDataProvider(
-        user_address).estimateGas, txn_dict, "estimating gas for: registering dataprovider in the LuceRegistry contract")
+    gas = transact_function(
+        contract_instance.functions.newDataProvider(user_address).estimateGas,
+        txn_dict,
+        "estimating gas for: registering dataprovider in the LuceRegistry contract"
+    )
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
@@ -478,11 +549,16 @@ def register_provider(registry, user, estimate):
     if estimate:
         return gas
 
-    contract_txn = transact_function(contract_instance.functions.newDataProvider(
-        user_address).buildTransaction, txn_dict, "building transaction: registering dataprovider in the LuceRegistry contract")
+    contract_txn = transact_function(
+        contract_instance.functions.newDataProvider(
+            user_address).buildTransaction, txn_dict,
+        "building transaction: registering dataprovider in the LuceRegistry contract"
+    )
     if type(contract_txn) is list:
         return contract_txn
-    return sign_and_send(contract_txn, private_key, "registering dataprovider in the LuceRegistry contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "registering dataprovider in the LuceRegistry contract")
 
 
 def register_requester(registry, user, license, estimate):
@@ -503,8 +579,11 @@ def register_requester(registry, user, license, estimate):
         'nonce': nonce,
     }
 
-    gas = transact_function(contract_instance.functions.registerNewUser(user_address, license).estimateGas, {
-    }, "estimating gas for: registering data requester in LuceRegistry contract")
+    gas = transact_function(
+        contract_instance.functions.registerNewUser(user_address,
+                                                    license).estimateGas, {},
+        "estimating gas for: registering data requester in LuceRegistry contract"
+    )
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
@@ -512,11 +591,17 @@ def register_requester(registry, user, license, estimate):
     if estimate:
         return gas
 
-    contract_txn = transact_function(contract_instance.functions.registerNewUser(
-        user_address, license).buildTransaction, txn_dict, "building transaction: registering data requester in LuceRegistry contract")
+    contract_txn = transact_function(
+        contract_instance.functions.registerNewUser(user_address,
+                                                    license).buildTransaction,
+        txn_dict,
+        "building transaction: registering data requester in LuceRegistry contract"
+    )
     if type(contract_txn) is list:
         return contract_txn
-    return sign_and_send(contract_txn, private_key, "registering data requester in LuceRegistry contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "registering data requester in LuceRegistry contract")
 
 
 def publish_dataset(datacontract, user, link, estimate):
@@ -541,8 +626,10 @@ def publish_dataset(datacontract, user, link, estimate):
     }
 
     # gas = 650432#contract_instance.functions.publishData(description, link, licence).estimateGas(txn_dict)
-    gas = transact_function(contract_instance.functions.publishData(
-        description, link, licence).estimateGas, txn_dict, "estimating gas for: publishData function in Dataset Contract")
+    gas = transact_function(
+        contract_instance.functions.publishData(description, link,
+                                                licence).estimateGas, txn_dict,
+        "estimating gas for: publishData function in Dataset Contract")
     if type(gas) is list:
         return gas
 
@@ -550,11 +637,16 @@ def publish_dataset(datacontract, user, link, estimate):
 
     if estimate:
         return gas
-    contract_txn = transact_function(contract_instance.functions.publishData(
-        description, link, licence).buildTransaction, txn_dict, "building transaction: publishData function in Dataset Contract")
+    contract_txn = transact_function(
+        contract_instance.functions.publishData(description, link,
+                                                licence).buildTransaction,
+        txn_dict,
+        "building transaction: publishData function in Dataset Contract")
     if type(contract_txn) is list:
         return contract_txn
-    return sign_and_send(contract_txn, private_key, "sending transaction: publishData function in Dataset Contract")
+    return sign_and_send(
+        contract_txn, private_key,
+        "sending transaction: publishData function in Dataset Contract")
 
 
 def get_link(datacontract, user, estimate):
@@ -582,7 +674,8 @@ def get_link(datacontract, user, estimate):
     return contract_txn
 
 
-def add_data_requester(datacontract, access_time, purpose_code, user, estimate):
+def add_data_requester(datacontract, access_time, purpose_code, user,
+                       estimate):
     d = compile_and_extract_interface_Main()
     abi = d["abi"]
     contract_address = datacontract.contract_address
@@ -602,8 +695,11 @@ def add_data_requester(datacontract, access_time, purpose_code, user, estimate):
     cost = contract_instance.functions.expectedCosts().call()
     txn_dict['value'] = cost
 
-    gas = transact_function(contract_instance.functions.addDataRequester(
-        1, access_time).estimateGas, txn_dict, "estimating gas for: add data requester to the LuceMain contract")
+    gas = transact_function(
+        contract_instance.functions.addDataRequester(1,
+                                                     access_time).estimateGas,
+        txn_dict,
+        "estimating gas for: add data requester to the LuceMain contract")
     if type(gas) is list:
         return gas
     txn_dict["gas"] = gas
@@ -613,12 +709,15 @@ def add_data_requester(datacontract, access_time, purpose_code, user, estimate):
 
     contract_txn = contract_instance.functions.addDataRequester(
         1, access_time).buildTransaction(txn_dict)
-    contract_txn = transact_function(contract_instance.functions.addDataRequester(
-        1, access_time).buildTransaction, txn_dict, "building transaction: add data requester to the LuceMain contract")
+    contract_txn = transact_function(
+        contract_instance.functions.addDataRequester(
+            1, access_time).buildTransaction, txn_dict,
+        "building transaction: add data requester to the LuceMain contract")
     if type(contract_txn) is list:
         return contract_txn
-    tx = sign_and_send(contract_txn, private_key,
-                       "sending transaction: add data requester to the LuceMain contract")
+    tx = sign_and_send(
+        contract_txn, private_key,
+        "sending transaction: add data requester to the LuceMain contract")
     return tx
 
 
@@ -669,14 +768,18 @@ def getAllRestrictionsAndPurposes(restrictions, researchpurpose):
             restrictions, restrictions_ids[id]) else False
 
     for id in generalResearchPurpose_ids.keys():
-        final[id] = getattr(researchpurpose.general_research_purpose, generalResearchPurpose_ids[id]) if hasattr(
-            researchpurpose.general_research_purpose, generalResearchPurpose_ids[id]) else False
+        final[id] = getattr(researchpurpose.general_research_purpose,
+                            generalResearchPurpose_ids[id]) if hasattr(
+                                researchpurpose.general_research_purpose,
+                                generalResearchPurpose_ids[id]) else False
 
     for id in hmbPurpose_ids.keys():
-        final[id] = getattr(researchpurpose.HMB_research_purpose, hmbPurpose_ids[id]) if hasattr(
-            researchpurpose.HMB_research_purpose, hmbPurpose_ids[id]) else False
+        final[id] = getattr(researchpurpose.HMB_research_purpose,
+                            hmbPurpose_ids[id]) if hasattr(
+                                researchpurpose.HMB_research_purpose,
+                                hmbPurpose_ids[id]) else False
     # for x in range(0,49):
-        #print(str(final[x])+" ["+str(x)+"]")
+    #print(str(final[x])+" ["+str(x)+"]")
     return final
 
 

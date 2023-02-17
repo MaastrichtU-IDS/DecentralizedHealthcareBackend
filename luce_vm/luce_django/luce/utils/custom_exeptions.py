@@ -47,13 +47,19 @@ def blockchain_exception(tx_receipt, receipts=[None]):
 
 
 def validation_exeption(serializer):
+    # print(serializer.errors)
+
     error = utils.format_errors(serializer.errors)
     response = STANDARD_RESPONSE
     response["error"]["code"] = 400
     response["error"]["message"] = "validation error"
     response["error"]["status"] = "ERROR"
     response["error"]["details"] = error
-    return {"body": response, "status": response["error"]["code"]}
+
+    return {
+        "body": response,
+        "status": response["error"]["code"]
+    }
 
 
 def custom_message(message):
