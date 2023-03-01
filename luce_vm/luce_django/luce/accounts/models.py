@@ -16,6 +16,15 @@ from brownie import project
 from brownie import network
 from brownie import accounts
 
+# project should be loaded at somewhere else
+loaded_project = project.get_loaded_projects()
+
+if len(loaded_project) == 0:
+    print("No project")
+else:
+    for p in loaded_project:
+        p.close()
+
 luce_project = project.load(
     "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/brownie"
 )
@@ -82,9 +91,9 @@ class UserManager(BaseUserManager):
     def create_superuser(
         self,
         email,
-        first_name,
-        last_name,
         password,
+        first_name="kun",
+        last_name="li",
         ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
         ethereum_private_key="0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
     ):
@@ -93,8 +102,8 @@ class UserManager(BaseUserManager):
         """
         user = self.create_user(
             email,
-            first_name,
-            last_name,
+            first_name="kun",
+            last_name="li",
             password=password,
             ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
             ethereum_private_key=
@@ -174,7 +183,7 @@ class User(AbstractBaseUser):
 
     # USERNAME_FIELD & Password are required by default
     # Add additional required fields here:
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    # REQUIRED_FIELDS = ['first_name', 'last_name']
 
     objects = UserManager()
 
