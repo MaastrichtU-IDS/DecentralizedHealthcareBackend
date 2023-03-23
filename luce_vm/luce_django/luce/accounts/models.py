@@ -15,12 +15,26 @@ from django.conf import settings
 from brownie import project
 from brownie import network
 from brownie import accounts
+import urllib3
+import json
 
 luce_project = project.load(
     "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/brownie"
 )
 luce_project.load_config()
 network.connect()
+
+
+class Verifier(models.Model):
+    address = models.CharField(max_length=255, null=True)
+
+    def deploy(self):
+        private_key = "00c24ab59eb79796c49e475153a49e54b9034b65baf53cce7cae9ddd4c098f3b"
+        new_account = accounts.add(private_key=private_key)
+        contract = luce_project.PlonkVerifier.deploy({'from': new_account})
+
+        self.address = contract.address
+        self.save()
 
 
 class UserManager(BaseUserManager):
@@ -332,6 +346,8 @@ class DataContract(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    commitment = models.CharField(max_length=255, null=False, default='0x0')
+
     consent_contract = models.ForeignKey(ConsentContract,
                                          on_delete=models.CASCADE,
                                          null=True)
@@ -342,14 +358,54 @@ class DataContract(models.Model):
 
     link = models.CharField(max_length=255, null=True)
 
+    def require_verifier_deployed(self):
+        try:
+            v = Verifier.objects.get(pk=1)
+
+            if v.address is None:
+                deploy_result = v.deploy()
+                # print(deploy_result)
+
+                v.address = deploy_result.address
+                v.save()
+        except ObjectDoesNotExist:
+            v = Verifier.objects.create(pk=1)
+
+            v.address = v.deploy()
+            v.save()
+
     def deploy(self):
         private_key = self.user.ethereum_private_key
         new_account = accounts.add(private_key=private_key)
+        # accounts[1].transfer(new_account, 1e18)  # 1 ether
+        # print(new_account)
+
+        self.require_verifier_deployed()
+        verifier_address = Verifier.objects.get(pk=1).address
+        # print(verifier_address)
+
+        commitment = self.get_commitment("hello")
+        # print(commitment)
+
         # print(accounts.at())
-        contract = luce_project.LuceMain.deploy({'from': new_account})
+        contract = luce_project.LuceMain.deploy(verifier_address,
+                                                commitment['public_signals'],
+                                                {'from': new_account})
 
         self.contract_address = contract.address
         self.save()
+
+    def get_commitment(self, secret):
+        http = urllib3.PoolManager()
+        snark_service_url = "http://127.0.0.1:3000/compute_commitment"
+        body_json = json.dumps({"secret": secret}).encode('utf-8')
+
+        r = http.request('POST',
+                         snark_service_url,
+                         body=body_json,
+                         headers={'Content-Type': 'application/json'})
+
+        return json.loads(r.data.decode('utf-8'))
 
     def deploy_contract(self):
         # self.deploy()
@@ -394,8 +450,12 @@ class DataContract(models.Model):
 
     def publish_dataset(self, link):
         transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key)
+            'from': accounts.add(private_key=self.user.ethereum_private_key),
+            "gas_limit": 1e15,
+            "allow_revert": True
         }
+
+        print(transaction_dict)
 
         transaction_receipt = luce_project.LuceMain.at(
             self.contract_address).publishData(self.description, link,

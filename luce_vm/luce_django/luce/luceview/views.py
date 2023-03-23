@@ -276,6 +276,13 @@ class UploadDataView(APIView):
             logger.error("Link field is invalid (empty?)")
             return Response(response["body"], response["status"])
 
+        new_account = accounts.add()
+        print(new_account)
+        accounts[0].transfer(new_account, 1e18)
+        user.ethereum_private_key = new_account.private_key
+        # user.ethereum_private_key = accounts.add()
+        # accounts[0].transfer(user.ether)
+
         tx_receipts = []
 
         if not LuceRegistry.objects.filter(pk=1).exists():
@@ -627,6 +634,8 @@ class LuceRegistryView(APIView):
     def post(self, request, format=None):
         estimate = request.data.get('estimate', False)
         user = request.user
+
+        # Deploy verifier
 
         if user.ethereum_public_key is None or user.ethereum_private_key is None:
             response = custom_exeptions.custom_message(
