@@ -46,11 +46,11 @@ DEBUG = True
 # to Infura the faucet can be replaced with an API call instead.
 
 # Private key (obtained via Ganache interface)
-faucet_privateKey = "52417fb192c8cb46bf2b76e814992a803910d42cd19ca0ae0a83c5de97c6dbd6"
+faucet_privateKey = "56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79"
 # faucet_privateKey = "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
 
 if ganache:
-    faucet_privateKey = "00c24ab59eb79796c49e475153a49e54b9034b65baf53cce7cae9ddd4c098f3b"
+    faucet_privateKey = "56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79"
 # Establish faucet account
 faucet = w3.eth.account.privateKeyToAccount(faucet_privateKey)
 

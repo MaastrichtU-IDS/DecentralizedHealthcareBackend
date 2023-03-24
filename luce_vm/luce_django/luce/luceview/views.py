@@ -277,7 +277,7 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
 
         new_account = accounts.add()
-        print(new_account)
+        # print(new_account)
         accounts[0].transfer(new_account, 1e18)
         user.ethereum_private_key = new_account.private_key
         # user.ethereum_private_key = accounts.add()
@@ -308,14 +308,14 @@ class UploadDataView(APIView):
         # check that user is registered in LuceRegistry, if not register him
         is_registered = luceregistry.is_registered(request.user, "provider")
 
-        if not is_registered:
-            cost = LuceRegistry.objects.get(pk=1).register_provider(
-                user, estimate)
+        # if not is_registered:
+        #     cost = LuceRegistry.objects.get(pk=1).register_provider(
+        #         user, estimate)
 
-            if type(cost) is list:
-                response = custom_exeptions.blockchain_exception(cost)
-                return Response(response["body"], response["status"])
-            tx_receipts.append(cost)
+        #     if type(cost) is list:
+        #         response = custom_exeptions.blockchain_exception(cost)
+        #         return Response(response["body"], response["status"])
+        #     tx_receipts.append(cost)
 
         if not restriction_serializer.is_valid():
             response = custom_exeptions.validation_exeption(
@@ -353,7 +353,7 @@ class UploadDataView(APIView):
 
         # tx_receipt2 = datacontract.deploy_contract()
         tx_receipt2 = datacontract.deploy()
-
+        
         if type(tx_receipt2) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(

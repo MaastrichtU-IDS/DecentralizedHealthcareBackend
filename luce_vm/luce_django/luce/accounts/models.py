@@ -17,11 +17,23 @@ from brownie import network
 from brownie import accounts
 import urllib3
 import json
+from django.core.exceptions import ObjectDoesNotExist
+
+# project should be loaded at somewhere else
+loaded_project = project.get_loaded_projects()
+
+if len(loaded_project) == 0:
+    print("No project")
+else:
+    for p in loaded_project:
+        p.close()
 
 luce_project = project.load(
     "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/brownie"
 )
 luce_project.load_config()
+# print("network.show_active()")
+print(network.is_connected())
 network.connect()
 
 
@@ -29,7 +41,7 @@ class Verifier(models.Model):
     address = models.CharField(max_length=255, null=True)
 
     def deploy(self):
-        private_key = "00c24ab59eb79796c49e475153a49e54b9034b65baf53cce7cae9ddd4c098f3b"
+        private_key = "56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79"
         new_account = accounts.add(private_key=private_key)
         contract = luce_project.PlonkVerifier.deploy({'from': new_account})
 
@@ -370,8 +382,10 @@ class DataContract(models.Model):
                 v.save()
         except ObjectDoesNotExist:
             v = Verifier.objects.create(pk=1)
+            r = v.deploy()
 
-            v.address = v.deploy()
+            print(r)
+            # v.address = v.deploy().address
             v.save()
 
     def deploy(self):
@@ -394,6 +408,7 @@ class DataContract(models.Model):
 
         self.contract_address = contract.address
         self.save()
+        return self.contract_address
 
     def get_commitment(self, secret):
         http = urllib3.PoolManager()

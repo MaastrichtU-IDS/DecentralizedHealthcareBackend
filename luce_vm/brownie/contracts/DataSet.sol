@@ -111,17 +111,17 @@ contract Dataset is ERC721, Commitment {
         string memory _description,
         string memory _link,
         uint256 _license
-    ) public onlyOwner providerGasCost {
+    ) public onlyOwner {
         require(unpublished == true, "1");
 
-        LUCERegistry c = LUCERegistry(registry);
-        ConsentCode cc = ConsentCode(consent);
+        // LUCERegistry c = LUCERegistry(registry);
+        // ConsentCode cc = ConsentCode(consent);
 
-        address[] memory dataSubjects = cc.displayDataSubjectAcc();
-        require(dataSubjects.length != 0, "2");
+        // address[] memory dataSubjects = cc.displayDataSubjectAcc();
+        // require(dataSubjects.length != 0, "2");
 
-        bool registered = c.checkProvider(msg.sender);
-        require(registered, "3");
+        // bool registered = c.checkProvider(msg.sender);
+        // require(registered, "3");
 
         dataDescription = _description;
         license = _license;
