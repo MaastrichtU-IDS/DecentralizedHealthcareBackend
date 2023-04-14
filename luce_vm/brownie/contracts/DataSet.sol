@@ -86,7 +86,7 @@ contract Dataset is ERC721, Commitment {
      * @param userRegistry is the address of the general registry contract this contract should call on whenever validating
      * data requesters.
      */
-    function setRegistryAddress(address userRegistry) public onlyOwner {
+    function setRegistryAddress(address userRegistry) public {
         registry = userRegistry;
     }
 
@@ -95,9 +95,7 @@ contract Dataset is ERC721, Commitment {
      * registered and possess the correct license.
      * @param userConsent is the address of the general consent contract this contract.
      */
-    function setConsentAddress(
-        address userConsent
-    ) public onlyOwner providerGasCost {
+    function setConsentAddress(address userConsent) public providerGasCost {
         consent = userConsent;
     }
 
@@ -111,7 +109,7 @@ contract Dataset is ERC721, Commitment {
         string memory _description,
         string memory _link,
         uint256 _license
-    ) public onlyOwner {
+    ) public {
         require(unpublished == true, "1");
 
         // LUCERegistry c = LUCERegistry(registry);

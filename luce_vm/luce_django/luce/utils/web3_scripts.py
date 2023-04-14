@@ -814,8 +814,9 @@ def sign_and_send(contract_txn, private_key, name):
             print(e)
         return [e, name]
     if DEBUG:
-        print("======================================================")
-        print(transaction)
+        pass
+        # print("======================================================")
+        # print(transaction)
     return transaction
 
 

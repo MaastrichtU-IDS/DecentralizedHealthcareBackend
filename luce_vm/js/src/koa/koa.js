@@ -29,6 +29,9 @@ const compute_commitment = async ctx => {
 
     const { proof, publicSignals } = await snarkjs.plonk.fullProve(input, wasm, zkey)
 
+    console.log(publicSignals)
+    // console.log(proof)
+
     const r = {
         proof: proof,
         public_signals: publicSignals

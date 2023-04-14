@@ -349,8 +349,23 @@ class ConsentContract(models.Model):
         return tx
 
     def give_general_research_purpose(self, user, estimate):
-        tx = web3.give_general_research_purpose(self, user, estimate)
-        return tx
+        rp = self.research_purpose.general_research_purpose
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+
+        txn_dict = {'from': new_account}
+
+        receipt = luce_project.ConsentCode.at(
+            self.contract_address).giveResearchPurpose(
+                user.ethereum_public_key, rp.use_for_methods_development,
+                rp.use_for_reference_or_control_material,
+                rp.use_for_research_concerning_populations,
+                rp.use_for_research_ancestry, rp.use_for_biomedical_research,
+                txn_dict)
+
+        # tx = web3.give_general_research_purpose(self, user, estimate)
+        # print(receipt)
+        return receipt
 
 
 class DataContract(models.Model):
@@ -369,6 +384,11 @@ class DataContract(models.Model):
     licence = models.IntegerField(default=1)
 
     link = models.CharField(max_length=255, null=True)
+
+    def get_a_new_account(self):
+        new_account = accounts.add()
+        accounts[0].transfer(new_account, 1e18)
+        return new_account
 
     def require_verifier_deployed(self):
         try:
@@ -389,8 +409,10 @@ class DataContract(models.Model):
             v.save()
 
     def deploy(self):
-        private_key = self.user.ethereum_private_key
-        new_account = accounts.add(private_key=private_key)
+
+        # private_key = self.user.ethereum_private_key
+        # new_account = accounts.add(private_key=private_key)
+        new_account = self.get_a_new_account()
         # accounts[1].transfer(new_account, 1e18)  # 1 ether
         # print(new_account)
 
@@ -408,7 +430,7 @@ class DataContract(models.Model):
 
         self.contract_address = contract.address
         self.save()
-        return self.contract_address
+        return contract.tx.txid
 
     def get_commitment(self, secret):
         http = urllib3.PoolManager()
@@ -433,9 +455,8 @@ class DataContract(models.Model):
         return tx_receipt
 
     def set_registry_address(self, registry_address):
-        transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key)
-        }
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
 
         transaction_receipt = luce_project.LuceMain.at(
             self.contract_address).setRegistryAddress(registry_address,
@@ -449,9 +470,8 @@ class DataContract(models.Model):
     #     return tx_receipt
 
     def set_consent_address(self):
-        transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key)
-        }
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
 
         transaction_receipt = luce_project.LuceMain.at(
             self.contract_address).setConsentAddress(
@@ -464,8 +484,9 @@ class DataContract(models.Model):
         # return tx_receipt
 
     def publish_dataset(self, link):
+        new_account = self.get_a_new_account()
         transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key),
+            'from': new_account,
             "gas_limit": 1e15,
             "allow_revert": True
         }
@@ -485,9 +506,15 @@ class DataContract(models.Model):
         return tx_receipt
 
     def add_data_requester(self, access_time, purpose_code, user, estimate):
-        tx = web3.add_data_requester(self, access_time, purpose_code, user,
-                                     estimate)
-        return tx
+        acc = accounts.add(private_key=user.ethereum_private_key)
+
+        txn_dict = {'from': acc, "gas_limit": 1e15, "allow_revert": True}
+
+        tx_receipt = luce_project.LuceMain.at(
+            self.contract_address).addDataRequester(purpose_code, access_time,
+                                                    txn_dict)
+
+        return tx_receipt
 
     def getLink(self, user, estimate):
         link = web3.get_link(self, user, estimate)
@@ -518,8 +545,16 @@ class LuceRegistry(models.Model):
         return tx_receipt
 
     def is_registered(self, user, usertype):
-        isregistered = web3.is_registered(self, user, usertype)
-        return isregistered
+        if usertype == 'requester':
+            return self.is_registered_as_requester(user)
+
+    def is_registered_as_requester(self, user):
+        result = luce_project.LUCERegistry.at(self.contract_address).checkUser(
+            user.ethereum_public_key)
+        return result
+
+        # isregistered = web3.is_registered(self, user, usertype)
+        # return isregistered
 
     def register_provider(self, user, estimate):
         tx = web3.register_provider(self, user, estimate)
