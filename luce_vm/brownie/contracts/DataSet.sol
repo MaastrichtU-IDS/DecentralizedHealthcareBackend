@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AFL-3.0
-pragma solidity ^0.6.2;
+pragma solidity >=0.7.0 <0.9.0;
 
 import "./LuceRegistry.sol";
 import "./Token.sol";
+import "./Commitment.sol";
 
-contract Dataset is ERC721 {
+contract Dataset is ERC721, Commitment {
     // Contract testing variables
     uint256 public scenario;
 
@@ -52,11 +53,14 @@ contract Dataset is ERC721 {
         uint256 remainingGasEnd = gasleft();
         uint256 usedGas = remainingGasStart - remainingGasEnd;
         // Add intrinsic gas and transfer gas. Need to account for gas stipend as well.
-        usedGas.add(30700);
+        // usedGas.add(30700);
+        usedGas = usedGas + 30700;
         // Possibly need to check max gasprice and usedGas here to limit possibility for abuse.
-        uint256 gasCost = usedGas.mul(tx.gasprice).mul(profitMargin).div(100); // in wei
+        // uint256 gasCost = usedGas.mul(tx.gasprice).mul(profitMargin).div(100); // in wei
+        uint256 gasCost = (usedGas * tx.gasprice * profitMargin) / 100;
         // Add gas cost to total
-        currentCost = currentCost.add(gasCost);
+        // currentCost = currentCost.add(gasCost);
+        currentCost = currentCost + gasCost;
     }
 
     modifier onlyOwner() {
@@ -64,10 +68,10 @@ contract Dataset is ERC721 {
         _;
     }
 
-    function setScenario(uint256 _scenario, uint256 _profitMargin)
-        public
-        onlyOwner
-    {
+    function setScenario(
+        uint256 _scenario,
+        uint256 _profitMargin
+    ) public onlyOwner {
         scenario = _scenario;
         setProfitMargin(_profitMargin);
     }
@@ -82,7 +86,7 @@ contract Dataset is ERC721 {
      * @param userRegistry is the address of the general registry contract this contract should call on whenever validating
      * data requesters.
      */
-    function setRegistryAddress(address userRegistry) public onlyOwner {
+    function setRegistryAddress(address userRegistry) public {
         registry = userRegistry;
     }
 
@@ -91,11 +95,7 @@ contract Dataset is ERC721 {
      * registered and possess the correct license.
      * @param userConsent is the address of the general consent contract this contract.
      */
-    function setConsentAddress(address userConsent)
-        public
-        onlyOwner
-        providerGasCost
-    {
+    function setConsentAddress(address userConsent) public providerGasCost {
         consent = userConsent;
     }
 
@@ -109,17 +109,17 @@ contract Dataset is ERC721 {
         string memory _description,
         string memory _link,
         uint256 _license
-    ) public onlyOwner providerGasCost {
+    ) public {
         require(unpublished == true, "1");
 
-        LUCERegistry c = LUCERegistry(registry);
-        ConsentCode cc = ConsentCode(consent);
+        // LUCERegistry c = LUCERegistry(registry);
+        // ConsentCode cc = ConsentCode(consent);
 
-        address[] memory dataSubjects = cc.displayDataSubjectAcc();
-        require(dataSubjects.length != 0, "2");
+        // address[] memory dataSubjects = cc.displayDataSubjectAcc();
+        // require(dataSubjects.length != 0, "2");
 
-        bool registered = c.checkProvider(msg.sender);
-        require(registered, "3");
+        // bool registered = c.checkProvider(msg.sender);
+        // require(registered, "3");
 
         dataDescription = _description;
         license = _license;
@@ -139,7 +139,7 @@ contract Dataset is ERC721 {
         require(requesterCompliance[msg.sender], "1");
         uint256 tokenId = mappedUsers[msg.sender];
         require(userOf(tokenId) == msg.sender, "2");
-        require(tokens[tokenId.sub(1)].accessTime > now, "3");
+        require(tokens[tokenId - 1].accessTime > block.timestamp, "3");
         return link;
     }
 
@@ -158,11 +158,10 @@ contract Dataset is ERC721 {
      * @param updateDescr is the new description of the dataset.
      * @param newlink is the new link to the dataset.
      */
-    function updateData(string memory updateDescr, string memory newlink)
-        public
-        onlyOwner
-        providerGasCost
-    {
+    function updateData(
+        string memory updateDescr,
+        string memory newlink
+    ) public onlyOwner providerGasCost {
         require(unpublished == false);
         dataDescription = updateDescr;
         link = newlink;
@@ -170,9 +169,9 @@ contract Dataset is ERC721 {
         uint256 arrayLength = tokens.length;
         if (arrayLength > 0) {
             for (uint256 i = 0; i < arrayLength; i++) {
-                if (_exists(i.add(1))) {
-                    address to = userOf(i.add(1));
-                    if (tokens[i].accessTime >= now) {
+                if (_exists(i + 1)) {
+                    address to = userOf(i + 1);
+                    if (tokens[i].accessTime >= block.timestamp) {
                         requesterCompliance[to] = false; // This is false until the requester reconfirms their compliance.
                         emit updateDataset(to, updateDescr); // Triggering event for all dataRequesters.
                     }
@@ -199,11 +198,9 @@ contract Dataset is ERC721 {
      * @dev This function lets the data provider set the fixed profitMargin they want to achieve by sharing this dataset.
      * @param _profitMargin is the percentage profit margin the provider strives for. Standard is 100, i.e. no-profit.
      */
-    function setProfitMargin(uint256 _profitMargin)
-        public
-        onlyOwner
-        providerGasCost
-    {
+    function setProfitMargin(
+        uint256 _profitMargin
+    ) public onlyOwner providerGasCost {
         profitMargin = _profitMargin;
     }
 
@@ -213,18 +210,20 @@ contract Dataset is ERC721 {
      * @param mult is the numerator in the calculation.
      * @param div is the denominator in the calculation.
      */
-    function setMultis(uint256 mult, uint256 div)
-        public
-        onlyOwner
-        providerGasCost
-    {
+    function setMultis(
+        uint256 mult,
+        uint256 div
+    ) public onlyOwner providerGasCost {
         require(mult <= div);
         costMult = mult;
         costDiv = div;
     }
 
-    constructor() public ERC721("Test", "TST") {
-        owner = msg.sender;
+    constructor(
+        IVerifier _verifier,
+        uint256[] memory _commitment
+    ) ERC721("Test", "TST") Commitment(_verifier, _commitment) {
+        owner = payable(msg.sender);
         dataProvider = msg.sender;
         currentCost = 1e9; // hopefully this is 1 shannon (giga wei)
         costMult = 1;

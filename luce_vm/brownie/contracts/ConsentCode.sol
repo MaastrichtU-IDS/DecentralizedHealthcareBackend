@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AFL-3.0
 
-pragma solidity ^0.6.2;
+pragma solidity >=0.7.0 <0.9.0;
 
 contract ConsentCode {
     address public dataProvider;
 
-    constructor() public {
+    constructor() {
         dataProvider = msg.sender;
     }
 
@@ -430,11 +430,10 @@ contract ConsentCode {
     }
 
     // AccessData function implements the logic of compliance between the consent and purpose statement
-    function AccessData(address _address1, address _address2)
-        public
-        view
-        returns (bool)
-    {
+    function AccessData(
+        address _address1,
+        address _address2
+    ) public view returns (bool) {
         return
             CheckAccess(
                 [

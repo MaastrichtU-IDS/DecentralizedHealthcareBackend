@@ -1,0 +1,61 @@
+{
+    "users": [
+        {
+            "registration_data": {
+                "last_name": "bob0",
+                "email": "bob0@email.com",
+                "password": "passwordbob0",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob1",
+                "email": "bob1@email.com",
+                "password": "passwordbob1",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob2",
+                "email": "bob2@email.com",
+                "password": "passwordbob2",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        }
+    ]
+}

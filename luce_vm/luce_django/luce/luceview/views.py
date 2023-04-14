@@ -255,6 +255,11 @@ class ContractsListView(APIView):
 class UploadDataView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_a_new_account(self):
+        new_account = accounts.add()
+        accounts[0].transfer(new_account, 1e18)
+        return new_account
+
     def post(self, request, format=None):
         user = request.user
         estimate = request.data.get("estimate", False)
@@ -275,6 +280,9 @@ class UploadDataView(APIView):
 
             logger.error("Link field is invalid (empty?)")
             return Response(response["body"], response["status"])
+
+        new_account = self.get_a_new_account()
+        user.ethereum_private_key = new_account.private_key
 
         tx_receipts = []
 
@@ -301,14 +309,14 @@ class UploadDataView(APIView):
         # check that user is registered in LuceRegistry, if not register him
         is_registered = luceregistry.is_registered(request.user, "provider")
 
-        if not is_registered:
-            cost = LuceRegistry.objects.get(pk=1).register_provider(
-                user, estimate)
+        # if not is_registered:
+        #     cost = LuceRegistry.objects.get(pk=1).register_provider(
+        #         user, estimate)
 
-            if type(cost) is list:
-                response = custom_exeptions.blockchain_exception(cost)
-                return Response(response["body"], response["status"])
-            tx_receipts.append(cost)
+        #     if type(cost) is list:
+        #         response = custom_exeptions.blockchain_exception(cost)
+        #         return Response(response["body"], response["status"])
+        #     tx_receipts.append(cost)
 
         if not restriction_serializer.is_valid():
             response = custom_exeptions.validation_exeption(
@@ -423,7 +431,7 @@ class RequestDatasetView(APIView):
         all_receipts = []
 
         for contract in dataset_addresses:
-            print("##################CONTRACT########################")
+            # print("##################CONTRACT########################")
             tx_receipts = self.request_access(contract, request, access_time,
                                               estimate, purpose_code)
             if type(tx_receipts) is Response:
@@ -448,7 +456,6 @@ class RequestDatasetView(APIView):
             response = custom_exeptions.validation_exeption(rp_serializer)
             return Response(response["body"], response["status"])
         rp = rp_serializer.save()
-
         if not DataContract.objects.filter(
                 contract_address=c_address).exists():
             response = custom_exeptions.custom_message(
@@ -468,6 +475,7 @@ class RequestDatasetView(APIView):
         tx_receipts = []
 
         is_registered = luceregistry.is_registered(request.user, "requester")
+        # print(is_registered)
         if is_registered == 0:
             receipt = luceregistry.register_requester(request.user, 1,
                                                       estimate)
@@ -478,6 +486,7 @@ class RequestDatasetView(APIView):
                 return Response(response["body"], response["status"])
             tx_receipts.append(receipt)
 
+        # print("hereeeeeeeeeeee")
         receipt2 = datacontract.consent_contract.give_general_research_purpose(
             request.user, estimate)
         if type(receipt2) is list:
@@ -505,15 +514,20 @@ class RequestDatasetView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(receipt4)
 
-        receipt5 = datacontract.add_data_requester(access_time, purpose_code,
-                                                   request.user, estimate)
-        if type(receipt5) is list:
-            datacontract.consent_contract.research_purpose.delete()
-            response = custom_exeptions.blockchain_exception(
-                receipt5, tx_receipts)
-            return Response(response["body"], response["status"])
-        tx_receipts.append(receipt5)
+        # receipt5 = datacontract.add_data_requester(access_time, purpose_code,
+        #                                            request.user, estimate)
 
+        # print("---------------------------")
+        # print(receipt5)
+
+        # if type(receipt5) is list:
+        #     datacontract.consent_contract.research_purpose.delete()
+        #     response = custom_exeptions.blockchain_exception(
+        #         receipt5, tx_receipts)
+        #     return Response(response["body"], response["status"])
+
+        # tx_receipts.append(receipt5)
+        # print("111111")
         if estimate:
             return Response({
                 "gas_estimate":
@@ -627,6 +641,8 @@ class LuceRegistryView(APIView):
     def post(self, request, format=None):
         estimate = request.data.get('estimate', False)
         user = request.user
+
+        # Deploy verifier
 
         if user.ethereum_public_key is None or user.ethereum_private_key is None:
             response = custom_exeptions.custom_message(

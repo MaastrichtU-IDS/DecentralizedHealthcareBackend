@@ -15,12 +15,38 @@ from django.conf import settings
 from brownie import project
 from brownie import network
 from brownie import accounts
+import urllib3
+import json
+from django.core.exceptions import ObjectDoesNotExist
+
+# project should be loaded at somewhere else
+loaded_project = project.get_loaded_projects()
+
+if len(loaded_project) == 0:
+    print("No project")
+else:
+    for p in loaded_project:
+        p.close()
 
 luce_project = project.load(
     "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/brownie"
 )
 luce_project.load_config()
+# print("network.show_active()")
+print(network.is_connected())
 network.connect()
+
+
+class Verifier(models.Model):
+    address = models.CharField(max_length=255, null=True)
+
+    def deploy(self):
+        private_key = "56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79"
+        new_account = accounts.add(private_key=private_key)
+        contract = luce_project.PlonkVerifier.deploy({'from': new_account})
+
+        self.address = contract.address
+        self.save()
 
 
 class UserManager(BaseUserManager):
@@ -323,14 +349,31 @@ class ConsentContract(models.Model):
         return tx
 
     def give_general_research_purpose(self, user, estimate):
-        tx = web3.give_general_research_purpose(self, user, estimate)
-        return tx
+        rp = self.research_purpose.general_research_purpose
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+
+        txn_dict = {'from': new_account}
+
+        receipt = luce_project.ConsentCode.at(
+            self.contract_address).giveResearchPurpose(
+                user.ethereum_public_key, rp.use_for_methods_development,
+                rp.use_for_reference_or_control_material,
+                rp.use_for_research_concerning_populations,
+                rp.use_for_research_ancestry, rp.use_for_biomedical_research,
+                txn_dict)
+
+        # tx = web3.give_general_research_purpose(self, user, estimate)
+        # print(receipt)
+        return receipt
 
 
 class DataContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True, unique=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    commitment = models.CharField(max_length=255, null=False, default='0x0')
 
     consent_contract = models.ForeignKey(ConsentContract,
                                          on_delete=models.CASCADE,
@@ -342,14 +385,64 @@ class DataContract(models.Model):
 
     link = models.CharField(max_length=255, null=True)
 
+    def get_a_new_account(self):
+        new_account = accounts.add()
+        accounts[0].transfer(new_account, 1e18)
+        return new_account
+
+    def require_verifier_deployed(self):
+        try:
+            v = Verifier.objects.get(pk=1)
+
+            if v.address is None:
+                deploy_result = v.deploy()
+                # print(deploy_result)
+
+                v.address = deploy_result.address
+                v.save()
+        except ObjectDoesNotExist:
+            v = Verifier.objects.create(pk=1)
+            r = v.deploy()
+
+            print(r)
+            # v.address = v.deploy().address
+            v.save()
+
     def deploy(self):
-        private_key = self.user.ethereum_private_key
-        new_account = accounts.add(private_key=private_key)
+
+        # private_key = self.user.ethereum_private_key
+        # new_account = accounts.add(private_key=private_key)
+        new_account = self.get_a_new_account()
+        # accounts[1].transfer(new_account, 1e18)  # 1 ether
+        # print(new_account)
+
+        self.require_verifier_deployed()
+        verifier_address = Verifier.objects.get(pk=1).address
+        # print(verifier_address)
+
+        commitment = self.get_commitment("hello")
+        # print(commitment)
+
         # print(accounts.at())
-        contract = luce_project.LuceMain.deploy({'from': new_account})
+        contract = luce_project.LuceMain.deploy(verifier_address,
+                                                commitment['public_signals'],
+                                                {'from': new_account})
 
         self.contract_address = contract.address
         self.save()
+        return contract.tx.txid
+
+    def get_commitment(self, secret):
+        http = urllib3.PoolManager()
+        snark_service_url = "http://127.0.0.1:3000/compute_commitment"
+        body_json = json.dumps({"secret": secret}).encode('utf-8')
+
+        r = http.request('POST',
+                         snark_service_url,
+                         body=body_json,
+                         headers={'Content-Type': 'application/json'})
+
+        return json.loads(r.data.decode('utf-8'))
 
     def deploy_contract(self):
         # self.deploy()
@@ -362,9 +455,8 @@ class DataContract(models.Model):
         return tx_receipt
 
     def set_registry_address(self, registry_address):
-        transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key)
-        }
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
 
         transaction_receipt = luce_project.LuceMain.at(
             self.contract_address).setRegistryAddress(registry_address,
@@ -378,9 +470,8 @@ class DataContract(models.Model):
     #     return tx_receipt
 
     def set_consent_address(self):
-        transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key)
-        }
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
 
         transaction_receipt = luce_project.LuceMain.at(
             self.contract_address).setConsentAddress(
@@ -393,9 +484,14 @@ class DataContract(models.Model):
         # return tx_receipt
 
     def publish_dataset(self, link):
+        new_account = self.get_a_new_account()
         transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key)
+            'from': new_account,
+            "gas_limit": 1e15,
+            "allow_revert": True
         }
+
+        print(transaction_dict)
 
         transaction_receipt = luce_project.LuceMain.at(
             self.contract_address).publishData(self.description, link,
@@ -410,9 +506,15 @@ class DataContract(models.Model):
         return tx_receipt
 
     def add_data_requester(self, access_time, purpose_code, user, estimate):
-        tx = web3.add_data_requester(self, access_time, purpose_code, user,
-                                     estimate)
-        return tx
+        acc = accounts.add(private_key=user.ethereum_private_key)
+
+        txn_dict = {'from': acc, "gas_limit": 1e15, "allow_revert": True}
+
+        tx_receipt = luce_project.LuceMain.at(
+            self.contract_address).addDataRequester(purpose_code, access_time,
+                                                    txn_dict)
+
+        return tx_receipt
 
     def getLink(self, user, estimate):
         link = web3.get_link(self, user, estimate)
@@ -443,8 +545,16 @@ class LuceRegistry(models.Model):
         return tx_receipt
 
     def is_registered(self, user, usertype):
-        isregistered = web3.is_registered(self, user, usertype)
-        return isregistered
+        if usertype == 'requester':
+            return self.is_registered_as_requester(user)
+
+    def is_registered_as_requester(self, user):
+        result = luce_project.LUCERegistry.at(self.contract_address).checkUser(
+            user.ethereum_public_key)
+        return result
+
+        # isregistered = web3.is_registered(self, user, usertype)
+        # return isregistered
 
     def register_provider(self, user, estimate):
         tx = web3.register_provider(self, user, estimate)

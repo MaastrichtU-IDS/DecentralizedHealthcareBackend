@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AFL-3.0
 
-pragma solidity ^0.6.2;
+pragma solidity >=0.7.0 <0.9.0;
 
 contract LUCERegistry {
     // This may be used for administrator control later. Not totally necessary. Can also remain unused.
@@ -77,7 +77,7 @@ contract LUCERegistry {
         providerRegistry[msg.sender] = false;
     }
 
-    constructor() public {
+    constructor() {
         admin = msg.sender;
     }
 }

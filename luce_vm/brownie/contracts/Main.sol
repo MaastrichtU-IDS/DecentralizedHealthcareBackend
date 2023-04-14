@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: AFL-3.0
-pragma solidity ^0.6.2;
+pragma solidity >=0.7.0 <0.9.0;
 
 import "./DataSet.sol";
 
 //import "./generateToken.sol";
 contract LuceMain is Dataset {
+    constructor(
+        IVerifier _verifier,
+        uint256[] memory _commitment
+    ) Dataset(_verifier, _commitment) {}
+
     bool private burnPermission = false;
 
     // This event signals a requester that their token was burned.
@@ -33,7 +38,7 @@ contract LuceMain is Dataset {
         if (arrayLength > 0) {
             for (uint256 i = 0; i < arrayLength; i++) {
                 if (tokens[i].license != newlicense) {
-                    burn(i.add(1)); // Burn all previously added tokens that now have the wrong license.
+                    burn(i + 1); // Burn all previously added tokens that now have the wrong license.
                 }
             }
         }
@@ -76,11 +81,13 @@ contract LuceMain is Dataset {
                 burnPermission
         );
         address user = userOf(tokenId);
-        uint256 accessTime = tokens[tokenId.sub(1)].accessTime;
+        uint256 accessTime = tokens[tokenId - 1].accessTime;
         uint256 remainingAccessTime = 0;
-        if (accessTime > now) {
+        if (accessTime > block.timestamp) {
             // access has expired
-            remainingAccessTime = remainingAccessTime = accessTime.sub(now); // access not yet expired
+            remainingAccessTime = remainingAccessTime =
+                accessTime -
+                block.timestamp; // access not yet expired
         }
         // tokens[tokenId].burned = true;
         _burn(tokenId);
@@ -105,11 +112,10 @@ contract LuceMain is Dataset {
      * @param accessTime is the amount of time in seconds the data should be available to the data requester. If 0 is passed
      * to this value, the function will set a standard 2 weeks accessTime. This parameter is mainly for testing purposes.
      */
-    function addDataRequester(uint256 purposeCode, uint256 accessTime)
-        public
-        payable
-        returns (uint256)
-    {
+    function addDataRequester(
+        uint256 purposeCode,
+        uint256 accessTime
+    ) public payable returns (uint256) {
         require(unpublished == false, "1");
         LUCERegistry c = LUCERegistry(registry);
 
@@ -130,7 +136,7 @@ contract LuceMain is Dataset {
 
         // Calculate the amount an individual requester must pay in order to receive access and make sure their transferred value matches.
         if (scenario > 1) {
-            uint256 individualCost = currentCost.mul(costMult).div(costDiv);
+            uint256 individualCost = (currentCost * (costMult)) / (costDiv);
             require(msg.value == individualCost, "6");
 
             // Adjust the true contract cost by subtracting the value this requester transferred.
@@ -138,7 +144,7 @@ contract LuceMain is Dataset {
                 // Values smaller than 0 are not allowed in solidity.
                 currentCost = 0;
             } else {
-                currentCost = currentCost.sub(individualCost);
+                currentCost = currentCost - (individualCost);
             }
         }
 
@@ -160,7 +166,7 @@ contract LuceMain is Dataset {
 
     function getAccessTime(uint256 tokenId) public view returns (uint256) {
         require(userOf(tokenId) == msg.sender || dataProvider == msg.sender);
-        return (tokens[tokenId.sub(1)].accessTime);
+        return (tokens[tokenId - 1].accessTime);
     }
 
     function confirmCompliance() public {
@@ -189,7 +195,7 @@ contract LuceMain is Dataset {
         require(requesterCompliance[msg.sender]);
         // Calculates the value the requester must pay to call this function and checks whether the amount transferred matches.
         if (scenario > 1) {
-            uint256 individualCost = currentCost.mul(costMult).div(costDiv);
+            uint256 individualCost = (currentCost * (costMult)) / (costDiv);
             require(msg.value == individualCost);
 
             // Adjust the true contract cost by subtracting the value this requester transferred.
@@ -197,18 +203,18 @@ contract LuceMain is Dataset {
                 // Values smaller than 0 are not allowed in solidity.
                 currentCost = 0;
             } else {
-                currentCost = currentCost.sub(individualCost);
+                currentCost = currentCost - (individualCost);
             }
         }
         if (newAccessTime == 0) {
             newAccessTime = 2 weeks;
         }
-        if (tokens[tokenId.sub(1)].accessTime > now) {
-            tokens[tokenId.sub(1)].accessTime = tokens[tokenId.sub(1)]
-                .accessTime
-                .add(newAccessTime);
+        if (tokens[tokenId - 1].accessTime > block.timestamp) {
+            tokens[tokenId - 1].accessTime =
+                tokens[tokenId - 1].accessTime +
+                (newAccessTime);
         } else {
-            tokens[tokenId.sub(1)].accessTime = now.add(newAccessTime);
+            tokens[tokenId - 1].accessTime = block.timestamp + (newAccessTime);
         }
     }
 
@@ -220,7 +226,7 @@ contract LuceMain is Dataset {
             return 0;
         }
         //returns the expected costs for the next data Requester
-        uint256 individualCost = currentCost.mul(costMult).div(costDiv);
+        uint256 individualCost = (currentCost * (costMult)) / (costDiv);
         return (individualCost);
     }
 
@@ -239,6 +245,6 @@ contract LuceMain is Dataset {
      * @dev Transfers all funds from the contract to the dataProvider. Only callable by the dataProvider.
      */
     function receiveFunds() public onlyOwner providerGasCost {
-        msg.sender.transfer(address(this).balance); //this could just be the balance of the contract
+        payable(msg.sender).transfer(address(this).balance); //this could just be the balance of the contract
     }
 }
