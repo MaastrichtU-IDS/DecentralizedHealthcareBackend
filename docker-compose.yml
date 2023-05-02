@@ -20,8 +20,8 @@ services:
     restart: unless-stopped
     depends_on: 
       - ganache_db
-    # ports:
-    #   - 5433:5432
+    ports:
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=luce
       - POSTGRES_USER=vagrant
@@ -41,7 +41,7 @@ services:
       - 8000:8000
     restart: unless-stopped
     volumes:
-  
+      - ./:/luce
     environment:
       - JUPYTER_TOKEN=luce
       # Nginx reverse proxy
@@ -53,6 +53,8 @@ services:
       - POSTGRES_PASSWORD=luce
       - POSTGRES_USER=vagrant
       - POSTGRES_DB=lucedb
+      # Ganache config
+      - GANACHE_PORT=8545
       # Ideally the users/password should be defined here
       # And automatically added to the database at start
       - PROVIDER_USER=provider@luce.com

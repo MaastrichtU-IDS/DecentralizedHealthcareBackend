@@ -18,7 +18,13 @@ ganache = False
 # CHAIN_ID = 80001
 
 ###CONNECT TO GANACHE LOCAL NETWORK##########
-w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
+GANACHE_ADDRESS = 'http://ganache_db'
+GANACHE_PORT = os.getenv('GANACHE_PORT')
+GANACHE_URI = GANACHE_ADDRESS + ':' + GANACHE_PORT
+
+BLOCKCHAIN_URI = GANACHE_URI
+
+w3 = Web3(Web3.HTTPProvider(BLOCKCHAIN_URI))
 CHAIN_ID = 1337
 ganache = True
 
