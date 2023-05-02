@@ -23,6 +23,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = ')%8jl5ba3h8jxwab#*x2v1l$c=f05^ac-btpt6*=htjwib()w4'
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -126,7 +128,7 @@ DATABASES = {
         'USER': 'luce',
         'PASSWORD': 'luce123456',
         'HOST': 'localhost',
-        'PORT': '5433',
+        'PORT': '5432',
     }
 }
 

@@ -18,6 +18,9 @@ from brownie import accounts
 import urllib3
 import json
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+
+import os
 
 # project should be loaded at somewhere else
 loaded_project = project.get_loaded_projects()
@@ -28,9 +31,10 @@ else:
     for p in loaded_project:
         p.close()
 
-luce_project = project.load(
-    "/Users/likun/src/phd/decentralized_healthcare/DecentralizedHealthcareBackend/luce_vm/brownie"
-)
+LUCE_PROJECT_PATH = os.path.join(settings.BASE_DIR, "../../brownie")
+# print(luce_project_path)
+print(LUCE_PROJECT_PATH)
+luce_project = project.load(LUCE_PROJECT_PATH)
 luce_project.load_config()
 # print("network.show_active()")
 print(network.is_connected())
