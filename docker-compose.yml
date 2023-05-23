@@ -30,6 +30,10 @@ services:
       - ${STORAGE_PATH:-./data}/postgres_db:/var/lib/postgresql/data
       - ./luce_vm/.config/init_postgres:/docker-entrypoint-initdb.d
 
+  zkp_service:
+    build: ./luce_vm/js
+    ports:
+      - 8888:8888
 
   luce_server:
     build: .

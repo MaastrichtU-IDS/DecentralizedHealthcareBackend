@@ -32,6 +32,8 @@ done
 python /luce/luce_vm/luce_django/luce/manage.py makemigrations accounts # TODO: I am not sure why the migration of accounts can't be executed automatically
 python /luce/luce_vm/luce_django/luce/manage.py migrate
 
+## Prepare brownie
+# brownie networks add LUCE luce host=https://127.0.0.1:8545 chainid=5777
 # Load 3 hardcoded users in database
 # python /luce/src/luce_django/luce/manage.py loaddata /luce/src/luce_django/luce/utils/fixtures/demo_users.json
 # Load in demo data: 3 users, 7 datasets (5 published, 2 unpublished)
@@ -53,7 +55,7 @@ echo "🚀 Access the LUCE user interface on http://localhost:8000"
 
 
 # Start Django on port 8000
-python /luce/luce_vm/luce_django/luce/manage.py runserver 0.0.0.0:8000 --noreload
+python /luce/luce_vm/luce_django/luce/manage.py runserver 0.0.0.0:8000
 
 
 # Send in commands to start Ethereum private testnet on port 8544
