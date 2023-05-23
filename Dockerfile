@@ -30,7 +30,7 @@ RUN pip install matplotlib
 COPY luce_vm/scripts/entrypoint.sh /entrypoint.sh
 RUN chmod 744 /entrypoint.sh
 
-RUN brownie networks add LUCE luce host=https://127.0.0.1:8545 chainid=72
+RUN brownie networks add LUCE luce host=http://ganache_db:8545 chainid=72
 
 
 

@@ -209,9 +209,19 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     def create_wallet(self):
-        txn_receipt, account = web3.assign_address_v3()
-        self.ethereum_public_key = account.address
-        self.ethereum_private_key = account.privateKey.hex()
+        # for simulation, we just create a new account for the user
+        # and transfer some ether to them
+        new_account = accounts.add()
+        txn_receipt = accounts[0].transfer(new_account, 1e18)
+
+        self.ethereum_public_key = new_account.public_key
+        self.ethereum_private_key = new_account.private_key
+
+        
+
+        # txn_receipt, account = web3.assign_address_v3()
+        # self.ethereum_public_key = account.address
+        # self.ethereum_private_key = account.privateKey.hex()
         return txn_receipt
 
     # The following default methods are expected to be defined by Django
