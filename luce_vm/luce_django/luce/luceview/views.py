@@ -267,12 +267,12 @@ class UploadDataView(APIView):
 
         logger.info("Upload data from: " + link)
 
-        if user.ethereum_public_key is None:
-            response = custom_exeptions.custom_message(
-                "user needs to have a wallet connected")
+        # if user.ethereum_public_key is None:
+        #     response = custom_exeptions.custom_message(
+        #         "user needs to have a wallet connected")
 
-            logger.error("no public key for current user")
-            return Response(response["body"], response["status"])
+        #     logger.error("no public key for current user")
+        #     return Response(response["body"], response["status"])
 
         if not link:
             response = custom_exeptions.custom_message(
