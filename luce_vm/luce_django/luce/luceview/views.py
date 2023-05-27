@@ -26,6 +26,8 @@ class UserRegistration(APIView):
     """
     """
     def post(self, request, format=None):
+
+        # Create an account for fake user
         createWallet = request.data.get("create_wallet")
 
         logger.info("Register a new user: ")
@@ -48,6 +50,8 @@ class UserRegistration(APIView):
 
         tx_receipt = self.address_get_or_create(instance, createWallet)
 
+        print(tx_receipt.status)
+
         # blockchain error handling
         if type(tx_receipt) is list:
             instance.delete()
@@ -59,7 +63,7 @@ class UserRegistration(APIView):
         response["error"]["message"] = "registration successfull"
         response["error"]["status"] = "OK"
         response["error"]["details"] = [{"reason": "SUCCESS"}]
-        response["data"]["transaction receipts"] = [tx_receipt]
+        response["data"]["transaction receipts"] = [tx_receipt.status]
 
         return Response(response, status=status.HTTP_200_OK)
 
