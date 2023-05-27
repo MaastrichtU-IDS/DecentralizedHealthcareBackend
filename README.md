@@ -13,4 +13,5 @@ As ganache-cli has upgrade into a full functional application - [Ganache](https:
 activate your devlopment environment, and start a Django server; generally, go into the root directory of Django project, `luce_django/luce` in this case, and run:
 `python manage.py runserver`
 
+## How to access LUCE
 You can access each end-point with http request, or use this [app](https://github.com/klifish/DecentralizedHealthcare)
