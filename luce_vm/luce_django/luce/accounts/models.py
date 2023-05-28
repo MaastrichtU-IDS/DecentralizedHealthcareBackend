@@ -20,7 +20,11 @@ import json
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 
+from utils.utils import get_initial_response, set_logger
+
 import os
+
+logger = set_logger(__file__)
 
 # project should be loaded at somewhere else
 loaded_project = project.get_loaded_projects()
@@ -39,6 +43,8 @@ luce_project.load_config()
 # print("network.show_active()")
 print(network.is_connected())
 network.connect()
+print(network.is_connected())
+
 
 
 class Verifier(models.Model):
@@ -214,11 +220,10 @@ class User(AbstractBaseUser):
         new_account = accounts.add()
         txn_receipt = accounts[0].transfer(new_account, 1e18)
 
-        self.ethereum_public_key = new_account.public_key
+        self.ethereum_public_key = new_account.address
         self.ethereum_private_key = new_account.private_key
 
-        
-
+        print(self.ethereum_public_key)
         # txn_receipt, account = web3.assign_address_v3()
         # self.ethereum_public_key = account.address
         # self.ethereum_private_key = account.privateKey.hex()
@@ -321,6 +326,8 @@ class ConsentContract(models.Model):
         transaction_dict = {
             'from': accounts.add(private_key=self.user.ethereum_private_key)
         }
+
+        logger.info(self.user.ethereum_public_key)
         transaction_receipt = luce_project.ConsentCode.at(
             self.contract_address).UploadDataPrimaryCategory(
                 self.user.ethereum_public_key,
@@ -448,7 +455,7 @@ class DataContract(models.Model):
 
     def get_commitment(self, secret):
         http = urllib3.PoolManager()
-        snark_service_url = "http://127.0.0.1:3000/compute_commitment"
+        snark_service_url = "http://zkp_service:8888/compute_commitment"
         body_json = json.dumps({"secret": secret}).encode('utf-8')
 
         r = http.request('POST',
@@ -544,12 +551,16 @@ class LuceRegistry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def deploy(self):
-        result = LUCERegistry.deploy({'from': self.user.ethereum_public_key})
-        if result.tx is None:
+
+        # account[0] as the administrator
+        result = luce_project.LUCERegistry.deploy({'from': accounts[0]})
+        if result.tx.status == 1:
+            self.contract_address = result.address
+            print("Deploy LUCERegistry contract succeeded")
+        else:
             print("Deploy LUCERegistry contract failed")
-            return result.tx
-        self.contract_address = result.address
-        return result.tx
+
+        return result.tx.status
 
     def deploy_contract(self):
         tx_receipt = web3.deploy_registry(self.user)

@@ -15,3 +15,30 @@ activate your devlopment environment, and start a Django server; generally, go i
 
 ## How to access LUCE
 You can access each end-point with http request, or use this [app](https://github.com/klifish/DecentralizedHealthcare)
+
+### For http request user
+1. Step 1: register
+2. Step 2: login
+> Once logged in, you can get a token which is necessary for later operation
+3. Step 3: upload data
+
+## Tips
+1. if you encounter the issue: 
+
+> ```brownie.exceptions.ContractNotFound: No contract deployed at 0xDa574613C62f6DB9FFE8dCC5a8b079Ba37e29390```,
+
+> please go to `luce_vm/brownie`, remove `build/deployment` folder in the brownie directory, and then run `brownie compile`
+
+2. If you got the response:
+```
+{
+    "error": {
+        "code": 400,
+        "message": "validation error",
+        "status": "ERROR",
+        "details": "luce registry was not deployed"
+    },
+    "data": {}
+}
+```
+please deploy a LUCERegistry contract in `admin/deployRegistry/` endpoint.
