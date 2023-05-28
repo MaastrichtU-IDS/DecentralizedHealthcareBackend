@@ -334,9 +334,11 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
 
         datacontract = serializer.save()
-        print("###########")
-        # tx_receipt = datacontract.consent_contract.deploy_contract()
+        # print("###########")
+        logger.info("Start to deploy Dataset contract")
         tx_receipt = datacontract.consent_contract.deploy()
+
+        logger.info(tx_receipt)
 
         # print(tx_receipt)
 
