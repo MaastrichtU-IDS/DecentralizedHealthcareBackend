@@ -50,7 +50,9 @@ class UserRegistration(APIView):
 
         tx_receipt = self.address_get_or_create(instance, createWallet)
 
-        print(tx_receipt.status)
+        logger.info("tx_receipt.status: ")
+        logger.info(tx_receipt.status)
+
 
         # blockchain error handling
         if type(tx_receipt) is list:
@@ -332,9 +334,11 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
 
         datacontract = serializer.save()
-        print("###########")
-        # tx_receipt = datacontract.consent_contract.deploy_contract()
+        # print("###########")
+        logger.info("Start to deploy Dataset contract")
         tx_receipt = datacontract.consent_contract.deploy()
+
+        logger.info(tx_receipt)
 
         # print(tx_receipt)
 
@@ -663,7 +667,7 @@ class LuceRegistryView(APIView):
             registry = LuceRegistry.objects.create(pk=1, user=user)
 
         registry.user = user
-        tx_receipt = registry.deploy_contract()
+        tx_receipt = registry.deploy()
         if type(tx_receipt) is list:
             response = custom_exeptions.blockchain_exception(tx_receipt)
             return Response(response["body"], response["status"])

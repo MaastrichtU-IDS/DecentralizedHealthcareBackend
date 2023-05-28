@@ -46,4 +46,4 @@ app.use(router.routes())
 // app.use(route.post('/compute_commitment', compute_commitment))
 
 
-app.listen(3000)
+app.listen(8888)
