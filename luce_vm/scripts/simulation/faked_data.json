@@ -56,6 +56,139 @@
                 "open_to_population_and_ancestry_research": false,
                 "open_to_disease_specific": false
             }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob3",
+                "email": "bob3@email.com",
+                "password": "passwordbob3",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob4",
+                "email": "bob4@email.com",
+                "password": "passwordbob4",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob5",
+                "email": "bob5@email.com",
+                "password": "passwordbob5",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob6",
+                "email": "bob6@email.com",
+                "password": "passwordbob6",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob7",
+                "email": "bob7@email.com",
+                "password": "passwordbob7",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob8",
+                "email": "bob8@email.com",
+                "password": "passwordbob8",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
+        },
+        {
+            "registration_data": {
+                "last_name": "bob9",
+                "email": "bob9@email.com",
+                "password": "passwordbob9",
+                "create_wallet": true,
+                "user_type": 0
+            },
+            "uploaded_data": {
+                "estimate": false,
+                "description": "description",
+                "link": "http://link.com",
+                "no_restrictions": false,
+                "open_to_general_research_and_clinical_care": false,
+                "open_to_HMB_research": false,
+                "open_to_population_and_ancestry_research": false,
+                "open_to_disease_specific": false
+            }
         }
     ]
 }

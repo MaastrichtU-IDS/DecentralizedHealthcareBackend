@@ -4,7 +4,7 @@ services:
   ganache_db:
     image: trufflesuite/ganache:v7.7.3
     restart: unless-stopped
-    command: --database.dbPath /ganache_db --chain.chainId 72 -h 0.0.0.0 --wallet.accounts "0xd49df1af2d195c2c56cb4aa9119d188889c8c28c011501a339a1eafcdcb790d8, 1000000000000000000000000" --wallet.accounts "0x56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79, 1000000000000000000000000" "0xcd4fc6fe57bb44764562df4abae6e9673a4b9db250ea94a0a42ac8500e0275eb, 1000000000000000000000000"
+    command: -l 300000000 --database.dbPath /ganache_db --chain.chainId 72 -h 0.0.0.0 --wallet.accounts "0xd49df1af2d195c2c56cb4aa9119d188889c8c28c011501a339a1eafcdcb790d8, 1000000000000000000000000" --wallet.accounts "0x56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79, 1000000000000000000000000" "0xcd4fc6fe57bb44764562df4abae6e9673a4b9db250ea94a0a42ac8500e0275eb, 1000000000000000000000000"
     ports:
       - 8545:8545
     environment:
@@ -28,7 +28,7 @@ services:
       - POSTGRES_DB=lucedb
     volumes: 
       - ${STORAGE_PATH:-./data}/postgres_db:/var/lib/postgresql/data
-      - ./luce_vm/.config/init_postgres:/docker-entrypoint-initdb.d
+      - ./luce_vm/scripts/init_postgres.sh:/docker-entrypoint-initdb.d/init_postgres.sh
 
   zkp_service:
     build: ./luce_vm/js

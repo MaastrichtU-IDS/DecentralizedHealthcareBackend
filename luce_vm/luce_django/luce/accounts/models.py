@@ -441,8 +441,10 @@ class DataContract(models.Model):
         verifier_address = Verifier.objects.get(pk=1).address
         # print(verifier_address)
 
-        commitment = self.get_commitment("hello")
-        # print(commitment)
+        # commitment = self.get_commitment("hello")
+        commitment = {"public_signals":['16279978653553831575017442062517458639822344791369834134794885970235221444339']}
+        # commitment = "16279978653553831575017442062517458639822344791369834134794885970235221444339n"
+        print(commitment)
 
         # print(accounts.at())
         contract = luce_project.LuceMain.deploy(verifier_address,
@@ -458,12 +460,18 @@ class DataContract(models.Model):
         snark_service_url = "http://zkp_service:8888/compute_commitment"
         body_json = json.dumps({"secret": secret}).encode('utf-8')
 
+        print(body_json)
+
         r = http.request('POST',
                          snark_service_url,
                          body=body_json,
                          headers={'Content-Type': 'application/json'})
 
-        return json.loads(r.data.decode('utf-8'))
+        
+        result = json.loads(r.data.decode('utf-8'))
+
+        print(result)
+        return result
 
     def deploy_contract(self):
         # self.deploy()
@@ -508,8 +516,6 @@ class DataContract(models.Model):
         new_account = self.get_a_new_account()
         transaction_dict = {
             'from': new_account,
-            "gas_limit": 1e15,
-            "allow_revert": True
         }
 
         print(transaction_dict)
