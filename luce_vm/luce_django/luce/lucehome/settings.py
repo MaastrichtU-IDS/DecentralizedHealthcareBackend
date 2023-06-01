@@ -125,8 +125,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'lucedb',
-        'USER': 'luce',
-        'PASSWORD': 'luce123456',
+        'USER': 'vagrant',
+        'PASSWORD': 'luce',
         'HOST': 'localhost',
         'PORT': '5432',
     }

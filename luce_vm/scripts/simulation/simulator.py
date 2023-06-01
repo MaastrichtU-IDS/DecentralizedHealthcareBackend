@@ -7,13 +7,13 @@ import django
 
 # BASE_DIR = "../../luce_django/luce"
 
-sys.path.append("../../luce_django/luce")
+# sys.path.append("../../luce_django/luce")
 # from accounts.models import User
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', "lucehome.settings")
-django.setup()
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', "lucehome.settings")
+# # django.setup()
 
-from accounts.models import User
+# from accounts.models import User
 
 http = urllib3.PoolManager()
 
@@ -54,7 +54,7 @@ def Register(registration_url, registration_data):
                      headers={'Content-Type': 'application/json'})
 
     result = json.loads(r.data.decode('utf-8'))
-    # print(result)
+    print(result)
     return result
 
 
@@ -107,10 +107,22 @@ def DeployRegistry(url, admin_token):
 
 # UploadData(upload_data_url, uploaded_data)
 
+test_url = "http://localhost:8000/"
+def Test(url):
+    r = http.request("GRT", url)
+    result = json.loads(r.data.decode('utf-8'))
+    print(result)
+
 
 def pipeline():
+
+    # Test(test_url)
+    # return 
+    print("Start simulation")
+    # return
+    
     # 1. clear user data
-    User.objects.all().delete()
+    # User.objects.all().delete()
 
     # 2. load faked user data
     with open("faked_data.json", "r") as f:
@@ -131,8 +143,10 @@ def pipeline():
         })
     DeployRegistry(deploy_registry_url, admin_token)
 
-    # 4. upload data
+    # return
 
+    # 4. upload data
+    print("Upload data:")
     for user in users:
         # 4.1 login
         token = Login(
@@ -140,6 +154,7 @@ def pipeline():
                 'username': user['registration_data']['email'],
                 'password': user['registration_data']['password']
             })
+        print(token)
         # 4.2 upload data
         UploadData(upload_data_url, user['uploaded_data'], token)
 

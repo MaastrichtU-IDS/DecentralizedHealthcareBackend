@@ -335,9 +335,9 @@ class UploadDataView(APIView):
 
         datacontract = serializer.save()
         # print("###########")
-        logger.info("Start to deploy Dataset contract")
+        logger.info("Start to deploy ConsentCode smart contract")
         tx_receipt = datacontract.consent_contract.deploy()
-
+        logger.info("Deploy Consentcode smart contract receipt:")
         logger.info(tx_receipt)
 
         # print(tx_receipt)
@@ -352,7 +352,11 @@ class UploadDataView(APIView):
         # tx_receipt0 = datacontract.consent_contract.upload_data_consent(
         #     estimate)
 
+        logger.info("Start to update ConsentCode smart contract")
+
         tx_receipt0 = datacontract.consent_contract.update_data_consent()
+        logger.info("Update consent:")
+        logger.info(tx_receipt0)
 
         if type(tx_receipt0) is list:
             datacontract.delete()
@@ -361,7 +365,11 @@ class UploadDataView(APIView):
         tx_receipts.append(tx_receipt0)
 
         # tx_receipt2 = datacontract.deploy_contract()
+        logger.info("Start to deploy Dataset smart contract")
+
         tx_receipt2 = datacontract.deploy()
+        logger.info("Datacontract receipt:")
+        logger.info(tx_receipt2)
 
         if type(tx_receipt2) is list:
             datacontract.delete()
@@ -375,7 +383,10 @@ class UploadDataView(APIView):
         # tx_receipt3 = datacontract.set_registry_address(
         #     LuceRegistry.objects.get(pk=1), estimate)
 
+        logger.info("Start to set registry address")
         tx_receipt3 = datacontract.set_registry_address(registry_address)
+        logger.info("Set registry address receipt:")
+        logger.info(tx_receipt3)
 
         if type(tx_receipt3) is list:
             datacontract.delete()
@@ -384,7 +395,10 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt3)
 
+        logger.info("Start to set consent address")
         tx_receipt4 = datacontract.set_consent_address()
+        logger.info("Set consent address receipt:")
+        logger.info(tx_receipt4)
         if type(tx_receipt4) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(
@@ -392,7 +406,10 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt4)
 
+        logger.info("Start to publish data")
         tx_receipt5 = datacontract.publish_dataset(link)
+        logger.info("Publish data receipt:")
+        logger.info(tx_receipt5)
         if type(tx_receipt5) is list:
             datacontract.delete()
             response = custom_exeptions.blockchain_exception(
@@ -400,7 +417,7 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(tx_receipt5)
 
-        print(tx_receipts)
+        logger.info(tx_receipts)
 
         print("###########")
         response = get_initial_response()

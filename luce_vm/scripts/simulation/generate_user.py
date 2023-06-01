@@ -58,7 +58,7 @@ def generate_users(number):
     return data
 
 
-users = generate_users(3)
+users = generate_users(10)
 
 with open("faked_data.json", "w") as f:
     json.dump(users, f)
