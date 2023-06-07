@@ -14,7 +14,7 @@ activate your devlopment environment, and start a Django server; generally, go i
 `python manage.py runserver`
 
 ## How to access LUCE
-You can access each end-point with http request, or use this [app](https://github.com/klifish/DecentralizedHealthcare)
+You can access with [LUCE API](https://documenter.getpostman.com/view/18666298/2s93sZ7aDm), or with [app](https://github.com/klifish/DecentralizedHealthcare)
 
 ### For http request user
 1. Step 1: register
