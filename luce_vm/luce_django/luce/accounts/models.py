@@ -362,12 +362,54 @@ class ConsentContract(models.Model):
         return tx_receipt
 
     def give_clinical_research_purpose(self, user, estimate):
-        tx = web3.give_clinical_research_purpose(self, user, estimate)
-        return tx
+        rp = self.research_purpose.clinical_purpose
+        # print(rp)
+        logger.info(rp)
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+
+        txn_dict = {'from': new_account}
+
+        receipt = luce_project.ConsentCode.at(
+            self.contract_address).giveClinicalPurpose(
+                user.ethereum_public_key,
+                rp.use_for_decision_support,
+                rp.use_for_disease_support,
+                txn_dict
+        )
+
+        logger.info(receipt)
+
+        return receipt.status
+
+        # tx = web3.give_clinical_research_purpose(self, user, estimate)
+        # return tx
 
     def give_HMB_research_purpose(self, user, estimate):
-        tx = web3.give_HMB_research_purpose(self, user, estimate)
-        return tx
+        rp = self.research_purpose.HMB_research_purpose
+        # print(rp)
+        logger.info(rp)
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+
+        txn_dict = {'from': new_account}
+
+        receipt = luce_project.ConsentCode.at(
+            self.contract_address).giveHMBPurpose(
+                user.ethereum_public_key, 
+                rp.use_for_research_concerning_fundamental_biology,
+                rp.use_for_research_concerning_genetics,
+                rp.use_for_research_concerning_drug_development,
+                rp.use_for_research_concerning_any_disease,
+                rp.use_for_research_concerning_age_categories,
+                rp.use_for_research_concerning_gender_categories,
+                txn_dict
+        )
+
+        logger.info(receipt)
+        return receipt.status
+        # tx = web3.give_HMB_research_purpose(self, user, estimate)
+        # return tx
 
     def give_general_research_purpose(self, user, estimate):
         rp = self.research_purpose.general_research_purpose
@@ -385,8 +427,8 @@ class ConsentContract(models.Model):
                 txn_dict)
 
         # tx = web3.give_general_research_purpose(self, user, estimate)
-        # print(receipt)
-        return receipt
+        logger.info(receipt)
+        return receipt.status
 
 
 class DataContract(models.Model):
@@ -592,8 +634,21 @@ class LuceRegistry(models.Model):
         return tx
 
     def register_requester(self, user, license, estimate):
-        tx = web3.register_requester(self, user, license, estimate)
-        return tx
+        logger.info(user.ethereum_private_key)
+        logger.info(user.ethereum_public_key)
+
+        sender = accounts.add(private_key=user.ethereum_private_key)
+        result = luce_project.LUCERegistry.at(self.contract_address).registerNewUser(
+            user.ethereum_public_key, 
+            license, 
+            {
+                'from': sender
+                }
+            )
+        print(result)
+        # tx = web3.register_requester(self, user, license, estimate)
+        return result
+
 
 
 """

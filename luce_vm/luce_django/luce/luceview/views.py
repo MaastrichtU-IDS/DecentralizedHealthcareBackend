@@ -446,6 +446,9 @@ class RequestDatasetView(APIView):
         access_time = request.data.pop("access_time", 100000000)
         purpose_code = request.data.pop("purpose_code", 1)
         dataset_addresses = request.data.pop("dataset_addresses", False)
+
+        logger.info(dataset_addresses)
+        logger.info(request.user)
         if request.user.ethereum_public_key is None:
             response = custom_exeptions.custom_message(
                 "user needs to have a wallet connected")
