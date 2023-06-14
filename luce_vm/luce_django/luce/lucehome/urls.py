@@ -5,17 +5,14 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken import views
 from django.views.decorators.csrf import csrf_exempt
 
-
 # from .views import *
 from luceview.views import *
-
 
 # Import settings to access environment variables
 from django.conf import settings
 
-
 urlpatterns = [
-    path('user/register/', UserRegistration.as_view()),
+    path('user/register/', UserRegistration.as_view(), name="user-register"),
     path('user/<int:id>/', PublicUserInfoView.as_view()),
     path('user/authenticated/', PrivateUserInfoView.as_view()),
     path('user/authenticated/update/', UserUpdateView.as_view()),
@@ -31,7 +28,6 @@ urlpatterns = [
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
-
 
 if settings.DEBUG:
     # Use local simulated CDN

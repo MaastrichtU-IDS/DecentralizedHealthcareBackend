@@ -1,10 +1,11 @@
 from django.test import TestCase
-from django.test.client import Client
+from django.urls import reverse
+from rest_framework.test import APIRequestFactory, APITestCase, APIClient
 
 from accounts.models import User
+from luceview.views import UserRegistration
 
 # Create your tests here.
-
 
 # class UploadDataViewTests(TestCase):
 #     def setUp(self):
@@ -18,43 +19,19 @@ from accounts.models import User
 #         self.client = Client()
 #         self.client.login(username=self.username, password=self.password)
 
-class UserRegistrationTests(TestCase):
-    def setUp(self):
-        self.email = 'test@email.com'
-        self.gender = 'male'
-        self.age = 30
-        self.first_name = 'first_name_test'
-        self.last_name = 'last_name_test'
-        self.password = 'password_test'
-        self.user_type = 0
 
-        self.user = User.objects.create_user(
-            self.email,
-            self.gender,
-            self.age,
-            self.first_name,
-            self.last_name,
-            password=self.password,
-            user_type=self.user_type
-        )
-
-        self.client = Client()
-
+class UserRegistrationTests(APITestCase):
     def test_registration(self):
-        path = 'user/register/'
-
-        # print(self.email)
-        post_data = {
-            'email': self.email
+        data = {
+            "last_name": "piccini",
+            "email": "email2@email.com",
+            "password": "password123",
+            "create_wallet": True,
+            "user_type": 0
         }
 
-        resp = self.client.post(
-            path=path,
-            data=post_data,
-            content_type='application/json'
-        )
-
-        result = resp
-
-        print(result)
-
+        url = reverse('user-register')
+        client = APIClient()
+        response = client.post(url, data, format='json')
+        # print(response)
+        self.assertEqual(response.status_code, 200)
