@@ -17,7 +17,7 @@ urlpatterns = [
     path('user/authenticated/', PrivateUserInfoView.as_view()),
     path('user/authenticated/update/', UserUpdateView.as_view()),
     path('user/all/', UserListView.as_view()),
-    path('user/login/', ObtainAuthToken.as_view()),
+    path('user/login/', ObtainAuthToken.as_view(), name='user-login'),
     path('admin/deployRegistry/', LuceRegistryView.as_view()),
     path('contract/all/', ContractsListView.as_view()),
     path('contract/dataUpload/', UploadDataView.as_view()),

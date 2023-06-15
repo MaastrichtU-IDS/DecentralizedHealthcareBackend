@@ -1,4 +1,5 @@
 from django.http import Http404
+
 from rest_framework.views import APIView
 from rest_framework import permissions, generics, filters, parsers, renderers, status
 from rest_framework.compat import coreapi, coreschema
@@ -6,12 +7,11 @@ from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+
 from accounts.models import User, DataContract
 from utils import custom_exeptions as custom_exeptions
 
-from rest_framework.response import Response
-# from .serializers import UserSerializer, RegestryContractSerializer
-# from .serializers import DataContractSerializer
 from .serializers import *
 from utils.web3_scripts import *
 from utils.utils import get_initial_response, set_logger
@@ -52,7 +52,6 @@ class UserRegistration(APIView):
 
         logger.info("tx_receipt.status: ")
         logger.info(tx_receipt.status)
-
 
         # blockchain error handling
         if type(tx_receipt) is list:
