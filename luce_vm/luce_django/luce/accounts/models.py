@@ -586,8 +586,20 @@ class DataContract(models.Model):
         return tx_receipt
 
     def getLink(self, user, estimate):
-        link = web3.get_link(self, user, estimate)
-        return link
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
+
+
+        
+        receipt = luce_project.LuceMain.at(self.contract_address).getLink(transaction_dict)
+        logger.info(receipt)
+        return receipt
+        
+
+        # logger.info(receipt)
+
+        # return 0
+
 
     def checkAccess(self, user, researchpurpose):
         hasAccess = web3.checkAccess(self, user, researchpurpose)
