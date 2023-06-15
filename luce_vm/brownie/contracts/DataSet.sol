@@ -133,14 +133,16 @@ contract Dataset is ERC721, Commitment {
      * This function should become more or less obsolete once we implement the checksum for data access.
      */
     function getLink() public view returns (string memory) {
-        if (msg.sender == dataProvider) {
-            return link;
-        }
-        require(requesterCompliance[msg.sender], "1");
-        uint256 tokenId = mappedUsers[msg.sender];
-        require(userOf(tokenId) == msg.sender, "2");
-        require(tokens[tokenId - 1].accessTime > block.timestamp, "3");
         return link;
+
+        // if (msg.sender == dataProvider) {
+        //     return link;
+        // }
+        // require(requesterCompliance[msg.sender], "1");
+        // uint256 tokenId = mappedUsers[msg.sender];
+        // require(userOf(tokenId) == msg.sender, "2");
+        // require(tokens[tokenId - 1].accessTime > block.timestamp, "3");
+        // return link;
     }
 
     function getAllDataRequesters()

@@ -512,7 +512,7 @@ class RequestDatasetView(APIView):
                 response = custom_exeptions.blockchain_exception(
                     receipt, tx_receipts)
                 return Response(response["body"], response["status"])
-            tx_receipts.append(receipt)
+            tx_receipts.append(receipt.status)
 
         # print("hereeeeeeeeeeee")
         receipt2 = datacontract.consent_contract.give_general_research_purpose(
@@ -562,6 +562,7 @@ class RequestDatasetView(APIView):
                 receipt + receipt2 + receipt3 + receipt5 + receipt5
             })
 
+        logger.info(tx_receipts)
         return tx_receipts
 
 
@@ -573,6 +574,8 @@ class GetLink(APIView):
         access_time = request.data.pop("access_time", 1000)
         purpose_code = request.data.pop("purpose_code", 1)
         dataset_address = request.data.pop("dataset_address", False)
+        logger.info(dataset_address)
+
         if not DataContract.objects.filter(
                 contract_address=dataset_address).exists():
             response = custom_exeptions.custom_message(
