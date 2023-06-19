@@ -9,22 +9,62 @@ from luceview.views import UserRegistration
 
 # Create your tests here.
 
-# class UploadDataViewTests(TestCase):
+# class UserRegistrationTest(APITestCase):
 #     def setUp(self):
-#         self.username = 'likun6034@gmail.com'
-#         self.password = '1'
-#         self.user = User.objects.create_user(
-#             username=self.username,
-#             password=self.password
-#         )
+#         self.registration_data = {
+#             "last_name": "piccini",
+#             "email": "email@email.com",
+#             "password": "password123",
+#             "create_wallet": True,
+#             "user_type": 0
+#         }
 
-#         self.client = Client()
-#         self.client.login(username=self.username, password=self.password)
+#         self.client = APIClient()
+#         self.url = reverse('user-register')
+
+#     def test_registration(self):
+#         response = self.client.post(self.url,
+#                                     self.registration_data,
+#                                     format='json')
+
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.data['error']['code'], 200)
+
+# class UserLoginTest(APITestCase):
+#     def setUp(self):
+#         self.registration_data = {
+#             "last_name": "piccini",
+#             "email": "email1@email.com",
+#             "password": "password123",
+#             "create_wallet": True,
+#             "user_type": 0
+#         }
+
+#         self.login_data = {
+#             "username": self.registration_data['email'],
+#             "password": self.registration_data['password'],
+#         }
+
+#         self.client = APIClient()
+#         # self.url = reverse('user-login')
+
+#     def test_login(self):
+#         # registration
+#         response = self.client.post(reverse('user-register'),
+#                                     self.registration_data,
+#                                     format='json')
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.data['error']['code'], 200)
+
+#         # login
+#         response = self.client.post(reverse('user-login'), self.login_data)
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.data['error']['code'], 200)
 
 
-class UserRegistrationTest(APITestCase):
-    def test_registration(self):
-        data = {
+class UploadDataTest(APITestCase):
+    def setUp(self):
+        self.registration_data = {
             "last_name": "piccini",
             "email": "email2@email.com",
             "password": "password123",
@@ -32,41 +72,45 @@ class UserRegistrationTest(APITestCase):
             "user_type": 0
         }
 
-        url = reverse('user-register')
-        client = APIClient()
-        response = client.post(url, data, format='json')
+        self.login_data = {
+            "username": self.registration_data['email'],
+            "password": self.registration_data['password'],
+        }
 
+        print(self.login_data)
+
+        self.uploaded_data = {
+            "estimate": False,
+            "description": "ds",
+            "link": "http://link.com",
+            "no_restrictions": False,
+            "open_to_general_research_and_clinical_care": False,
+            "open_to_HMB_research": False,
+            "open_to_population_and_ancestry_research": False,
+            "open_to_disease_specific": False
+        }
+
+        self.client = APIClient()
+
+    def test_upload_data(self):
+        response = self.client.post(reverse('user-register'),
+                                    self.registration_data,
+                                    format='json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['error']['code'], 200)
 
+        # login
+        response = self.client.post(reverse('user-login'), self.login_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['error']['code'], 200)
 
-class UserLogin(APITestCase):
-    def setUp(self):
-        data = {
-            "last_name": "piccini",
-            "email": "email2@email.com",
-            "password": "password123",
-            "create_wallet": True,
-            "user_type": 0
-        }
+        login_token = response.data['data']['token']
+        # upload data
 
-        user_serializer = UserSerializer(data=data,
-                                         context={"create_wallet": True})
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + login_token)
 
-        self.user = None
-
-        if user_serializer.is_valid():
-            self.user = user_serializer.save()
-
-        self.client = APIClient()
-        self.url = reverse('user-login')
-
-    def test_login(self):
-        login_data = {
-            "username": "email2@email.com",
-            "password": "password123",
-        }
-        response = self.client.post(self.url, login_data)
+        response = self.client.post(reverse('contract-dataUpload'),
+                                    self.uploaded_data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['error']['code'], 200)
