@@ -46,8 +46,10 @@ network.connect()
 print(network.is_connected())
 
 
-
 class Verifier(models.Model):
+    """
+    Verifier contract
+    """
     address = models.CharField(max_length=255, null=True)
 
     def deploy(self):
@@ -74,7 +76,7 @@ class UserManager(BaseUserManager):
                     is_staff=False,
                     is_admin=False):
         """
-        Creates and saves a User with the given arguments and password.
+        Creates and saves a User with the given arguments and password. 
         """
         if not email:
             raise ValueError('Users must have an email address')
@@ -372,11 +374,8 @@ class ConsentContract(models.Model):
 
         receipt = luce_project.ConsentCode.at(
             self.contract_address).giveClinicalPurpose(
-                user.ethereum_public_key,
-                rp.use_for_decision_support,
-                rp.use_for_disease_support,
-                txn_dict
-        )
+                user.ethereum_public_key, rp.use_for_decision_support,
+                rp.use_for_disease_support, txn_dict)
 
         logger.info(receipt)
 
@@ -396,15 +395,13 @@ class ConsentContract(models.Model):
 
         receipt = luce_project.ConsentCode.at(
             self.contract_address).giveHMBPurpose(
-                user.ethereum_public_key, 
+                user.ethereum_public_key,
                 rp.use_for_research_concerning_fundamental_biology,
                 rp.use_for_research_concerning_genetics,
                 rp.use_for_research_concerning_drug_development,
                 rp.use_for_research_concerning_any_disease,
                 rp.use_for_research_concerning_age_categories,
-                rp.use_for_research_concerning_gender_categories,
-                txn_dict
-        )
+                rp.use_for_research_concerning_gender_categories, txn_dict)
 
         logger.info(receipt)
         return receipt.status
@@ -484,7 +481,11 @@ class DataContract(models.Model):
         # print(verifier_address)
 
         # commitment = self.get_commitment("hello")
-        commitment = {"public_signals":['16279978653553831575017442062517458639822344791369834134794885970235221444339']}
+        commitment = {
+            "public_signals": [
+                '16279978653553831575017442062517458639822344791369834134794885970235221444339'
+            ]
+        }
         # commitment = "16279978653553831575017442062517458639822344791369834134794885970235221444339n"
         print(commitment)
 
@@ -509,7 +510,6 @@ class DataContract(models.Model):
                          body=body_json,
                          headers={'Content-Type': 'application/json'})
 
-        
         result = json.loads(r.data.decode('utf-8'))
 
         print(result)
@@ -638,17 +638,12 @@ class LuceRegistry(models.Model):
         logger.info(user.ethereum_public_key)
 
         sender = accounts.add(private_key=user.ethereum_private_key)
-        result = luce_project.LUCERegistry.at(self.contract_address).registerNewUser(
-            user.ethereum_public_key, 
-            license, 
-            {
-                'from': sender
-                }
-            )
+        result = luce_project.LUCERegistry.at(
+            self.contract_address).registerNewUser(user.ethereum_public_key,
+                                                   license, {'from': sender})
         print(result)
         # tx = web3.register_requester(self, user, license, estimate)
         return result
-
 
 
 """
