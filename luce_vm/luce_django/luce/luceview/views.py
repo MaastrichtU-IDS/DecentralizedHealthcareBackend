@@ -6,7 +6,8 @@ from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.models import Token
-from accounts.models import User, DataContract
+from accounts.models import User
+from blockchain.models import DataContract
 from utils import custom_exeptions as custom_exeptions
 
 from rest_framework.response import Response
@@ -16,232 +17,12 @@ from .serializers import *
 from utils.web3_scripts import *
 from utils.utils import get_initial_response, set_logger
 
-from accounts.models import LuceRegistry
+from blockchain.models import LuceRegistryContract as LuceRegistry
 
 logger = set_logger(__file__)
 
 
 # APIview for registering donors and influencers.
-class UserRegistration(APIView):
-    """
-    """
-    def post(self, request, format=None):
-
-        # Create an account for fake user
-        createWallet = request.data.get("create_wallet")
-
-        logger.info("Register a new user: ")
-        logger.info(request.data)
-
-        serializer = UserSerializer(data=request.data,
-                                    context={"create_wallet": createWallet})
-
-        # print(serializer.is_valid())
-
-        # serializer validation
-        if not serializer.is_valid():
-            print(serializer.errors)
-            response = custom_exeptions.validation_exeption(serializer)
-            logger.error("Register failed: " +
-                         response['body']["error"]["message"])
-            return Response(response["body"], response["status"])
-
-        instance = serializer.save()
-
-        tx_receipt = self.address_get_or_create(instance, createWallet)
-
-        logger.info("tx_receipt.status: ")
-        logger.info(tx_receipt.status)
-
-
-        # blockchain error handling
-        if type(tx_receipt) is list:
-            instance.delete()
-            response = custom_exeptions.blockchain_exception(tx_receipt)
-            return Response(response["body"], response["status"])
-
-        response = get_initial_response()
-        response["error"]["code"] = 200
-        response["error"]["message"] = "registration successfull"
-        response["error"]["status"] = "OK"
-        response["error"]["details"] = [{"reason": "SUCCESS"}]
-        response["data"]["transaction receipts"] = [tx_receipt.status]
-
-        return Response(response, status=status.HTTP_200_OK)
-
-    def address_get_or_create(self, instance, createWallet):
-        if (createWallet):
-            # User
-            tx_receipt = instance.create_wallet()
-            instance.save()
-
-            if tx_receipt:
-                return tx_receipt
-        tx_receipt = None
-        return tx_receipt
-
-
-class ObtainAuthToken(APIView):
-    # user/login
-    throttle_classes = ()
-    permission_classes = ()
-    parser_classes = (
-        parsers.FormParser,
-        parsers.MultiPartParser,
-        parsers.JSONParser,
-    )
-    renderer_classes = (renderers.JSONRenderer, )
-    serializer_class = AuthTokenSerializer
-
-    if coreapi_schema.is_enabled():
-        schema = ManualSchema(
-            fields=[
-                coreapi.Field(
-                    name="username",
-                    required=True,
-                    location='form',
-                    schema=coreschema.String(
-                        title="Username",
-                        description="Valid username for authentication",
-                    ),
-                ),
-                coreapi.Field(
-                    name="password",
-                    required=True,
-                    location='form',
-                    schema=coreschema.String(
-                        title="Password",
-                        description="Valid password for authentication",
-                    ),
-                ),
-            ],
-            encoding="application/json",
-        )
-
-    def get_serializer_context(self):
-        return {
-            'request': self.request,
-            'format': self.format_kwarg,
-            'view': self
-        }
-
-    def get_serializer(self, *args, **kwargs):
-        kwargs['context'] = self.get_serializer_context()
-        return self.serializer_class(*args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        logger.info("Login information:" + str(request.data))
-
-        serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            response = custom_exeptions.validation_exeption(serializer)
-            return Response(response["body"], response["status"])
-
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-
-        response = get_initial_response()
-        response["error"]["code"] = 200
-        response["error"]["message"] = "login successfull"
-        response["error"]["status"] = "OK"
-        response["error"]["details"] = ["SUCCESS"]
-        response["data"]["token"] = token.key
-
-        return Response(response)
-
-
-class UserUpdateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def put(self, request, format=None):
-        user = self.request.user
-        instance = user
-        createWallet = request.data.get("create_wallet")
-        serializer = UserSerializer(user,
-                                    data=request.data,
-                                    context={"create_wallet": createWallet},
-                                    partial=True)
-
-        if not serializer.is_valid():
-            response = custom_exeptions.validation_exeption(serializer)
-            return Response(response["body"], response["status"])
-
-        tx_receipt = self.address_get_or_create(instance, createWallet)
-        if type(tx_receipt) is list:
-            response = custom_exeptions.blockchain_exception(tx_receipt)
-            return Response(response["body"], response["status"])
-
-        response = get_initial_response()
-        response["error"]["code"] = 200
-        response["error"]["message"] = "update user successfull"
-        response["error"]["status"] = "OK"
-        response["error"]["details"] = ["SUCCESS"]
-        response["data"]["transaction receipts"] = [tx_receipt]
-
-        serializer.save()
-        return Response(response, status=status.HTTP_200_OK)
-
-    def address_get_or_create(self, instance, createWallet):
-        if (createWallet):
-            tx_receipt = instance.create_wallet()
-
-            if tx_receipt:
-                return tx_receipt
-        tx_receipt = None
-        return tx_receipt
-
-
-class PublicUserInfoView(APIView):
-    def get(self, request, id, format=None):
-        user = self.get_object(id)
-        serializer = PublicUserSerializer(user)
-
-        response = get_initial_response()
-        response["error"]["code"] = 200
-        response["error"][
-            "message"] = "user public data retrieved successfully"
-        response["error"]["status"] = "OK"
-        response["error"]["details"] = ["SUCCESS"]
-        response["data"]["users"] = [serializer.data]
-
-        return Response(response)
-
-    def get_object(self, id):
-        try:
-            return User.objects.get(pk=id)
-        except User.DoesNotExist:
-            raise Http404
-
-
-class PrivateUserInfoView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, format=None):
-        user = request.user
-        serializer = UserSerializer(user)
-
-        response = get_initial_response()
-        response["error"]["code"] = 200
-        response["error"][
-            "message"] = "user private data retrieved successfully"
-        response["error"]["status"] = "OK"
-        response["error"]["details"] = ["SUCCESS"]
-        response["data"]["users"] = [serializer.data]
-        return Response(response)
-
-
-class UserListView(APIView):
-    def get(self, request, format=None):
-        users = User.objects.all()
-        serializer = PublicUserSerializer(users, many=True)
-
-        response = get_initial_response()
-        response["error"]["code"] = 200
-        response["error"]["message"] = "all user data retrieved successfully"
-        response["error"]["status"] = "OK"
-        response["error"]["details"] = ["SUCCESS"]
-        response["data"]["users"] = [serializer.data]
-        return Response(response)
 
 
 class ContractsListView(APIView):
@@ -674,6 +455,11 @@ class LuceRegistryView(APIView):
         user = request.user
 
         # Deploy verifier
+        from blockchain.models import PlonkVerifierContract
+        if not PlonkVerifierContract.objects.filter(pk=1).exists():
+            verifier = PlonkVerifierContract.objects.create(pk=1)
+            verifier.deploy()
+            # verifier.save()
 
         if user.ethereum_public_key is None or user.ethereum_private_key is None:
             response = custom_exeptions.custom_message(
