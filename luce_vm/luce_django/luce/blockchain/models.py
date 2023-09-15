@@ -1,0 +1,438 @@
+from django.db import models
+from accounts.models import User
+
+# Create your models here.
+from brownie import network, project, accounts
+from django.core.exceptions import ObjectDoesNotExist
+
+# Tips:
+# We can not import the following here, because the name just can be provided(resolved) after the app is loaded.
+# So just import them in the functions where they are used.
+# from brownie.project.BrownieProject import *
+
+from utils.utils import get_initial_response, set_logger
+
+logger = set_logger(__file__)
+
+
+class PlonkVerifierContract(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        # if not self.address:
+        #     self.deploy()
+        super().save(*args, **kwargs)
+
+    def deploy(self):
+        from brownie import accounts
+        from brownie.project.BrownieProject import PlonkVerifier
+
+        # 1. deploy contract
+        contract = PlonkVerifier.deploy({'from': accounts[0]})
+        self.address = contract.address
+
+        # 2. save contract address
+        self.save()
+
+        return contract.tx
+
+
+class LuceRegistryContract(models.Model):
+    contract_address = models.CharField(max_length=255, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def deploy(self):
+        # from brownie import accounts
+        from brownie.project.BrownieProject import LUCERegistry
+
+        # account[0] as the administrator
+        contract = LUCERegistry.deploy({'from': accounts[0]})
+        receipt = contract.tx
+        if receipt.status == 1:
+            self.contract_address = receipt.contract_address
+            print("Deploy LUCERegistry contract succeeded")
+        else:
+            print("Deploy LUCERegistry contract failed")
+
+        return receipt.status
+
+    def deploy_contract(self):
+        tx_receipt = web3.deploy_registry(self.user)
+        if type(tx_receipt) is list:
+            return tx_receipt
+        self.contract_address = tx_receipt["contractAddress"]
+        return tx_receipt
+
+    def is_registered(self, user, usertype):
+        if usertype == 'requester':
+            return self.is_registered_as_requester(user)
+
+    def is_registered_as_requester(self, user):
+        result = luce_project.LUCERegistry.at(self.contract_address).checkUser(
+            user.ethereum_public_key)
+        return result
+
+        # isregistered = web3.is_registered(self, user, usertype)
+        # return isregistered
+
+    def register_provider(self, user, estimate):
+        tx = web3.register_provider(self, user, estimate)
+        return tx
+
+    def register_requester(self, user, license, estimate):
+        logger.info(user.ethereum_private_key)
+        logger.info(user.ethereum_public_key)
+
+        sender = accounts.add(private_key=user.ethereum_private_key)
+        result = luce_project.LUCERegistry.at(
+            self.contract_address).registerNewUser(user.ethereum_public_key,
+                                                   license, {'from': sender})
+        print(result)
+        # tx = web3.register_requester(self, user, license, estimate)
+        return result
+
+
+class Restrictions(models.Model):
+    no_restrictions = models.BooleanField()
+    open_to_general_research_and_clinical_care = models.BooleanField()
+    open_to_HMB_research = models.BooleanField()
+    open_to_population_and_ancestry_research = models.BooleanField()
+    open_to_disease_specific = models.BooleanField()
+
+
+class GeneralResearchPurpose(models.Model):
+    use_for_methods_development = models.BooleanField(default=False)
+    use_for_reference_or_control_material = models.BooleanField(default=False)
+    use_for_research_concerning_populations = models.BooleanField(
+        default=False)
+    use_for_research_ancestry = models.BooleanField(default=False)
+    use_for_biomedical_research = models.BooleanField(default=False)
+
+
+class HMBResearchPurpose(models.Model):
+    use_for_research_concerning_fundamental_biology = models.BooleanField(
+        default=False)
+    use_for_research_concerning_genetics = models.BooleanField(default=False)
+    use_for_research_concerning_drug_development = models.BooleanField(
+        default=False)
+    use_for_research_concerning_any_disease = models.BooleanField(
+        default=False)
+    use_for_research_concerning_age_categories = models.BooleanField(
+        default=False)
+    use_for_research_concerning_gender_categories = models.BooleanField(
+        default=False)
+
+
+class ClinicalPurpose(models.Model):
+    use_for_decision_support = models.BooleanField(default=False)
+    use_for_disease_support = models.BooleanField(default=False)
+
+
+class ResearchPurpose(models.Model):
+    general_research_purpose = models.ForeignKey(GeneralResearchPurpose,
+                                                 on_delete=models.CASCADE,
+                                                 null=True)
+    HMB_research_purpose = models.ForeignKey(HMBResearchPurpose,
+                                             on_delete=models.CASCADE,
+                                             null=True)
+    clinical_purpose = models.ForeignKey(ClinicalPurpose,
+                                         on_delete=models.CASCADE,
+                                         null=True)
+
+
+class ConsentContract(models.Model):
+    # from brownie.project.BrownieProject import ConsentCode
+    contract_address = models.CharField(max_length=255, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
+    research_purpose = models.ForeignKey(ResearchPurpose,
+                                         on_delete=models.CASCADE,
+                                         null=True)
+
+    def update_data_consent(self):
+        from brownie.project.BrownieProject import ConsentCode
+        transaction_dict = {
+            'from': accounts.add(private_key=self.user.ethereum_private_key)
+        }
+
+        logger.info(self.user.ethereum_public_key)
+        transaction_receipt = ConsentCode.at(
+            self.contract_address).UploadDataPrimaryCategory(
+                self.user.ethereum_public_key,
+                self.restrictions.no_restrictions,
+                self.restrictions.open_to_general_research_and_clinical_care,
+                self.restrictions.open_to_HMB_research,
+                self.restrictions.open_to_population_and_ancestry_research,
+                self.restrictions.open_to_disease_specific, transaction_dict)
+
+        return transaction_receipt.status
+
+    def upload_data_consent(self, estimate):
+        return web3.upload_data_consent(self, estimate)
+
+    def retrieve_contract_owner(self):
+        return web3.retrieve_contract_owner(self)
+
+    def deploy(self):
+        from brownie.project.BrownieProject import ConsentCode
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+        contract = ConsentCode.deploy({'from': new_account})
+
+        self.contract_address = contract.address
+        self.save()
+
+    def deploy_contract(self):
+        tx_receipt = web3.deploy_consent(self.user)
+        if type(tx_receipt) is list:
+            return tx_receipt
+        self.contract_address = tx_receipt["contractAddress"]
+        self.save()
+        return tx_receipt
+
+    def give_clinical_research_purpose(self, user, estimate):
+        rp = self.research_purpose.clinical_purpose
+        # print(rp)
+        logger.info(rp)
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+
+        txn_dict = {'from': new_account}
+
+        receipt = luce_project.ConsentCode.at(
+            self.contract_address).giveClinicalPurpose(
+                user.ethereum_public_key, rp.use_for_decision_support,
+                rp.use_for_disease_support, txn_dict)
+
+        logger.info(receipt)
+
+        return receipt.status
+
+        # tx = web3.give_clinical_research_purpose(self, user, estimate)
+        # return tx
+
+    def give_HMB_research_purpose(self, user, estimate):
+        rp = self.research_purpose.HMB_research_purpose
+        # print(rp)
+        logger.info(rp)
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+
+        txn_dict = {'from': new_account}
+
+        receipt = luce_project.ConsentCode.at(
+            self.contract_address).giveHMBPurpose(
+                user.ethereum_public_key,
+                rp.use_for_research_concerning_fundamental_biology,
+                rp.use_for_research_concerning_genetics,
+                rp.use_for_research_concerning_drug_development,
+                rp.use_for_research_concerning_any_disease,
+                rp.use_for_research_concerning_age_categories,
+                rp.use_for_research_concerning_gender_categories, txn_dict)
+
+        logger.info(receipt)
+        return receipt.status
+        # tx = web3.give_HMB_research_purpose(self, user, estimate)
+        # return tx
+
+    def give_general_research_purpose(self, user, estimate):
+        rp = self.research_purpose.general_research_purpose
+        private_key = self.user.ethereum_private_key
+        new_account = accounts.add(private_key=private_key)
+
+        txn_dict = {'from': new_account}
+
+        receipt = luce_project.ConsentCode.at(
+            self.contract_address).giveResearchPurpose(
+                user.ethereum_public_key, rp.use_for_methods_development,
+                rp.use_for_reference_or_control_material,
+                rp.use_for_research_concerning_populations,
+                rp.use_for_research_ancestry, rp.use_for_biomedical_research,
+                txn_dict)
+
+        # tx = web3.give_general_research_purpose(self, user, estimate)
+        logger.info(receipt)
+        return receipt.status
+
+
+class DataContract(models.Model):
+    contract_address = models.CharField(max_length=255, null=True, unique=True)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    commitment = models.CharField(max_length=255, null=False, default='0x0')
+
+    consent_contract = models.ForeignKey(ConsentContract,
+                                         on_delete=models.CASCADE,
+                                         null=True)
+
+    description = models.CharField(max_length=255, null=True)
+
+    licence = models.IntegerField(default=1)
+
+    link = models.CharField(max_length=255, null=True)
+
+    def get_a_new_account(self):
+        new_account = accounts.add()
+        accounts[0].transfer(new_account, 1e18)
+        return new_account
+
+    def require_verifier_deployed(self):
+        try:
+            v = PlonkVerifierContract.objects.get(pk=1)
+
+            if v.address is None:
+                deploy_result = v.deploy()
+                # print(deploy_result)
+
+                v.address = deploy_result.address
+                v.save()
+        except ObjectDoesNotExist:
+            v = PlonkVerifierContract.objects.create(pk=1)
+            r = v.deploy()
+
+            print(r)
+            # v.address = v.deploy().address
+            # v.save()
+
+    def deploy(self):
+        from brownie.project.BrownieProject import LuceMain
+
+        # private_key = self.user.ethereum_private_key
+        # new_account = accounts.add(private_key=private_key)
+        new_account = self.get_a_new_account()
+        # accounts[1].transfer(new_account, 1e18)  # 1 ether
+        # print(new_account)
+
+        self.require_verifier_deployed()
+        verifier_address = PlonkVerifierContract.objects.get(pk=1).address
+        # print(verifier_address)
+
+        # commitment = self.get_commitment("hello")
+        commitment = {
+            "public_signals": [
+                '16279978653553831575017442062517458639822344791369834134794885970235221444339'
+            ]
+        }
+        # commitment = "16279978653553831575017442062517458639822344791369834134794885970235221444339n"
+        print(commitment)
+
+        # print(accounts.at())
+        contract = LuceMain.deploy(verifier_address,
+                                   commitment['public_signals'],
+                                   {'from': new_account})
+
+        self.contract_address = contract.address
+        self.save()
+        return contract.tx.txid
+
+    def get_commitment(self, secret):
+        http = urllib3.PoolManager()
+        snark_service_url = "http://zkp_service:8888/compute_commitment"
+        body_json = json.dumps({"secret": secret}).encode('utf-8')
+
+        print(body_json)
+
+        r = http.request('POST',
+                         snark_service_url,
+                         body=body_json,
+                         headers={'Content-Type': 'application/json'})
+
+        result = json.loads(r.data.decode('utf-8'))
+
+        print(result)
+        return result
+
+    def deploy_contract(self):
+        from brownie.project.BrownieProject import LuceMain
+        # self.deploy()
+
+        tx_receipt = web3.deploy_contract_main(self.user)
+        if type(tx_receipt) is list:
+            return tx_receipt
+        self.contract_address = tx_receipt["contractAddress"]
+        self.save()
+        return tx_receipt
+
+    def set_registry_address(self, registry_address):
+        from brownie.project.BrownieProject import LuceMain
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
+
+        transaction_receipt = LuceMain.at(
+            self.contract_address).setRegistryAddress(registry_address,
+                                                      transaction_dict)
+
+        return transaction_receipt.status
+
+    # def set_registry_address(self, registry, estimate):
+    #     tx_receipt = web3.set_registry_address(self, registry.contract_address,
+    #                                            estimate)
+    #     return tx_receipt
+
+    def set_consent_address(self):
+        from brownie.project.BrownieProject import LuceMain
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
+
+        transaction_receipt = LuceMain.at(
+            self.contract_address).setConsentAddress(
+                self.consent_contract.contract_address, transaction_dict)
+
+        return transaction_receipt.status
+
+        # tx_receipt = web3.set_consent_address(
+        #     self, self.consent_contract.contract_address, estimate)
+        # return tx_receipt
+
+    def publish_dataset(self, link):
+        from brownie.project.BrownieProject import LuceMain
+        new_account = self.get_a_new_account()
+        transaction_dict = {
+            'from': new_account,
+        }
+
+        print(transaction_dict)
+
+        transaction_receipt = LuceMain.at(self.contract_address).publishData(
+            self.description, link, self.licence, transaction_dict)
+
+        return transaction_receipt.status
+        # tx = web3.publish_dataset(self, user, link)
+        # return tx
+
+    def retreive_info(self):
+        tx_receipt = web3.retreive_dataset_info(self)
+        return tx_receipt
+
+    def add_data_requester(self, access_time, purpose_code, user, estimate):
+        acc = accounts.add(private_key=user.ethereum_private_key)
+
+        txn_dict = {'from': acc, "gas_limit": 1e15, "allow_revert": True}
+
+        tx_receipt = luce_project.LuceMain.at(
+            self.contract_address).addDataRequester(purpose_code, access_time,
+                                                    txn_dict)
+
+        return tx_receipt
+
+    def getLink(self, user, estimate):
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
+
+        receipt = luce_project.LuceMain.at(
+            self.contract_address).getLink(transaction_dict)
+        logger.info(receipt)
+        return receipt
+
+        # logger.info(receipt)
+
+        # return 0
+
+    def checkAccess(self, user, researchpurpose):
+        hasAccess = web3.checkAccess(self, user, researchpurpose)
+        return hasAccess

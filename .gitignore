@@ -12,7 +12,7 @@ luce_vm/js/node_modules/
 # Ignore database and migrations
 luce_vm/luce_django/luce/db.sqlite3
 luce_vm/luce_django/luce/accounts/migrations/*
-luce_vm/luce_django/luce/luce/blockchain/migrations/*
+luce_vm/luce_django/luce/blockchain/migrations/*
 luce_vm/brownie/build
 
 
