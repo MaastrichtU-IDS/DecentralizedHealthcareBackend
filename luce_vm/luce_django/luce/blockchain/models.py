@@ -1,18 +1,67 @@
 from django.db import models
 from accounts.models import User
-
-# Create your models here.
 from brownie import network, project, accounts
 from django.core.exceptions import ObjectDoesNotExist
+from utils.utils import get_initial_response, set_logger
+
+logger = set_logger(__file__)
 
 # Tips:
 # We can not import the following here, because the name just can be provided(resolved) after the app is loaded.
 # So just import them in the functions where they are used.
 # from brownie.project.BrownieProject import *
 
-from utils.utils import get_initial_response, set_logger
+from privacy.snarkjs_service import SnarkjsService
 
-logger = set_logger(__file__)
+snarkjs_service = SnarkjsService()
+
+
+class Restrictions(models.Model):
+    no_restrictions = models.BooleanField()
+    open_to_general_research_and_clinical_care = models.BooleanField()
+    open_to_HMB_research = models.BooleanField()
+    open_to_population_and_ancestry_research = models.BooleanField()
+    open_to_disease_specific = models.BooleanField()
+
+
+class GeneralResearchPurpose(models.Model):
+    use_for_methods_development = models.BooleanField(default=False)
+    use_for_reference_or_control_material = models.BooleanField(default=False)
+    use_for_research_concerning_populations = models.BooleanField(
+        default=False)
+    use_for_research_ancestry = models.BooleanField(default=False)
+    use_for_biomedical_research = models.BooleanField(default=False)
+
+
+class HMBResearchPurpose(models.Model):
+    use_for_research_concerning_fundamental_biology = models.BooleanField(
+        default=False)
+    use_for_research_concerning_genetics = models.BooleanField(default=False)
+    use_for_research_concerning_drug_development = models.BooleanField(
+        default=False)
+    use_for_research_concerning_any_disease = models.BooleanField(
+        default=False)
+    use_for_research_concerning_age_categories = models.BooleanField(
+        default=False)
+    use_for_research_concerning_gender_categories = models.BooleanField(
+        default=False)
+
+
+class ClinicalPurpose(models.Model):
+    use_for_decision_support = models.BooleanField(default=False)
+    use_for_disease_support = models.BooleanField(default=False)
+
+
+class ResearchPurpose(models.Model):
+    general_research_purpose = models.ForeignKey(GeneralResearchPurpose,
+                                                 on_delete=models.CASCADE,
+                                                 null=True)
+    HMB_research_purpose = models.ForeignKey(HMBResearchPurpose,
+                                             on_delete=models.CASCADE,
+                                             null=True)
+    clinical_purpose = models.ForeignKey(ClinicalPurpose,
+                                         on_delete=models.CASCADE,
+                                         null=True)
 
 
 class PlonkVerifierContract(models.Model):
@@ -96,56 +145,7 @@ class LuceRegistryContract(models.Model):
         return result
 
 
-class Restrictions(models.Model):
-    no_restrictions = models.BooleanField()
-    open_to_general_research_and_clinical_care = models.BooleanField()
-    open_to_HMB_research = models.BooleanField()
-    open_to_population_and_ancestry_research = models.BooleanField()
-    open_to_disease_specific = models.BooleanField()
-
-
-class GeneralResearchPurpose(models.Model):
-    use_for_methods_development = models.BooleanField(default=False)
-    use_for_reference_or_control_material = models.BooleanField(default=False)
-    use_for_research_concerning_populations = models.BooleanField(
-        default=False)
-    use_for_research_ancestry = models.BooleanField(default=False)
-    use_for_biomedical_research = models.BooleanField(default=False)
-
-
-class HMBResearchPurpose(models.Model):
-    use_for_research_concerning_fundamental_biology = models.BooleanField(
-        default=False)
-    use_for_research_concerning_genetics = models.BooleanField(default=False)
-    use_for_research_concerning_drug_development = models.BooleanField(
-        default=False)
-    use_for_research_concerning_any_disease = models.BooleanField(
-        default=False)
-    use_for_research_concerning_age_categories = models.BooleanField(
-        default=False)
-    use_for_research_concerning_gender_categories = models.BooleanField(
-        default=False)
-
-
-class ClinicalPurpose(models.Model):
-    use_for_decision_support = models.BooleanField(default=False)
-    use_for_disease_support = models.BooleanField(default=False)
-
-
-class ResearchPurpose(models.Model):
-    general_research_purpose = models.ForeignKey(GeneralResearchPurpose,
-                                                 on_delete=models.CASCADE,
-                                                 null=True)
-    HMB_research_purpose = models.ForeignKey(HMBResearchPurpose,
-                                             on_delete=models.CASCADE,
-                                             null=True)
-    clinical_purpose = models.ForeignKey(ClinicalPurpose,
-                                         on_delete=models.CASCADE,
-                                         null=True)
-
-
 class ConsentContract(models.Model):
-    # from brownie.project.BrownieProject import ConsentCode
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
@@ -313,13 +313,17 @@ class DataContract(models.Model):
         # print(verifier_address)
 
         # commitment = self.get_commitment("hello")
+        proof = snarkjs_service.generate_proof("hello")
+
+        # print("proof\n" + str(proof))
+        print("proof\n" + str(proof['public_signals']))
         commitment = {
             "public_signals": [
                 '16279978653553831575017442062517458639822344791369834134794885970235221444339'
             ]
         }
         # commitment = "16279978653553831575017442062517458639822344791369834134794885970235221444339n"
-        print(commitment)
+        # print(commitment)
 
         # print(accounts.at())
         contract = LuceMain.deploy(verifier_address,
@@ -328,7 +332,7 @@ class DataContract(models.Model):
 
         self.contract_address = contract.address
         self.save()
-        return contract.tx.txid
+        return contract.tx
 
     def get_commitment(self, secret):
         http = urllib3.PoolManager()

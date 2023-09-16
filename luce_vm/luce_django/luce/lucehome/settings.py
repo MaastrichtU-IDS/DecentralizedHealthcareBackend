@@ -49,7 +49,8 @@ INSTALLED_APPS = [
 
     # rest framework
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'privacy',
 ]
 
 REST_FRAMEWORK = {
