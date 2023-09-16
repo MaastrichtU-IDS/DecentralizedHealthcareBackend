@@ -4,7 +4,9 @@ include "../node_modules/circomlib/circuits/pedersen.circom";
 
 template Claim() {
     signal input secret;
-    signal output commitment;
+    // log("circuit secret:");
+    log(secret);
+    signal output commitment[2];
 
     component commitmentHasher = Pedersen(256);
 
@@ -15,9 +17,10 @@ template Claim() {
         commitmentHasher.in[i] <== secretBits.out[i];
     }
 
-    commitment <== commitmentHasher.out[0];
+    commitment[0] <== commitmentHasher.out[0];
+    commitment[1] <== commitmentHasher.out[1];
     // log("circuit commitment:");
-    log(commitment);
+    // log(commitment);
 }
 
 component main = Claim();
