@@ -11,6 +11,21 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+from pathlib import Path
+
+# ==== SETUP BROWNIE ====
+from brownie import network, project
+
+brownie_folder = Path(__file__).parent.parent.parent.parent
+# pri("Brownie folder: " + str(brownie_folder))
+brownie_path = brownie_folder / 'brownie'
+# pri("Brownie path: " + str(brownie_path))
+# pr("Loading Brownie from: " + str(brownie_path)
+p = project.load(brownie_path, name="BrownieProject")
+p.load_config()
+# pr(p.dict()
+network.connect('luce')
+# is_connected = network.is_connected()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
