@@ -59,5 +59,12 @@ class MimicMixingServiceContract(models.Model):
         return deposited
         # pass
 
-    def withdraw(self):
-        pass
+    def withdraw(self, dispossable_address, amount):
+        from brownie.project.BrownieProject import MimicMixingService
+        self.require_deployed()
+        # dispossable_address = accounts.add()
+        withdrawn = MimicMixingService.at(
+            self.contract_address).withdrawToDisposable(
+                dispossable_address, amount, {'from': accounts[0]})
+
+        return withdrawn

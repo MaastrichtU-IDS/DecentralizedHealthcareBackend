@@ -13,6 +13,7 @@ from luceview.views import *
 from django.conf import settings
 
 urlpatterns = [
+    path('docs/', include('sphinxdoc.urls')),
     path('users/', include('accounts.urls')),
     # path('user/register/', UserRegistration.as_view()),
     # path('user/<int:id>/', PublicUserInfoView.as_view()),
