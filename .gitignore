@@ -15,6 +15,9 @@ luce_vm/luce_django/luce/accounts/migrations/*
 luce_vm/luce_django/luce/blockchain/migrations/*
 luce_vm/luce_django/luce/privacy/migrations/*
 luce_vm/brownie/build
+luce_vm/luce_django/luce/docs/_build
+# luce_vm/luce_django/luce/docs/_static
+# luce_vm/luce_django/luce/docs/_templates
 
 
 # Exlude internal vagrant directories

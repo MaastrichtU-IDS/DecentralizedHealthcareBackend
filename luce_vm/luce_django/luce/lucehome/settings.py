@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
+    'sphinxdoc',
+    'haystack',
     'accounts',
     'luceview',
     'blockchain.apps.BlockchainConfig',  # Here, if I just put 'blockchain', it will not execute the ready() function in apps.py
@@ -67,6 +69,12 @@ INSTALLED_APPS = [
     'corsheaders',
     'privacy',
 ]
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    },
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':

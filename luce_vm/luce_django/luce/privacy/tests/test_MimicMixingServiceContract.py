@@ -15,3 +15,10 @@ class MimicMixingServiceContractModelTestCase(TestCase):
         deposited = self.mimic_mixing_service_contract.deposit()
         # print(deposited)
         self.assertEqual(deposited.status, 1)
+
+    def test_withdraw(self):
+        from brownie import accounts
+        withdrawn = self.mimic_mixing_service_contract.withdraw(
+            accounts.add(), 1000000000000000000)
+        # print(withdrawn)
+        self.assertEqual(withdrawn.status, 1)
