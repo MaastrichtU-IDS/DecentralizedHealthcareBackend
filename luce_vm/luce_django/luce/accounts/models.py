@@ -224,11 +224,8 @@ class User(AbstractBaseUser):
 
         self.ethereum_public_key = new_account.address
         self.ethereum_private_key = new_account.private_key
+        self.save()
 
-        print(self.ethereum_public_key)
-        # txn_receipt, account = web3.assign_address_v3()
-        # self.ethereum_public_key = account.address
-        # self.ethereum_private_key = account.privateKey.hex()
         return txn_receipt
 
     # The following default methods are expected to be defined by Django
@@ -266,10 +263,6 @@ class User(AbstractBaseUser):
     def is_active(self):
         "Is the user active?"
         return self.active
-
-
-
-
 
 
 """

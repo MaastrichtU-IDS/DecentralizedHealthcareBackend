@@ -18,6 +18,7 @@ logger = set_logger(__file__)
 
 class UserRegistration(APIView):
     """
+    Register a new user
     """
     def post(self, request, format=None):
 
@@ -25,13 +26,11 @@ class UserRegistration(APIView):
         createWallet = request.data.get("create_wallet")
         createWallet = True
 
-        logger.info("Register a new user: ")
-        logger.info(request.data)
+        logger.info("Register a new user: " + str(request.data))
+        # logger.info(request.data)
 
         serializer = UserSerializer(data=request.data,
                                     context={"create_wallet": createWallet})
-
-        # print(serializer.is_valid())
 
         # serializer validation
         if not serializer.is_valid():
@@ -45,9 +44,6 @@ class UserRegistration(APIView):
 
         tx_receipt = self.address_get_or_create(instance, createWallet)
 
-        logger.info("tx_receipt.status: ")
-        # logger.info(tx_receipt.status)
-
         # blockchain error handling
         if type(tx_receipt) is list:
             instance.delete()
@@ -59,7 +55,7 @@ class UserRegistration(APIView):
         response["error"]["message"] = "registration successfull"
         response["error"]["status"] = "OK"
         response["error"]["details"] = [{"reason": "SUCCESS"}]
-        response["data"]["transaction receipts"] = [tx_receipt.status]
+        response["data"]["transaction id"] = [tx_receipt.txid]
 
         return Response(response, status=status.HTTP_200_OK)
 
