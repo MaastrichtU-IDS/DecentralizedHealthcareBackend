@@ -21,7 +21,6 @@ from blockchain.models import LuceRegistryContract as LuceRegistry
 
 logger = set_logger(__file__)
 
-
 # APIview for registering donors and influencers.
 
 
@@ -207,7 +206,7 @@ class UploadDataView(APIView):
         response["error"]["status"] = "OK"
         response["error"]["details"] = ["SUCCESS"]
         response["data"] = {}
-        response["data"]["contracts"] = [serializer.data]
+        response["data"]["contracts"] = serializer.data
         response["data"]["transaction receipts"] = tx_receipts
         return Response(response)
 

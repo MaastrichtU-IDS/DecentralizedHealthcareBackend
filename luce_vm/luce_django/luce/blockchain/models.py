@@ -332,7 +332,7 @@ class DataContract(models.Model):
 
         self.contract_address = contract.address
         self.save()
-        return contract.tx
+        return contract.tx.status
 
     def get_commitment(self, secret):
         http = urllib3.PoolManager()

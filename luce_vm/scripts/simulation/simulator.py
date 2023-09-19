@@ -5,6 +5,17 @@ import sys
 import os
 import django
 
+from generate_user import generate_users
+
+luce_django_path = os.path.abspath('../..')  # luce_vm
+luce_django_path = os.path.join(luce_django_path, 'luce_django/luce')
+# print(luce_django_path)
+sys.path.insert(0, luce_django_path)
+os.environ['DJANGO_SETTINGS_MODULE'] = 'lucehome.settings'
+
+django.setup()
+
+from accounts.models import User
 # BASE_DIR = "../../luce_django/luce"
 
 # sys.path.append("../../luce_django/luce")
@@ -54,7 +65,7 @@ def Register(registration_url, registration_data):
                      headers={'Content-Type': 'application/json'})
 
     result = json.loads(r.data.decode('utf-8'))
-    print(result)
+    # print(result)
     return result
 
 
@@ -87,13 +98,15 @@ def UploadData(upload_url, data, token):
                      })
 
     result = json.loads(r.data.decode('utf-8'))
-    print(result)
+    # print(result)
+    return result
 
 
 deploy_registry_url = "http://localhost:8000/admin/deployRegistry/"
 
 
 def DeployRegistry(url, admin_token):
+    print("Deploy registry")
     r = http.request("POST",
                      url,
                      headers={
@@ -102,12 +115,14 @@ def DeployRegistry(url, admin_token):
                      })
 
     result = json.loads(r.data.decode('utf-8'))
-    print(result)
+    # print(result)
 
 
 # UploadData(upload_data_url, uploaded_data)
 
 test_url = "http://localhost:8000/"
+
+
 def Test(url):
     r = http.request("GRT", url)
     result = json.loads(r.data.decode('utf-8'))
@@ -117,22 +132,30 @@ def Test(url):
 def pipeline():
 
     # Test(test_url)
-    # return 
+    # return
     print("Start simulation")
     # return
-    
+
     # 1. clear user data
-    # User.objects.all().delete()
+    User.objects.all().delete()
 
     # 2. load faked user data
-    with open("faked_data.json", "r") as f:
-        data = json.load(f)
+    # with open("faked_data.json", "r") as f:
+    #     data = json.load(f)
+
+    data = generate_users(3)
+    # print(data)
 
     users = data['users']
 
     # 3. register users
     for user in users:
+        email = user['registration_data']['email']
+        print("Register user: " + email)
         Register(registration_url, user['registration_data'])
+
+        # user = User.objects.get(email=email)
+        # print(user.ethereum_public_key)
 
     # 4. deploy registry
     admin = users.pop()
@@ -154,9 +177,18 @@ def pipeline():
                 'username': user['registration_data']['email'],
                 'password': user['registration_data']['password']
             })
-        print(token)
+
+        email = user['registration_data']['email']
+        user_instance = User.objects.get(email=email)
+        user_address = user_instance.ethereum_public_key
+
         # 4.2 upload data
-        UploadData(upload_data_url, user['uploaded_data'], token)
+        uploaded = UploadData(upload_data_url, user['uploaded_data'], token)
+        print("Upload data for user: " + email)
+        uploaded_address = uploaded['data']['contracts']
+        print("Uploaded address: ")
+        # print(type(uploaded_address))
+        print(uploaded_address['contract_address'])
 
 
 pipeline()
