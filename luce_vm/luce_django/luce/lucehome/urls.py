@@ -5,9 +5,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken import views
 from django.views.decorators.csrf import csrf_exempt
 
-# from .views import *
-from luceview.views import *
-# from views import *
+from healthcare.views import *
 
 # Import settings to access environment variables
 from django.conf import settings
@@ -15,8 +13,8 @@ from django.conf import settings
 urlpatterns = [
     path('docs/', include('sphinxdoc.urls')),
     path('user/', include('accounts.urls')),
-    path('contract/', include('luceview.urls')),
-    path('admin/', include('luceview.urls')),
+    path('contract/', include('healthcare.urls')),
+    path('admin/', include('healthcare.urls')),
 
     # path('user/register/', UserRegistration.as_view()),
     # path('user/<int:id>/', PublicUserInfoView.as_view()),
