@@ -70,7 +70,6 @@ class Simulator:
                               })
 
         result = json.loads(r.data.decode('utf-8'))
-        # print(result)
         return result
 
     def _deploy_registry(self, url, admin_token):
@@ -87,8 +86,10 @@ class Simulator:
         return address[:5] + "..." + address[-5:]
 
     def _senario_1(self):
+        """
+        In this senario, we will simulate uploading data.
+        """
         print("Start simulate senario 1")
-        # print(self.user)
 
         # 1. clear user data
         User.objects.all().delete()
@@ -127,8 +128,8 @@ class Simulator:
                                          user['uploaded_data'], token)
             print("Upload data for user: " + email)
             uploaded_address = uploaded['data']['contracts']
-            print("Uploaded address: ")
-            print(uploaded_address['contract_address'])
+            print("Uploaded address: " + uploaded_address['contract_address'])
+            print()
             self.directed_graph.add_edge(
                 self._address_to_label(user_address),
                 self._address_to_label(uploaded_address['contract_address']))

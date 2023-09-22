@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     'sphinxdoc',
     'haystack',
     'accounts',
-    'luceview',
+    'healthcare',
     'blockchain.apps.BlockchainConfig',  # Here, if I just put 'blockchain', it will not execute the ready() function in apps.py
     # 'blockchain',
     'django_extensions',
