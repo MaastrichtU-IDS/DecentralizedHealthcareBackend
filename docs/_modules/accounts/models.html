@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>accounts.models &#8212; LUCE 0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for accounts.models</h1><div class="highlight"><pre>
+<span></span><span class="c1"># accounts.models.py</span>
+
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span> <span class="nn">django.db.models.signals</span> <span class="kn">import</span> <span class="n">post_save</span>
+<span class="kn">from</span> <span class="nn">rest_framework.authtoken.models</span> <span class="kn">import</span> <span class="n">Token</span>
+<span class="kn">from</span> <span class="nn">django.core.validators</span> <span class="kn">import</span> <span class="n">MaxValueValidator</span><span class="p">,</span> <span class="n">MinValueValidator</span>
+<span class="kn">import</span> <span class="nn">utils.web3_scripts</span> <span class="k">as</span> <span class="nn">web3</span>
+<span class="kn">from</span> <span class="nn">django.dispatch</span> <span class="kn">import</span> <span class="n">receiver</span>
+
+<span class="kn">from</span> <span class="nn">django.contrib.auth.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">BaseUserManager</span><span class="p">,</span> <span class="n">AbstractBaseUser</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+
+<span class="c1"># from brownie import LUCERegistry</span>
+<span class="kn">from</span> <span class="nn">brownie</span> <span class="kn">import</span> <span class="n">project</span>
+<span class="kn">from</span> <span class="nn">brownie</span> <span class="kn">import</span> <span class="n">network</span>
+<span class="kn">from</span> <span class="nn">brownie</span> <span class="kn">import</span> <span class="n">accounts</span>
+<span class="c1"># from brownie.project.BrownieProject import PlonkVerifier</span>
+<span class="c1"># from blockchain.models import PlonkVerifierContract</span>
+
+<span class="kn">import</span> <span class="nn">urllib3</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">django.core.exceptions</span> <span class="kn">import</span> <span class="n">ObjectDoesNotExist</span>
+<span class="kn">from</span> <span class="nn">django.conf</span> <span class="kn">import</span> <span class="n">settings</span>
+
+<span class="kn">from</span> <span class="nn">utils.utils</span> <span class="kn">import</span> <span class="n">get_initial_response</span><span class="p">,</span> <span class="n">set_logger</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">set_logger</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+
+<span class="c1"># project should be loaded at somewhere else</span>
+<span class="c1"># loaded_project = project.get_loaded_projects()</span>
+
+<span class="c1"># if len(loaded_project) == 0:</span>
+<span class="c1">#     print(&quot;No project&quot;)</span>
+<span class="c1"># else:</span>
+<span class="c1">#     for p in loaded_project:</span>
+<span class="c1">#         p.close()</span>
+
+<span class="c1"># LUCE_PROJECT_PATH = os.path.join(settings.BASE_DIR, &quot;../../brownie&quot;)</span>
+<span class="c1"># # print(luce_project_path)</span>
+<span class="c1"># print(LUCE_PROJECT_PATH)</span>
+<span class="c1"># luce_project = project.load(LUCE_PROJECT_PATH)</span>
+<span class="c1"># luce_project.load_config()</span>
+<span class="c1"># print(luce_project)</span>
+<span class="c1"># # print(&quot;network.show_active()&quot;)</span>
+<span class="c1"># print(network.is_connected())</span>
+<span class="c1"># network.connect()</span>
+<span class="c1"># print(network.is_connected())</span>
+
+<span class="c1"># class Verifier(models.Model):</span>
+<span class="c1">#     address = models.CharField(max_length=255, null=True)</span>
+
+<span class="c1">#     def deploy(self):</span>
+<span class="c1">#         private_key = &quot;56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79&quot;</span>
+<span class="c1">#         new_account = accounts.add(private_key=private_key)</span>
+<span class="c1">#         contract = PlonkVerifier.deploy({&#39;from&#39;: new_account})</span>
+
+<span class="c1">#         self.address = contract.address</span>
+<span class="c1">#         self.save()</span>
+
+
+<span class="k">class</span> <span class="nc">UserManager</span><span class="p">(</span><span class="n">BaseUserManager</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">create_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">email</span><span class="p">,</span>
+                    <span class="n">gender</span><span class="p">,</span>
+                    <span class="n">age</span><span class="p">,</span>
+                    <span class="n">first_name</span><span class="p">,</span>
+                    <span class="n">last_name</span><span class="p">,</span>
+                    <span class="n">password</span><span class="p">,</span>
+                    <span class="n">user_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">ethereum_private_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">ethereum_public_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">contract_address</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">is_staff</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">is_admin</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates and saves a User with the given arguments and password.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">email</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Users must have an email address&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">first_name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Users must have a first_name&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">last_name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Users must have a last_name&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">password</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Users must have a password&#39;</span><span class="p">)</span>
+
+        <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">normalize_email</span><span class="p">(</span><span class="n">email</span><span class="p">),</span> <span class="p">)</span>
+
+        <span class="n">user</span><span class="o">.</span><span class="n">gender</span> <span class="o">=</span> <span class="n">gender</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">staff</span> <span class="o">=</span> <span class="n">is_staff</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">set_password</span><span class="p">(</span><span class="n">password</span><span class="p">)</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">first_name</span> <span class="o">=</span> <span class="n">first_name</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">last_name</span> <span class="o">=</span> <span class="n">last_name</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">admin</span> <span class="o">=</span> <span class="n">is_admin</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">ethereum_private_key</span> <span class="o">=</span> <span class="n">ethereum_private_key</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">ethereum_public_key</span> <span class="o">=</span> <span class="n">ethereum_public_key</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">user_type</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">user_type</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">using</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_db</span><span class="p">)</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">contract_address</span> <span class="o">=</span> <span class="n">contract_address</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">age</span>
+        <span class="k">return</span> <span class="n">user</span>
+
+    <span class="k">def</span> <span class="nf">create_staffuser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">first_name</span><span class="p">,</span> <span class="n">last_name</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates and saves a staff user.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span>
+            <span class="n">email</span><span class="p">,</span>
+            <span class="n">first_name</span><span class="p">,</span>
+            <span class="n">last_name</span><span class="p">,</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">staff</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">using</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_db</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">user</span>
+
+    <span class="k">def</span> <span class="nf">create_superuser</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">email</span><span class="p">,</span>
+        <span class="n">first_name</span><span class="p">,</span>
+        <span class="n">last_name</span><span class="p">,</span>
+        <span class="n">password</span><span class="p">,</span>
+        <span class="n">ethereum_public_key</span><span class="o">=</span><span class="s2">&quot;0x43e196c418b4b7ebf71ba534042cc8907bd39dc9&quot;</span><span class="p">,</span>
+        <span class="n">ethereum_private_key</span><span class="o">=</span><span class="s2">&quot;0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3&quot;</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates and saves a superuser.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span>
+            <span class="n">email</span><span class="p">,</span>
+            <span class="n">first_name</span><span class="p">,</span>
+            <span class="n">last_name</span><span class="p">,</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">,</span>
+            <span class="n">ethereum_public_key</span><span class="o">=</span><span class="s2">&quot;0x43e196c418b4b7ebf71ba534042cc8907bd39dc9&quot;</span><span class="p">,</span>
+            <span class="n">ethereum_private_key</span><span class="o">=</span>
+            <span class="s2">&quot;0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3&quot;</span>
+        <span class="p">)</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">staff</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">admin</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">user_type</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">using</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_db</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">user</span>
+
+    <span class="nd">@receiver</span><span class="p">(</span><span class="n">post_save</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">AUTH_USER_MODEL</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">create_auth_token</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">instance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">created</span><span class="p">:</span>
+            <span class="n">Token</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">instance</span><span class="p">)</span>
+
+
+<span class="c1"># Our custom user class</span>
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../index.html#accounts.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">AbstractBaseUser</span><span class="p">):</span>
+    <span class="c1"># id,</span>
+    <span class="c1"># password and</span>
+    <span class="c1"># last_login are automatically inherited AbstractBaseUser</span>
+    <span class="c1"># The other model fields we define ourselves</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">(</span>
+        <span class="n">verbose_name</span><span class="o">=</span><span class="s1">&#39;email address&#39;</span><span class="p">,</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
+        <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">country</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">institution</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">ethereum_private_key</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
+                                            <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                            <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">ethereum_public_key</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
+                                           <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                           <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Make these fields compulsory?</span>
+    <span class="n">first_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">last_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Can use this later to activate certain features only</span>
+    <span class="c1"># once ethereum address is associated</span>
+    <span class="c1"># True for now while developing..</span>
+    <span class="n">is_approved</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># user_type is used to know if the user is a Data Provider(0) or a data requester(1)</span>
+    <span class="n">user_type</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Data Provider&quot;</span><span class="p">),</span>
+                                             <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Data Requester&quot;</span><span class="p">)],</span>
+                                    <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># active user? -&gt; can login</span>
+    <span class="n">active</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># a admin user; non super-user</span>
+    <span class="n">staff</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># a superuser</span>
+    <span class="n">admin</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># notice the absence of a &quot;Password field&quot;, that&#39;s built in.</span>
+
+    <span class="c1"># gender of the user</span>
+    <span class="n">gender</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">choices</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;Male&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Female&#39;</span><span class="p">)],</span>
+                              <span class="n">max_length</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                              <span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">age</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Define which field should be the username for login</span>
+    <span class="n">USERNAME_FIELD</span> <span class="o">=</span> <span class="s1">&#39;email&#39;</span>
+
+    <span class="c1"># USERNAME_FIELD &amp; Password are required by default</span>
+    <span class="c1"># Add additional required fields here:</span>
+    <span class="n">REQUIRED_FIELDS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;first_name&#39;</span><span class="p">,</span> <span class="s1">&#39;last_name&#39;</span><span class="p">]</span>
+
+    <span class="n">objects</span> <span class="o">=</span> <span class="n">UserManager</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">create_wallet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># for simulation, we just create a new account for the user</span>
+        <span class="c1"># and transfer some ether to them</span>
+        <span class="n">new_account</span> <span class="o">=</span> <span class="n">accounts</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">txn_receipt</span> <span class="o">=</span> <span class="n">accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">transfer</span><span class="p">(</span><span class="n">new_account</span><span class="p">,</span> <span class="mf">1e18</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ethereum_public_key</span> <span class="o">=</span> <span class="n">new_account</span><span class="o">.</span><span class="n">address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ethereum_private_key</span> <span class="o">=</span> <span class="n">new_account</span><span class="o">.</span><span class="n">private_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">txn_receipt</span>
+
+    <span class="c1"># The following default methods are expected to be defined by Django</span>
+    <span class="k">def</span> <span class="nf">get_full_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The user is identified by their email address</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span>
+
+    <span class="k">def</span> <span class="nf">get_short_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The user is identified by their email address</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">email</span>
+
+<div class="viewcode-block" id="User.has_perm"><a class="viewcode-back" href="../../index.html#accounts.models.User.has_perm">[docs]</a>    <span class="k">def</span> <span class="nf">has_perm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">perm</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="s2">&quot;Does the user have a specific permission?&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="User.has_module_perms"><a class="viewcode-back" href="../../index.html#accounts.models.User.has_module_perms">[docs]</a>    <span class="k">def</span> <span class="nf">has_module_perms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_label</span><span class="p">):</span>
+        <span class="s2">&quot;Does the user have permissions to view the app `app_label`?&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="c1"># Properties are based on our custom attributes</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_staff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Is the user a member of staff?&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">staff</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_admin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Is the user an admin member?&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_active</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Is the user active?&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span></div>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">class Cause(models.Model):</span>
+
+<span class="sd">    title = models.CharField(max_length=255)</span>
+<span class="sd">    goal = models.IntegerField(default=0)</span>
+<span class="sd">    description = models.CharField(max_length=255, blank=True, null=True)</span>
+<span class="sd">    ethereum_private_key = models.CharField(max_length=255, blank=True, null=True)</span>
+<span class="sd">    ethereum_public_key = models.CharField(max_length=255, blank=True, null=True)</span>
+<span class="sd">    percentBPS = models.IntegerField(validators=[MaxValueValidator(10000), MinValueValidator(0)], default=10000)</span>
+<span class="sd">    creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE)</span>
+
+
+<span class="sd">class Donation(models.Model):</span>
+<span class="sd">    cause = models.ForeignKey(Cause, on_delete=models.CASCADE)</span>
+<span class="sd">    donor = models.ForeignKey(User, on_delete=models.CASCADE)</span>
+<span class="sd">    amount = models.IntegerField(default = 0)</span>
+
+
+
+<span class="sd">class CauseGroup(models.Model):</span>
+<span class="sd">    name = models.CharField(max_length=255, default = &#39;&#39;)</span>
+<span class="sd">    description = models.CharField(max_length=255, default = &#39;&#39;)</span>
+<span class="sd">    creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE)</span>
+
+
+
+<span class="sd">    </span>
+<span class="sd">class GroupInfo(models.Model):</span>
+<span class="sd">    cause = models.ForeignKey(Cause, on_delete=models.CASCADE)</span>
+<span class="sd">    group = models.ForeignKey(CauseGroup, related_name=&#39;group&#39;, on_delete=models.CASCADE, null = True)</span>
+<span class="sd">    split = models.IntegerField(validators=[MaxValueValidator(10000), MinValueValidator(0)])</span>
+<span class="sd">    </span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">LUCE</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, K. Li.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
