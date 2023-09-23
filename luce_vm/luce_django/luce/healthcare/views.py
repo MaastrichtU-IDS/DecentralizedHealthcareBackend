@@ -11,8 +11,6 @@ from blockchain.models import DataContract
 from utils import custom_exeptions as custom_exeptions
 
 from rest_framework.response import Response
-# from .serializers import UserSerializer, RegestryContractSerializer
-# from .serializers import DataContractSerializer
 from .serializers import *
 from utils.web3_scripts import *
 from utils.utils import get_initial_response, set_logger
@@ -20,8 +18,6 @@ from utils.utils import get_initial_response, set_logger
 from blockchain.models import LuceRegistryContract as LuceRegistry
 
 logger = set_logger(__file__)
-
-# APIview for registering donors and influencers.
 
 
 class ContractsListView(APIView):
