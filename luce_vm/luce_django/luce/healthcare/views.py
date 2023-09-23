@@ -215,9 +215,30 @@ class UploadDataView(APIView):
 
 
 class RequestDatasetView(APIView):
+    """
+    Handles dataset access requests by authenticated users.
+
+    Users must be authenticated to make dataset access requests. This view supports 
+    registration and validation of data contracts on the Ethereum blockchain.
+    """
+
+    # Specifies that the user must be authenticated to use this view
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, format=None):
+        """
+        Handles POST requests for dataset access.
+
+        This method extracts request data, logs relevant information, checks the Ethereum public key
+        of the requesting user, and processes each dataset contract address in the request.
+
+        Args:
+            request (Request): The HTTP request object.
+            format (str, optional): Format of the request. Defaults to None.
+
+        Returns:
+            Response: A Response object with either the transaction receipts or error message.
+        """
         estimate = request.data.pop("estimate", False)
         access_time = request.data.pop("access_time", 100000000)
         purpose_code = request.data.pop("purpose_code", 1)
@@ -254,6 +275,22 @@ class RequestDatasetView(APIView):
 
     def request_access(self, c_address, request, access_time, estimate,
                        purpose_code):
+        """
+        Requests access to a specific dataset contract address.
+
+        This method validates the research purpose, checks the existence of the dataset and LuceRegistry,
+        and handles the registration and research purpose assignments on the Ethereum blockchain.
+
+        Args:
+            c_address (str): The contract address to request access to.
+            request (Request): The HTTP request object.
+            access_time (int): Time to access the dataset.
+            estimate (bool): Flag to determine if this is an estimation request.
+            purpose_code (int): Code indicating the purpose of the request.
+
+        Returns:
+            Union[Response, List]: A Response object with an error message or a list of transaction receipts.
+        """
 
         rp_serializer = ResearchPurposeSerializer(data=request.data)
         if not rp_serializer.is_valid():
