@@ -1,10 +1,4 @@
-from abc import ABC, abstractmethod
-
-# Define the Strategy interface
-class SimulationStrategy(ABC):
-    @abstractmethod
-    def execute(self, simulator):
-        pass
+from .base_strategy import SimulationStrategy
 
 
 class DataUploadStrategy(SimulationStrategy):

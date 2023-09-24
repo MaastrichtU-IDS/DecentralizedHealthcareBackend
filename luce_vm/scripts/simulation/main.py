@@ -1,5 +1,5 @@
 from simulator import Simulator
-from simulation_strategy import DataUploadStrategy
+from strategy.data_upload_strategy import DataUploadStrategy
 
 
 def main():
@@ -10,7 +10,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# strategy = DataUploadStrategy()
-# simulator = Simulator(3, strategy)
-# simulator.run_scenario()
