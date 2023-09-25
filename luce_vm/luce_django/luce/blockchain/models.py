@@ -24,6 +24,32 @@ class Restrictions(models.Model):
     open_to_disease_specific = models.BooleanField()
 
 
+class PrimaryCategoty(models.Model):
+    no_restrictions = models.BooleanField()
+    open_to_general_research_and_clinical_care = models.BooleanField()
+    open_to_HMB_research = models.BooleanField()
+    open_to_population_and_ancestry_research = models.BooleanField()
+    open_to_disease_specific = models.BooleanField()
+
+
+class SecondaryCategory(models.Model):
+    open_to_genetic_studies_only = models.BooleanField()
+    research_specific_restrictions = models.BooleanField()
+    open_to_research_use_only = models.BooleanField()
+    no_general_method_research = models.BooleanField()
+
+
+class Requirements(models.Model):
+    geographic_specific_restriction = models.BooleanField()
+    open_to_non_profit_use_only = models.BooleanField()
+    publication_required = models.BooleanField()
+    collaboration_required = models.BooleanField()
+    ethics_approval_required = models.BooleanField()
+    time_limit_on_use = models.BooleanField()
+    cost_on_use = models.BooleanField()
+    data_security_measures_required = models.BooleanField()
+
+
 class GeneralResearchPurpose(models.Model):
     use_for_methods_development = models.BooleanField(default=False)
     use_for_reference_or_control_material = models.BooleanField(default=False)
