@@ -47,6 +47,9 @@ class UploadDataView(APIView):
         estimate = request.data.get("estimate", False)
         link = request.data.get("link", False)
 
+        print("###########")
+        print(request.data)
+
         logger.info("Upload data from: " + link)
 
         # if user.ethereum_public_key is None:
