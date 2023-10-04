@@ -55,3 +55,4 @@ my_files/**
 
 js/node_modules/
 .vscode/
+.conda/
