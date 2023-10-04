@@ -46,7 +46,7 @@ luce_vm/jupyter/safe_storage_area/**
 # Exclude specific files/folders
 nohup.out
 ubuntu-xenial-16.04-cloudimg-console.log
- my_files/**
+my_files/**
 
 # Exclude Django VM
  django_vm/**
