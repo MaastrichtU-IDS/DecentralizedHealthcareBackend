@@ -11,7 +11,7 @@ from healthcare.views import *
 from django.conf import settings
 
 urlpatterns = [
-    path('docs/', include('sphinxdoc.urls')),
+    # path('docs/', include('sphinxdoc.urls')),
     path('user/', include('accounts.urls')),
     path('contract/', include('healthcare.urls')),
     path('admin/', include('healthcare.urls')),

@@ -162,6 +162,8 @@ class User(AbstractBaseUser):
         unique=True,
     )
 
+    datasets = models.JSONField(null=True)
+
     country = models.CharField(max_length=25, null=True)
 
     institution = models.CharField(max_length=255, null=True)
@@ -263,39 +265,3 @@ class User(AbstractBaseUser):
     def is_active(self):
         "Is the user active?"
         return self.active
-
-
-"""
-
-class Cause(models.Model):
-
-    title = models.CharField(max_length=255)
-    goal = models.IntegerField(default=0)
-    description = models.CharField(max_length=255, blank=True, null=True)
-    ethereum_private_key = models.CharField(max_length=255, blank=True, null=True)
-    ethereum_public_key = models.CharField(max_length=255, blank=True, null=True)
-    percentBPS = models.IntegerField(validators=[MaxValueValidator(10000), MinValueValidator(0)], default=10000)
-    creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
-
-
-class Donation(models.Model):
-    cause = models.ForeignKey(Cause, on_delete=models.CASCADE)
-    donor = models.ForeignKey(User, on_delete=models.CASCADE)
-    amount = models.IntegerField(default = 0)
-
-
-
-class CauseGroup(models.Model):
-    name = models.CharField(max_length=255, default = '')
-    description = models.CharField(max_length=255, default = '')
-    creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
-
-
-
-    
-class GroupInfo(models.Model):
-    cause = models.ForeignKey(Cause, on_delete=models.CASCADE)
-    group = models.ForeignKey(CauseGroup, related_name='group', on_delete=models.CASCADE, null = True)
-    split = models.IntegerField(validators=[MaxValueValidator(10000), MinValueValidator(0)])
-    
-"""
