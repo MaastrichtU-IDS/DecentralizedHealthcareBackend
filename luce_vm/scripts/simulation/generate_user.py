@@ -18,6 +18,29 @@ user_template = {
         "open_to_HMB_research": False,
         "open_to_population_and_ancestry_research": False,
         "open_to_disease_specific": False
+    },
+    "access_data": {
+        "estimate": false,
+        "dataset_addresses": ["0x0000"],
+        "general_research_purpose": {
+            "use_for_methods_development": true,
+            "use_for_reference_or_control_material": true,
+            "use_for_populations_research": true,
+            "use_for_ancestry_research": true,
+            "use_for_HMB_research": true
+        },
+        "HMB_research_purpose": {
+            "use_for_research_concerning_fundamental_biology": false,
+            "use_for_research_concerning_genetics": false,
+            "use_for_research_concerning_drug_development": false,
+            "use_for_research_concerning_any_disease": false,
+            "use_for_research_concerning_age_categories": false,
+            "use_for_research_concerning_gender_categories": false
+        },
+        "clinical_purpose": {
+            "use_for_decision_support": false,
+            "use_for_disease_support": false
+        }
     }
 }
 

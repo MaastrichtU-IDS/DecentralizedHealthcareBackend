@@ -17,6 +17,8 @@ from utils.utils import get_initial_response, set_logger
 
 from blockchain.models import LuceRegistryContract as LuceRegistry
 
+from privacy.disposable_address import DisposableAddressService
+
 logger = set_logger(__file__)
 
 
@@ -42,22 +44,22 @@ class UploadDataView(APIView):
         accounts[0].transfer(new_account, 1e18)
         return new_account
 
+    def is_luce_registry_deployed(self):
+        return LuceRegistry.objects.filter(pk=1).exists()
+
+    def get_luce_registry(self):
+        return LuceRegistry.objects.get(pk=1)
+
     def post(self, request, format=None):
         user = request.user
         estimate = request.data.get("estimate", False)
         link = request.data.get("link", False)
 
         print("###########")
-        print(request.data)
+        # print(request.data)
+        print("request.data:\n", request.data)
 
         logger.info("Upload data from: " + link)
-
-        # if user.ethereum_public_key is None:
-        #     response = custom_exeptions.custom_message(
-        #         "user needs to have a wallet connected")
-
-        #     logger.error("no public key for current user")
-        #     return Response(response["body"], response["status"])
 
         if not link:
             response = custom_exeptions.custom_message(
@@ -66,12 +68,27 @@ class UploadDataView(APIView):
             logger.error("Link field is invalid (empty?)")
             return Response(response["body"], response["status"])
 
-        new_account = self.get_a_new_account()
+        # new_account = self.get_a_new_account()
+        user_account = accounts.at(user.ethereum_public_key)
+        print("user_account:\n", user_account)
+        user_balance = user_account.balance()
+        print("user_balance:\n", user_balance)
+
+        disposable_address_service = DisposableAddressService()
+        new_account = disposable_address_service.get_a_new_address_with_balance(
+            user_account, 1e15)
+        # print("new_account:\n", new_account)
+        balance_of_new_account = new_account.balance()
+        print(f"balance_of_new_account: {balance_of_new_account}")
+
+        user_balance = user_account.balance()
+        print("user_balance after deposit:\n", user_balance)
+
         user.ethereum_private_key = new_account.private_key
 
         tx_receipts = []
 
-        if not LuceRegistry.objects.filter(pk=1).exists():
+        if not self.is_luce_registry_deployed():
             response = custom_exeptions.custom_message(
                 "luce registry was not deployed")
 
