@@ -1,18 +1,28 @@
-from django.db import models
+# from django.db import models
 from brownie import accounts
+from blockchain.models import SingletonContractModel
 
 
-class MimicMixingServiceContract(models.Model):
+class MimicMixingServiceContract(SingletonContractModel):
     """
     Model to store the MimicMixingService contract address.
     """
-    contract_address = models.CharField(max_length=42, null=True, blank=True)
 
-    # contract_abi = models.TextField(null=True, blank=True)
-    # contract_bytecode = models.TextField(null=True, blank=True)
+    # contract_address = models.CharField(max_length=42, null=True, blank=True)
 
     def __str__(self):
         return self.contract_address
+
+    def balance(self):
+        """
+        Function to get the balance of the MimicMixingService contract.
+        """
+        from brownie.project.BrownieProject import MimicMixingService
+
+        self.require_deployed()
+        balance = MimicMixingService.at(self.contract_address).balance()
+
+        return balance
 
     def deploy(self):
         """
@@ -45,7 +55,7 @@ class MimicMixingServiceContract(models.Model):
             self.deploy()
             return self.contract_address
 
-    def deposit(self):
+    def _deposit(self):
         from brownie.project.BrownieProject import MimicMixingService
 
         self.require_deployed()
@@ -57,12 +67,29 @@ class MimicMixingServiceContract(models.Model):
         })
         # print(deposited)
         return deposited
-        # pass
+
+    def deposit(self, sender, amount):
+        from brownie.project.BrownieProject import MimicMixingService
+
+        print(
+            f"sender: {sender} depositing {amount} at {self.contract_address}")
+
+        self.require_deployed()
+        deposited = MimicMixingService.at(self.contract_address).deposit({
+            'from':
+            sender,
+            'value':
+            amount
+        })
+
+        return deposited
 
     def withdraw(self, dispossable_address, amount):
         from brownie.project.BrownieProject import MimicMixingService
         self.require_deployed()
         # dispossable_address = accounts.add()
+        # TODO: `from` should be the admin address
+        sender = MimicMixingService.at(self.contract_address)
         withdrawn = MimicMixingService.at(
             self.contract_address).withdrawToDisposable(
                 dispossable_address, amount, {'from': accounts[0]})

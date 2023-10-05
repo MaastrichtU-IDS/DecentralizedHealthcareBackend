@@ -20,5 +20,7 @@ class DataAccessStrategy(SimulationStrategy):
         # 4. Upload data
         simulator.upload_data()
 
+        
+
         # 5. Draw the graph
         simulator._draw_graph()

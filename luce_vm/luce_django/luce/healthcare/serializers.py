@@ -6,6 +6,7 @@ import utils.custom_exeptions as custom_exeptions
 from rest_framework.response import Response
 
 from blockchain.models import *
+# from blockchain.models import PrimaryCategoty
 
 
 class RestrictionsSerializer(serializers.ModelSerializer):
@@ -16,6 +17,36 @@ class RestrictionsSerializer(serializers.ModelSerializer):
             "open_to_general_research_and_clinical_care",
             "open_to_HMB_research", "open_to_population_and_ancestry_research",
             "open_to_disease_specific"
+        ]
+
+
+class PrimaryCategotySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PrimaryCategory
+        fields = [
+            "no_restrictions", "open_to_general_research_and_clinical_care",
+            "open_to_HMB_research", "open_to_population_and_ancestry_research",
+            "open_to_disease_specific"
+        ]
+
+
+class SecondaryCategotySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SecondaryCategory
+        fields = [
+            "open_to_genetic_studies", "research_specific_restrictions",
+            "open_to_research_use_only", "no_general_method_research"
+        ]
+
+
+class RequirementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Requirements
+        fields = [
+            "geographic_specific_restriction", "open_to_non_profit_use_only",
+            "publication_required", "collaboration_required",
+            "ethics_approval_required", "time_limit_on_use", "cost_on_use",
+            "data_security_measures_required"
         ]
 
 

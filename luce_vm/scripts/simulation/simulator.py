@@ -76,6 +76,9 @@ class Simulator:
 
         result = json.loads(r.data.decode('utf-8'))
 
+    def _access_data(self, access_url, access_data, token):
+        pass
+
     def upload_data(self):
         for user in self.user['users']:
             email = user['registration_data']['email']

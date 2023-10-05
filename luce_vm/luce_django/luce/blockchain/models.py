@@ -3,6 +3,7 @@ from accounts.models import User
 from brownie import network, project, accounts
 from django.core.exceptions import ObjectDoesNotExist
 from utils.utils import get_initial_response, set_logger
+from .singleton import SingletonModel, SingletonContractModel
 
 logger = set_logger(__file__)
 
@@ -24,12 +25,14 @@ class Restrictions(models.Model):
     open_to_disease_specific = models.BooleanField()
 
 
-class PrimaryCategoty(models.Model):
-    no_restrictions = models.BooleanField()
-    open_to_general_research_and_clinical_care = models.BooleanField()
-    open_to_HMB_research = models.BooleanField()
-    open_to_population_and_ancestry_research = models.BooleanField()
-    open_to_disease_specific = models.BooleanField()
+class PrimaryCategory(models.Model):
+    no_restrictions = models.BooleanField(default=False)
+    open_to_general_research_and_clinical_care = models.BooleanField(
+        default=False)
+    open_to_HMB_research = models.BooleanField(default=False)
+    open_to_population_and_ancestry_research = models.BooleanField(
+        default=False)
+    open_to_disease_specific = models.BooleanField(default=False)
 
 
 class SecondaryCategory(models.Model):
@@ -116,6 +119,43 @@ class PlonkVerifierContract(models.Model):
         return contract.tx
 
 
+# class LuceRegistryContractSingleton(SingletonContractModel):
+#     contract_address = models.CharField(max_length=255, null=True)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+
+#     def deploy(self):
+#         """
+#         Method to deploy the LUCERegistry contract using Brownie.
+
+#         This will set the contract address in the database if the deployment is successful.
+#         If a contract is already deployed, it will not redeploy and simply return the existing address.
+#         """
+
+#         # Check if contract is already deployed
+#         if self.contract_address:
+#             print("Contract already deployed at:", self.contract_address)
+#             return self.contract_address
+
+#         from brownie.project.BrownieProject import LUCERegistry
+
+#         # admin = accounts.add(private_key=self.user.ethereum_private_key)
+#         # TODO: to simplify the process, we use the first account as the admin
+#         # There should be a admin user to deploy the contract
+#         admin = accounts[0]
+
+#         transaction_dict = {'from': admin}
+
+#         contract = LUCERegistry.deploy(transaction_dict)
+#         if contract.tx.status == 1:
+#             self.contract_address = contract.address
+#             self.save()
+#             print("Deploy LUCERegistry contract succeeded")
+#         else:
+#             print("Deploy LUCERegistry contract failed")
+
+#         return contract.tx.status
+
+
 class LuceRegistryContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -175,9 +215,16 @@ class ConsentContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restrictions = models.ForeignKey(Restrictions, on_delete=models.CASCADE)
-    research_purpose = models.ForeignKey(ResearchPurpose,
-                                         on_delete=models.CASCADE,
-                                         null=True)
+
+    # primary_category = models.ForeignKey(PrimaryCategory,
+    #                                      on_delete=models.CASCADE)
+    # secondary_category = models.ForeignKey(SecondaryCategory,
+    #                                        on_delete=models.CASCADE)
+    # requirements = models.ForeignKey(Requirements, on_delete=models.CASCADE)
+
+    # research_purpose = models.ForeignKey(ResearchPurpose,
+    #                                      on_delete=models.CASCADE,
+    #                                      null=True)
 
     def update_data_consent(self):
         from brownie.project.BrownieProject import ConsentCode
@@ -194,6 +241,25 @@ class ConsentContract(models.Model):
                 self.restrictions.open_to_HMB_research,
                 self.restrictions.open_to_population_and_ancestry_research,
                 self.restrictions.open_to_disease_specific, transaction_dict)
+
+        # ConsentCode.at(self.contract_address).UploadDataSecondaryCategory(
+        #     self.user.ethereum_public_key,
+        #     self.secondary_category.open_to_genetic_studies_only,
+        #     self.secondary_category.research_specific_restrictions,
+        #     self.secondary_category.open_to_research_use_only,
+        #     self.secondary_category.no_general_method_research,
+        #     transaction_dict)
+
+        # ConsentCode.at(self.contract_address).UploadDataRequirements(
+        #     self.user.ethereum_public_key,
+        #     self.requirements.geographic_specific_restriction,
+        #     self.requirements.open_to_non_profit_use_only,
+        #     self.requirements.publication_required,
+        #     self.requirements.collaboration_required,
+        #     self.requirements.ethics_approval_required,
+        #     self.requirements.time_limit_on_use, self.requirements.cost_on_use,
+        #     self.requirements.data_security_measures_required,
+        #     transaction_dict)
 
         return transaction_receipt.status
 
