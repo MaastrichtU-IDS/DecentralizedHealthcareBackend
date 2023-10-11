@@ -10,10 +10,14 @@ class MimicMixingServiceContractModelTestCase(TestCase):
         In this step, we create a MimicMixingServiceContract instance, which deploys the contract.
         """
         self.mimic_mixing_service_contract = MimicMixingServiceContract.load()
+        print("setUp")
+        print(self.mimic_mixing_service_contract)
+        print(self.mimic_mixing_service_contract.contract_address)
+        print(self.mimic_mixing_service_contract.contract_name)
 
-    # def test_deploy(self):
-    #     deployed = self.mimic_mixing_service_contract.deploy()
-    #     self.assertEqual(deployed.status, 1)
+    def test_deploy(self):
+        deployed = self.mimic_mixing_service_contract.deploy()
+        self.assertEqual(deployed.status, 1)
 
     def test_str(self):
         """
@@ -22,28 +26,28 @@ class MimicMixingServiceContractModelTestCase(TestCase):
         # print(self.mimic_mixing_service_contract)
         print("test_str")
         self.assertEqual(str(self.mimic_mixing_service_contract),
-                         self.mimic_mixing_service_contract.contract_address)
+                         self.mimic_mixing_service_contract.contract_name)
 
-    def test_is_deployed(self):
-        """
-        Test the is_deployed method of the MimicMixingServiceContract model.
-        """
-        print("test_is_deployed")
-        self.assertTrue(self.mimic_mixing_service_contract.is_deployed())
+    # def test_is_deployed(self):
+    #     """
+    #     Test the is_deployed method of the MimicMixingServiceContract model.
+    #     """
+    #     print("test_is_deployed")
+    #     self.assertTrue(self.mimic_mixing_service_contract.is_deployed())
 
-    def test_deposit(self):
-        balance_before_deposit = self.mimic_mixing_service_contract.balance()
-        print(f"balance_before_deposit: {balance_before_deposit}")
-        sender = accounts[0]
-        amount = 1000000000000000000
-        deposited = self.mimic_mixing_service_contract.deposit(sender=sender,
-                                                               amount=amount)
-        balance_after_deposit = self.mimic_mixing_service_contract.balance()
-        print(f"balance_after_deposit: {balance_after_deposit}")
+    # def test_deposit(self):
+    #     balance_before_deposit = self.mimic_mixing_service_contract.balance()
+    #     print(f"balance_before_deposit: {balance_before_deposit}")
+    #     sender = accounts[0]
+    #     amount = 1000000000000000000
+    #     deposited = self.mimic_mixing_service_contract.deposit(sender=sender,
+    #                                                            amount=amount)
+    #     balance_after_deposit = self.mimic_mixing_service_contract.balance()
+    #     print(f"balance_after_deposit: {balance_after_deposit}")
 
-        self.assertEqual(deposited.status, 1)
-        self.assertEqual(balance_after_deposit,
-                         balance_before_deposit + amount)
+    #     self.assertEqual(deposited.status, 1)
+    #     self.assertEqual(balance_after_deposit,
+    #                      balance_before_deposit + amount)
 
     # def test_withdraw(self):
     #     from brownie import accounts

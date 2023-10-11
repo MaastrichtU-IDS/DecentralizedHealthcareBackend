@@ -59,8 +59,8 @@ INSTALLED_APPS = [
     'haystack',
     'accounts',
     'healthcare',
-    'blockchain.apps.BlockchainConfig',  # Here, if I just put 'blockchain', it will not execute the ready() function in apps.py
-    # 'blockchain',
+    # 'blockchain.apps.BlockchainConfig',  # Here, if I just put 'blockchain', it will not execute the ready() function in apps.py
+    'blockchain',
     'django_extensions',
     'rest_framework.authtoken',
 
