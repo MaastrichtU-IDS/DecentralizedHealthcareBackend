@@ -41,6 +41,12 @@ class DisposableAddressService:
         new_address = accounts.add()
 
         mixing_service = MimicMixingServiceContract.load()
+        print(f"mixing_service: {mixing_service}")
+        print(f"mixing_service.is_deployed(): {mixing_service.is_deployed()}")
+        print(
+            f"mixing_service.contract_address: {mixing_service.contract_address}"
+        )
+        print(f"mixing_service.contract_name: {mixing_service.contract_name}")
 
         if not mixing_service.is_deployed():
             mixing_service.deploy()

@@ -24,11 +24,12 @@ def setup_django():
 setup_django()
 # Local modules
 from generate_user import generate_users
+from generate_user import generate_data_requesters
 from accounts.models import User
 
 
 class Simulator:
-    def __init__(self, num_of_users, strategy=None):
+    def __init__(self, num_of_users, num_of_requesters=0, strategy=None):
         self.http = urllib3.PoolManager()
         self.urls = {
             "login": "http://127.0.0.1:8000/user/login/",
@@ -38,8 +39,8 @@ class Simulator:
         }
 
         self.user = generate_users(num_of_users)
+        self.requester = generate_data_requesters(num_of_users)
         self.directed_graph = nx.DiGraph()
-
         self.strategy = strategy
 
     def set_strategy(self, strategy):
@@ -61,6 +62,13 @@ class Simulator:
         token = json.loads(r.data.decode('utf-8'))["data"]["token"]
         return token
 
+    def register_requesters(self):
+        for requester in self.requester['requesters']:
+            email = requester['registration_data']['email']
+            print("Register requester: " + email)
+            self._register(self.urls['register'],
+                           requester['registration_data'])
+
     def register_users(self):
         for user in self.user['users']:
             email = user['registration_data']['email']
@@ -75,6 +83,15 @@ class Simulator:
             headers={'Content-Type': 'application/json'})
 
         result = json.loads(r.data.decode('utf-8'))
+
+    def _get_all_provider(self):
+        providers = User.objects.filter(user_type=0)
+        return providers
+
+    def _get_all_datasets(self):
+        p = self._get_all_provider()
+        print(p)
+        # pass
 
     def _access_data(self, access_url, access_data, token):
         pass

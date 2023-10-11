@@ -1,6 +1,9 @@
 import json
 import copy
-
+"""
+At the beginning of deployment, we did not take into account the type of user; However, we have different types of users now; 
+thus, while discussing data provider, we just use user; and for other user types, we should indicate the type of user
+"""
 user_template = {
     "registration_data": {
         "last_name": "bob",
@@ -20,29 +23,57 @@ user_template = {
         "open_to_disease_specific": False
     },
     "access_data": {
-        "estimate": false,
+        "estimate": False,
         "dataset_addresses": ["0x0000"],
         "general_research_purpose": {
-            "use_for_methods_development": true,
-            "use_for_reference_or_control_material": true,
-            "use_for_populations_research": true,
-            "use_for_ancestry_research": true,
-            "use_for_HMB_research": true
+            "use_for_methods_development": True,
+            "use_for_reference_or_control_material": True,
+            "use_for_populations_research": True,
+            "use_for_ancestry_research": True,
+            "use_for_HMB_research": True
         },
         "HMB_research_purpose": {
-            "use_for_research_concerning_fundamental_biology": false,
-            "use_for_research_concerning_genetics": false,
-            "use_for_research_concerning_drug_development": false,
-            "use_for_research_concerning_any_disease": false,
-            "use_for_research_concerning_age_categories": false,
-            "use_for_research_concerning_gender_categories": false
+            "use_for_research_concerning_fundamental_biology": False,
+            "use_for_research_concerning_genetics": False,
+            "use_for_research_concerning_drug_development": False,
+            "use_for_research_concerning_any_disease": False,
+            "use_for_research_concerning_age_categories": False,
+            "use_for_research_concerning_gender_categories": False
         },
         "clinical_purpose": {
-            "use_for_decision_support": false,
-            "use_for_disease_support": false
+            "use_for_decision_support": False,
+            "use_for_disease_support": False
         }
     }
 }
+
+
+def generate_a_data_requester(requester_id):
+    requester = copy.deepcopy(user_template)
+    last_name = "alice" + str(requester_id)
+    email = last_name + "@email"
+    password = "password" + last_name
+    create_wallet = True
+    user_type = 1
+    requester['registration_data']['last_name'] = last_name
+    requester['registration_data']['email'] = email
+    requester['registration_data']['password'] = password
+    requester['registration_data']['create_wallet'] = create_wallet
+    requester['registration_data']['user_type'] = user_type
+
+    return requester.copy()
+
+
+def generate_data_requesters(number):
+    data = {"requesters": []}
+    all_requesters = []
+    for i in range(number):
+        new_requester = generate_a_data_requester(i)
+        all_requesters.append(new_requester.copy())
+
+    data['requesters'] = all_requesters
+
+    return data
 
 
 def generate_user(user_id):

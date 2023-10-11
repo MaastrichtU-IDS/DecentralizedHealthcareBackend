@@ -162,7 +162,7 @@ class User(AbstractBaseUser):
         unique=True,
     )
 
-    datasets = models.JSONField(null=True)
+    # datasets = models.JSONField(null=True)
 
     country = models.CharField(max_length=25, null=True)
 

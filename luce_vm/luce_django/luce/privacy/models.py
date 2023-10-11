@@ -7,11 +7,19 @@ class MimicMixingServiceContract(SingletonContractModel):
     """
     Model to store the MimicMixingService contract address.
     """
+    default_contract_name = "MimicMixingService"
 
-    # contract_address = models.CharField(max_length=42, null=True, blank=True)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.contract_name = self.default_contract_name
 
     def __str__(self):
-        return self.contract_address
+        return self.contract_name
+
+    # def save(self, *args, **kwargs):
+    #     # self.contract_name = self.default_contract_name
+    #     self.contract_address = self.deployed_address
+    #     super().save(*args, **kwargs)
 
     def balance(self):
         """
@@ -33,6 +41,7 @@ class MimicMixingServiceContract(SingletonContractModel):
 
         deployed = MimicMixingService.deploy({'from': accounts[0]})
         self.contract_address = deployed.address
+        self.save()
 
         return deployed.tx
 

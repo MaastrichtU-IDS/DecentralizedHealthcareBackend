@@ -1,4 +1,5 @@
 from django.db import models
+from abc import abstractmethod
 
 
 class SingletonModel(models.Model):
@@ -32,12 +33,26 @@ class SingletonContractModel(SingletonModel):
                                         blank=True,
                                         default="0x0")
 
+    contract_name = models.CharField(max_length=100,
+                                     null=True,
+                                     blank=True,
+                                     default="")
+
+    class Meta:
+        abstract = True
+
+    @abstractmethod
+    def deploy(self):
+        pass
+
     @classmethod
     def load(cls):
         obj, created = cls.objects.get_or_create(pk=1)
         if created:
-            print("Singleton instance created.")
+            print(f"{obj.contract_name} Singleton instance created.")
             obj.deploy()
         else:
-            print("Singleton instance loaded.")
+            print(
+                f"{obj.contract_name} Singleton ({obj.contract_address}) instance loaded."
+            )
         return obj
