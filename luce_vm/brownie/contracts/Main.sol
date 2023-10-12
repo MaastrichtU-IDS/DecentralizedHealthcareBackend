@@ -116,37 +116,52 @@ contract LuceMain is Dataset {
         uint256 purposeCode,
         uint256 accessTime
     ) public payable returns (uint256) {
-        require(unpublished == false, "1");
+        require(unpublished == false, "published");
         LUCERegistry c = LUCERegistry(registry);
 
         uint256 userLicense = c.checkUser(msg.sender);
 
         // Make sure the requester's license matches with the provider's requirements
-        require(license == userLicense, "2");
+        // Update: this is not necessary anymore because the msg.sender is the disposable address which is impossible to be registered in the registry
+        require(
+            license == userLicense,
+            "the requester's license does not with the provider's requirements"
+        );
+
         // Make sure the requester's purpose matches the 'requirements' (this is where the consent contract will interface)
-        require(purposeCode <= 20, "3");
+        require(
+            purposeCode <= 20,
+            "Make sure the requester's purpose matches the 'requirements"
+        );
         // Make sure the requester doesn't have a token yet.
         require(mappedUsers[msg.sender] == 0, "already have token");
 
         ConsentCode cc = ConsentCode(consent);
         bool accessGranted = cc.AccessData(dataProvider, msg.sender);
-        require(accessGranted, "5");
+
+        // For simulation, we assume that the consent contract always returns true.
+        accessGranted = true;
+        require(accessGranted, "accessGranted is false");
 
         addressIndices.push(msg.sender); //adding the data requester to an array so that I can loop the mapping of dataRequesters later!
 
         // Calculate the amount an individual requester must pay in order to receive access and make sure their transferred value matches.
-        if (scenario > 1) {
-            uint256 individualCost = (currentCost * (costMult)) / (costDiv);
-            require(msg.value == individualCost, "6");
+        // For simulation, we do not require cost for now.
+        // if (scenario > 1) {
+        //     uint256 individualCost = (currentCost * (costMult)) / (costDiv);
+        //     require(
+        //         msg.value == individualCost,
+        //         "the amount an individual requester must pay does not match with the transferred value"
+        //     );
 
-            // Adjust the true contract cost by subtracting the value this requester transferred.
-            if (currentCost < individualCost) {
-                // Values smaller than 0 are not allowed in solidity.
-                currentCost = 0;
-            } else {
-                currentCost = currentCost - (individualCost);
-            }
-        }
+        //     // Adjust the true contract cost by subtracting the value this requester transferred.
+        //     if (currentCost < individualCost) {
+        //         // Values smaller than 0 are not allowed in solidity.
+        //         currentCost = 0;
+        //     } else {
+        //         currentCost = currentCost - (individualCost);
+        //     }
+        // }
 
         // Token generation
         if (accessTime == 0) {
