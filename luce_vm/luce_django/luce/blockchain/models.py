@@ -4,6 +4,7 @@ from brownie import network, project, accounts
 from django.core.exceptions import ObjectDoesNotExist
 from utils.utils import get_initial_response, set_logger
 from .singleton import SingletonModel, SingletonContractModel
+from privacy.disposable_address import DisposableAddressService
 
 logger = set_logger(__file__)
 
@@ -119,43 +120,6 @@ class PlonkVerifierContract(models.Model):
         return contract.tx
 
 
-# class LuceRegistryContractSingleton(SingletonContractModel):
-#     contract_address = models.CharField(max_length=255, null=True)
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-
-#     def deploy(self):
-#         """
-#         Method to deploy the LUCERegistry contract using Brownie.
-
-#         This will set the contract address in the database if the deployment is successful.
-#         If a contract is already deployed, it will not redeploy and simply return the existing address.
-#         """
-
-#         # Check if contract is already deployed
-#         if self.contract_address:
-#             print("Contract already deployed at:", self.contract_address)
-#             return self.contract_address
-
-#         from brownie.project.BrownieProject import LUCERegistry
-
-#         # admin = accounts.add(private_key=self.user.ethereum_private_key)
-#         # TODO: to simplify the process, we use the first account as the admin
-#         # There should be a admin user to deploy the contract
-#         admin = accounts[0]
-
-#         transaction_dict = {'from': admin}
-
-#         contract = LUCERegistry.deploy(transaction_dict)
-#         if contract.tx.status == 1:
-#             self.contract_address = contract.address
-#             self.save()
-#             print("Deploy LUCERegistry contract succeeded")
-#         else:
-#             print("Deploy LUCERegistry contract failed")
-
-#         return contract.tx.status
-
-
 class LuceRegistryContract(models.Model):
     contract_address = models.CharField(max_length=255, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -187,7 +151,8 @@ class LuceRegistryContract(models.Model):
             return self.is_registered_as_requester(user)
 
     def is_registered_as_requester(self, user):
-        result = luce_project.LUCERegistry.at(self.contract_address).checkUser(
+        from brownie.project.BrownieProject import LUCERegistry
+        result = LUCERegistry.at(self.contract_address).checkUser(
             user.ethereum_public_key)
         return result
 
@@ -199,15 +164,14 @@ class LuceRegistryContract(models.Model):
         return tx
 
     def register_requester(self, user, license, estimate):
-        logger.info(user.ethereum_private_key)
-        logger.info(user.ethereum_public_key)
+        from brownie.project.BrownieProject import LUCERegistry
+
+        print("register_requester")
+        print(license)
 
         sender = accounts.add(private_key=user.ethereum_private_key)
-        result = luce_project.LUCERegistry.at(
-            self.contract_address).registerNewUser(user.ethereum_public_key,
-                                                   license, {'from': sender})
-        print(result)
-        # tx = web3.register_requester(self, user, license, estimate)
+        result = LUCERegistry.at(self.contract_address).registerNewUser(
+            user.ethereum_public_key, license, {'from': sender})
         return result
 
 
@@ -222,9 +186,9 @@ class ConsentContract(models.Model):
     #                                        on_delete=models.CASCADE)
     # requirements = models.ForeignKey(Requirements, on_delete=models.CASCADE)
 
-    # research_purpose = models.ForeignKey(ResearchPurpose,
-    #                                      on_delete=models.CASCADE,
-    #                                      null=True)
+    research_purpose = models.ForeignKey(ResearchPurpose,
+                                         on_delete=models.CASCADE,
+                                         null=True)
 
     def update_data_consent(self):
         from brownie.project.BrownieProject import ConsentCode
@@ -287,20 +251,19 @@ class ConsentContract(models.Model):
         return tx_receipt
 
     def give_clinical_research_purpose(self, user, estimate):
+        from brownie.project.BrownieProject import ConsentCode
         rp = self.research_purpose.clinical_purpose
-        # print(rp)
-        logger.info(rp)
+
         private_key = self.user.ethereum_private_key
         new_account = accounts.add(private_key=private_key)
 
         txn_dict = {'from': new_account}
 
-        receipt = luce_project.ConsentCode.at(
-            self.contract_address).giveClinicalPurpose(
-                user.ethereum_public_key, rp.use_for_decision_support,
-                rp.use_for_disease_support, txn_dict)
+        receipt = ConsentCode.at(self.contract_address).giveClinicalPurpose(
+            user.ethereum_public_key, rp.use_for_decision_support,
+            rp.use_for_disease_support, txn_dict)
 
-        logger.info(receipt)
+        # logger.info(receipt)
 
         return receipt.status
 
@@ -308,46 +271,42 @@ class ConsentContract(models.Model):
         # return tx
 
     def give_HMB_research_purpose(self, user, estimate):
+        from brownie.project.BrownieProject import ConsentCode
         rp = self.research_purpose.HMB_research_purpose
-        # print(rp)
-        logger.info(rp)
         private_key = self.user.ethereum_private_key
         new_account = accounts.add(private_key=private_key)
 
         txn_dict = {'from': new_account}
 
-        receipt = luce_project.ConsentCode.at(
-            self.contract_address).giveHMBPurpose(
-                user.ethereum_public_key,
-                rp.use_for_research_concerning_fundamental_biology,
-                rp.use_for_research_concerning_genetics,
-                rp.use_for_research_concerning_drug_development,
-                rp.use_for_research_concerning_any_disease,
-                rp.use_for_research_concerning_age_categories,
-                rp.use_for_research_concerning_gender_categories, txn_dict)
+        receipt = ConsentCode.at(self.contract_address).giveHMBPurpose(
+            user.ethereum_public_key,
+            rp.use_for_research_concerning_fundamental_biology,
+            rp.use_for_research_concerning_genetics,
+            rp.use_for_research_concerning_drug_development,
+            rp.use_for_research_concerning_any_disease,
+            rp.use_for_research_concerning_age_categories,
+            rp.use_for_research_concerning_gender_categories, txn_dict)
 
-        logger.info(receipt)
+        # logger.info(receipt)
         return receipt.status
-        # tx = web3.give_HMB_research_purpose(self, user, estimate)
-        # return tx
 
     def give_general_research_purpose(self, user, estimate):
+        from brownie.project.BrownieProject import ConsentCode
         rp = self.research_purpose.general_research_purpose
         private_key = self.user.ethereum_private_key
         new_account = accounts.add(private_key=private_key)
 
         txn_dict = {'from': new_account}
 
-        receipt = luce_project.ConsentCode.at(
-            self.contract_address).giveResearchPurpose(
-                user.ethereum_public_key, rp.use_for_methods_development,
-                rp.use_for_reference_or_control_material,
-                rp.use_for_research_concerning_populations,
-                rp.use_for_research_ancestry, rp.use_for_biomedical_research,
-                txn_dict)
+        receipt = ConsentCode.at(self.contract_address).giveResearchPurpose(
+            user.ethereum_public_key, rp.use_for_methods_development,
+            rp.use_for_reference_or_control_material,
+            rp.use_for_research_concerning_populations,
+            rp.use_for_research_ancestry, rp.use_for_biomedical_research,
+            txn_dict)
 
         # tx = web3.give_general_research_purpose(self, user, estimate)
-        logger.info(receipt)
+        # logger.info(receipt)
         return receipt.status
 
 
@@ -369,8 +328,13 @@ class DataContract(models.Model):
     link = models.CharField(max_length=255, null=True)
 
     def get_a_new_account(self):
-        new_account = accounts.add()
-        accounts[0].transfer(new_account, 1e18)
+        disposable_address_service = DisposableAddressService()
+        user_account = accounts.at(self.user.ethereum_public_key)
+        new_account = disposable_address_service.get_a_new_address_with_balance(
+            sender=user_account, amount=1e15)
+
+        # new_account = accounts.add()
+        # accounts[0].transfer(new_account, 1e18)
         return new_account
 
     def require_verifier_deployed(self):
@@ -414,10 +378,7 @@ class DataContract(models.Model):
                 '16279978653553831575017442062517458639822344791369834134794885970235221444339'
             ]
         }
-        # commitment = "16279978653553831575017442062517458639822344791369834134794885970235221444339n"
-        # print(commitment)
 
-        # print(accounts.at())
         contract = LuceMain.deploy(verifier_address,
                                    commitment['public_signals'],
                                    {'from': new_account})
@@ -492,7 +453,7 @@ class DataContract(models.Model):
             'from': new_account,
         }
 
-        print(transaction_dict)
+        print("Dataset license: " + str(self.licence))
 
         transaction_receipt = LuceMain.at(self.contract_address).publishData(
             self.description, link, self.licence, transaction_dict)
@@ -506,22 +467,25 @@ class DataContract(models.Model):
         return tx_receipt
 
     def add_data_requester(self, access_time, purpose_code, user, estimate):
-        acc = accounts.add(private_key=user.ethereum_private_key)
+        from brownie.project.BrownieProject import LuceMain
+        sender = user_account = accounts.at(user.ethereum_public_key)
+        # disposable_address_service = DisposableAddressService()
+        # acc = disposable_address_service.get_a_new_address_with_balance(
+        #     sender=sender, amount=1e15)
 
-        txn_dict = {'from': acc, "gas_limit": 1e15, "allow_revert": True}
+        txn_dict = {'from': sender}
 
-        tx_receipt = luce_project.LuceMain.at(
-            self.contract_address).addDataRequester(purpose_code, access_time,
-                                                    txn_dict)
+        tx_receipt = LuceMain.at(self.contract_address).addDataRequester(
+            purpose_code, access_time, txn_dict)
 
-        return tx_receipt
+        return tx_receipt.status
 
     def getLink(self, user, estimate):
+        from brownie.project.BrownieProject import LuceMain
         new_account = self.get_a_new_account()
         transaction_dict = {'from': new_account}
 
-        receipt = luce_project.LuceMain.at(
-            self.contract_address).getLink(transaction_dict)
+        receipt = LuceMain.at(self.contract_address).getLink(transaction_dict)
         logger.info(receipt)
         return receipt
 

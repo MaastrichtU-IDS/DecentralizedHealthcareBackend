@@ -107,6 +107,8 @@ class UploadDataView(APIView):
                                             },
                                             partial=True)
 
+        print("serializer:\n", serializer)
+
         restriction_serializer = RestrictionsSerializer(data=request.data)
         # check that user is registered in LuceRegistry, if not register him
         is_registered = luceregistry.is_registered(request.user, "provider")
@@ -130,6 +132,8 @@ class UploadDataView(APIView):
             return Response(response["body"], response["status"])
 
         datacontract = serializer.save()
+
+        print("datacontract licence:\n", datacontract.licence)
         # print("###########")
         logger.info("Start to deploy ConsentCode smart contract")
         tx_receipt = datacontract.consent_contract.deploy()
@@ -264,8 +268,6 @@ class RequestDatasetView(APIView):
         purpose_code = request.data.pop("purpose_code", 1)
         dataset_addresses = request.data.pop("dataset_addresses", False)
 
-        logger.info(dataset_addresses)
-        logger.info(request.user)
         if request.user.ethereum_public_key is None:
             response = custom_exeptions.custom_message(
                 "user needs to have a wallet connected")
@@ -276,7 +278,6 @@ class RequestDatasetView(APIView):
         all_receipts = []
 
         for contract in dataset_addresses:
-            # print("##################CONTRACT########################")
             tx_receipts = self.request_access(contract, request, access_time,
                                               estimate, purpose_code)
             if type(tx_receipts) is Response:
@@ -284,6 +285,7 @@ class RequestDatasetView(APIView):
             all_receipts.append(tx_receipts)
 
         response = get_initial_response()
+        print("all_receipts:\n", all_receipts)
         response["error"]["code"] = 200
         response["error"]["message"] = "data requested successfully"
         response["error"]["status"] = "OK"
@@ -375,19 +377,16 @@ class RequestDatasetView(APIView):
             return Response(response["body"], response["status"])
         tx_receipts.append(receipt4)
 
-        # receipt5 = datacontract.add_data_requester(access_time, purpose_code,
-        #                                            request.user, estimate)
+        receipt5 = datacontract.add_data_requester(access_time, purpose_code,
+                                                   request.user, estimate)
 
-        # print("---------------------------")
-        # print(receipt5)
+        if type(receipt5) is list:
+            datacontract.consent_contract.research_purpose.delete()
+            response = custom_exeptions.blockchain_exception(
+                receipt5, tx_receipts)
+            return Response(response["body"], response["status"])
 
-        # if type(receipt5) is list:
-        #     datacontract.consent_contract.research_purpose.delete()
-        #     response = custom_exeptions.blockchain_exception(
-        #         receipt5, tx_receipts)
-        #     return Response(response["body"], response["status"])
-
-        # tx_receipts.append(receipt5)
+        tx_receipts.append(receipt5)
         # print("111111")
         if estimate:
             return Response({
