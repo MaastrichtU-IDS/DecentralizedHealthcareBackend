@@ -11,7 +11,7 @@ class DataAccessStrategy(SimulationStrategy):
         # 1. Clear user data
         simulator._clear_data()
 
-        # 2. Register users
+        # 2. Register data providers
         simulator.register_users()
 
         # 3. Deploy registry
@@ -20,7 +20,16 @@ class DataAccessStrategy(SimulationStrategy):
         # 4. Upload data
         simulator.upload_data()
 
-        simulator._get_all_datasets()
+        # return
+        # 5. Register data requesters
+        simulator.register_requesters()
 
-        # 5. Draw the graph
-        # simulator._draw_graph()
+        # 6. Request access to data
+        simulator.access_data()
+
+        # 7. Draw the graph
+        # simulator._draw_graph(name="data_access.png")
+        simulator._save_graph(name="data_access.png")
+
+        # 8. Analyze the graph
+        simulator._analyze_graph()

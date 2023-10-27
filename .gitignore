@@ -16,6 +16,7 @@ luce_vm/luce_django/luce/blockchain/migrations/*
 luce_vm/luce_django/luce/privacy/migrations/*
 luce_vm/brownie/build
 luce_vm/luce_django/luce/docs/_build
+luce_vm/scripts/simulation/images/*
 # luce_vm/luce_django/luce/docs/_static
 # luce_vm/luce_django/luce/docs/_templates
 

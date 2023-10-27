@@ -190,13 +190,25 @@ class ConsentContract(models.Model):
                                          on_delete=models.CASCADE,
                                          null=True)
 
+    def get_a_new_account(self, amount=1e15):
+        disposable_address_service = DisposableAddressService()
+        user_account = accounts.at(self.user.ethereum_public_key)
+        new_account = disposable_address_service.get_a_new_address_with_balance(
+            sender=user_account, amount=amount)
+
+        return new_account
+
     def update_data_consent(self):
         from brownie.project.BrownieProject import ConsentCode
-        transaction_dict = {
-            'from': accounts.add(private_key=self.user.ethereum_private_key)
-        }
+        new_account = self.get_a_new_account(amount=1e17)
 
-        logger.info(self.user.ethereum_public_key)
+        print("new_account: " + str(new_account))
+        print("balance: " + str(new_account.balance()))
+        transaction_dict = {'from': new_account}
+
+        consent_contract = ConsentCode.at(self.contract_address)
+
+        print("consent_contract: " + str(consent_contract))
         transaction_receipt = ConsentCode.at(
             self.contract_address).UploadDataPrimaryCategory(
                 self.user.ethereum_public_key,
@@ -235,8 +247,9 @@ class ConsentContract(models.Model):
 
     def deploy(self):
         from brownie.project.BrownieProject import ConsentCode
-        private_key = self.user.ethereum_private_key
-        new_account = accounts.add(private_key=private_key)
+        # private_key = self.user.ethereum_private_key
+        # new_account = accounts.add(private_key=private_key)
+        new_account = self.get_a_new_account()
         contract = ConsentCode.deploy({'from': new_account})
 
         self.contract_address = contract.address
@@ -257,6 +270,8 @@ class ConsentContract(models.Model):
         private_key = self.user.ethereum_private_key
         new_account = accounts.add(private_key=private_key)
 
+        # new_account = self.get_a_new_account()
+
         txn_dict = {'from': new_account}
 
         receipt = ConsentCode.at(self.contract_address).giveClinicalPurpose(
@@ -275,6 +290,7 @@ class ConsentContract(models.Model):
         rp = self.research_purpose.HMB_research_purpose
         private_key = self.user.ethereum_private_key
         new_account = accounts.add(private_key=private_key)
+        # new_account = self.get_a_new_account()
 
         txn_dict = {'from': new_account}
 
@@ -295,6 +311,7 @@ class ConsentContract(models.Model):
         rp = self.research_purpose.general_research_purpose
         private_key = self.user.ethereum_private_key
         new_account = accounts.add(private_key=private_key)
+        # new_account = self.get_a_new_account()
 
         txn_dict = {'from': new_account}
 

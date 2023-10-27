@@ -63,7 +63,7 @@ class DisposableAddressService:
         # print(f"withdrawn: {withdrawn}")
 
         new_address_balance = new_address.balance()
-        print(f"new_address_balance: {new_address_balance}")
+        print(f"balance of {new_address}: {new_address_balance}")
 
         return new_address
 

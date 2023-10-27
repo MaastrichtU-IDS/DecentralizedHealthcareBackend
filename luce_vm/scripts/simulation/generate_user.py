@@ -51,7 +51,7 @@ user_template = {
 def generate_a_data_requester(requester_id):
     requester = copy.deepcopy(user_template)
     last_name = "alice" + str(requester_id)
-    email = last_name + "@email"
+    email = last_name + "@email.com"
     password = "password" + last_name
     create_wallet = True
     user_type = 1

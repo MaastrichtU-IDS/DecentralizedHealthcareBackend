@@ -16,4 +16,4 @@ class DataUploadStrategy(SimulationStrategy):
         simulator.upload_data()
 
         # 5. Draw the graph
-        simulator._draw_graph()
+        simulator._draw_graph(name="data_upload.png")

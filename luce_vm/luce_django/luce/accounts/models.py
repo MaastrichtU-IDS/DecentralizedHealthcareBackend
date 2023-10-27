@@ -222,7 +222,7 @@ class User(AbstractBaseUser):
         # for simulation, we just create a new account for the user
         # and transfer some ether to them
         new_account = accounts.add()
-        txn_receipt = accounts[0].transfer(new_account, 1e18)
+        txn_receipt = accounts[0].transfer(new_account, 1e19)
 
         self.ethereum_public_key = new_account.address
         self.ethereum_private_key = new_account.private_key
