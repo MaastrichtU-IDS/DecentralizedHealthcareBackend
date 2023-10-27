@@ -125,7 +125,7 @@ contract ConsentCode {
         bool _OpenToPopulationAndAncestryResearch,
         bool _OpenToDiseaseSpecific
     ) public {
-        require(msg.sender == dataProvider);
+        // require(msg.sender == dataProvider, "Only data provider can upload");
         objects[_address1].NoRestrictions = _NoRestrictions;
         objects[_address1]
             .OpenToGeneralResearchAndClinicalCare = _OpenToGeneralResearchAndClinicalCare;

@@ -55,7 +55,7 @@ class UserRegistration(APIView):
         response["error"]["message"] = "registration successfull"
         response["error"]["status"] = "OK"
         response["error"]["details"] = [{"reason": "SUCCESS"}]
-        response["data"]["transaction id"] = [tx_receipt.txid]
+        response["data"]["transaction_id"] = [tx_receipt.txid]
 
         return Response(response, status=status.HTTP_200_OK)
 
