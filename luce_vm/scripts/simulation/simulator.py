@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 from web3 import Web3
 
-w3 = Web3(Web3.HTTPProvider('HTTP://127.0.0.1:7545'))
+w3 = Web3(Web3.HTTPProvider('HTTP://127.0.0.1:8545'))
 
 # Constants
 LUCE_DJANGO_PATH = os.path.abspath(os.path.join('../..', 'luce_django/luce'))
@@ -20,6 +20,9 @@ DJANGO_SETTINGS_MODULE = 'lucehome.settings'
 
 
 def setup_django():
+    # to load same settings as in container
+    os.environ['DJANGO_USE_PSQL'] = 'true'
+    os.environ['SIMULATION'] = 'true'
     sys.path.insert(0, LUCE_DJANGO_PATH)
     os.environ['DJANGO_SETTINGS_MODULE'] = DJANGO_SETTINGS_MODULE
     django.setup()

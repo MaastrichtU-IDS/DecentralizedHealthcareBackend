@@ -11,6 +11,7 @@ from utils.utils import get_initial_response, set_logger
 
 from .serializers import UserSerializer, PublicUserSerializer
 from rest_framework.response import Response
+from accounts.models import User
 
 logger = set_logger(__file__)
 # Create your views here.
