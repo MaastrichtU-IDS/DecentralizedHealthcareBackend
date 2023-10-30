@@ -1,2 +1,2 @@
 networks:
-    default: luce
+    default: luce-docker

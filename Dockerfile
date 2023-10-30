@@ -16,6 +16,7 @@ RUN pip3 install djangorestframework
 RUN pip install django-cors-headers
 RUN pip install psycopg2
 RUN pip install matplotlib
+RUN pip install django-haystack
 # Install Ethereum
 # RUN add-apt-repository -y ppa:ethereum/ethereum && \
 #     apt update && \
@@ -30,6 +31,7 @@ RUN pip install matplotlib
 COPY luce_vm/scripts/entrypoint.sh /entrypoint.sh
 RUN chmod 744 /entrypoint.sh
 
+# brownie networks add [environment] [id] host=[host] [KEY=VALUE, ...]
 RUN brownie networks add LUCE luce host=http://ganache_db:8545 chainid=72
 
 
