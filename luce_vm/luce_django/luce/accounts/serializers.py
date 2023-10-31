@@ -26,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
             "ethereum_private_key", "country", "institution"
         ]
 
-    #override create method because the authomatic token authentication fails
+    # override create method because the authomatic token authentication fails
     def create(self, validated_data):
 
         validated_data["password"] = make_password(
@@ -47,10 +47,9 @@ class UserSerializer(serializers.ModelSerializer):
         instance.institution = validated_data.get('institution',
                                                   instance.institution)
 
-        instance.password = validated_data.get(
-            'password', instance.password)  #TODO: change password check.
-        instance.user_type = validated_data.get(
-            'user_type', instance.user_type)  #TODO: is this changable?
+        instance.password = validated_data.get('password', instance.password)
+        instance.user_type = validated_data.get('user_type',
+                                                instance.user_type)
         instance.save()
         return instance
 

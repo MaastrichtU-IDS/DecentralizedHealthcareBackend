@@ -14,6 +14,16 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('../../luce_vm/luce_django/luce'))
+
+import django
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'lucehome.settings'
+django.setup()
+
 # -- Project information -----------------------------------------------------
 
 project = 'LUCE'
@@ -23,24 +33,14 @@ author = 'K. Li'
 # The full version, including alpha/beta/rc tags
 release = '0.0'
 
-import os
-import sys
-
-luce_django_path = os.path.abspath('..')
-print(luce_django_path)
-sys.path.insert(0, luce_django_path)
-os.environ['DJANGO_SETTINGS_MODULE'] = 'lucehome.settings'
-
-import django
-
-django.setup()
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = [
+    'sphinx.ext.autodoc',  # Automatically generate documentation from docstrings
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -48,7 +48,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
 
