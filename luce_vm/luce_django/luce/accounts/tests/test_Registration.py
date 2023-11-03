@@ -11,7 +11,7 @@ class RegistrationTestCase(TestCase):
             'email': 'test@email.com',
             'password': 'testpassword',
         }
-        response = self.client.post(reverse('register'), data)
+        response = self.client.post(reverse('user_registration'), data)
         # print("here")
         # print(response.data)
         self.assertEqual(response.status_code, 200)  # expecting a redirect

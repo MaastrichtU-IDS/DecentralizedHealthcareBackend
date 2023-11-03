@@ -58,15 +58,15 @@ class UploadDataViewTest(TestCase):
     def test_upload_data_view(self):
 
         registration_response = self.register_user(self.data_registration)
-        print("registration_response", registration_response.data)
+        # print("registration_response", registration_response.data)
 
         user = User.objects.get(email=self.data_registration['email'])
         self.client.force_authenticate(user=user)
 
         deployed_registry = self.deploy_registry()
-        print("deployed_registry", deployed_registry)
+        # print("deployed_registry", deployed_registry)
 
         response = self.client.post(self.upload_data_url,
                                     self.data,
                                     format='json')
-        print("response", response.data)
+        # print("response", response.data)
