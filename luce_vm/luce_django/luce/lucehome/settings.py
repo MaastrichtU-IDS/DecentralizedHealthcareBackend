@@ -19,6 +19,8 @@ from brownie import network, project
 brownie_folder = Path(__file__).parent.parent.parent.parent
 brownie_path = brownie_folder / 'brownie'
 p = project.load(brownie_path, name="BrownieProject")
+
+# It seems that we can load config and connect to network at other places. If so, we can remove these two lines
 p.load_config()
 network.connect('luce')
 

@@ -50,14 +50,15 @@ class UploadDataView(APIView):
     def get_luce_registry(self):
         return LuceRegistry.objects.get(pk=1)
 
+    def get_disposable_address(self, user_account, amount):
+        disposable_address_service = DisposableAddressService()
+        return disposable_address_service.get_a_new_address_with_balance(
+            user_account, amount)
+
     def post(self, request, format=None):
         user = request.user
         estimate = request.data.get("estimate", False)
         link = request.data.get("link", False)
-
-        print("###########")
-        # print(request.data)
-        print("request.data:\n", request.data)
 
         logger.info("Upload data from: " + link)
 
@@ -70,21 +71,18 @@ class UploadDataView(APIView):
 
         # new_account = self.get_a_new_account()
         user_account = accounts.at(user.ethereum_public_key)
-        print("user_account:\n", user_account)
+        print("User account:\n", user_account)
         user_balance = user_account.balance()
-        print("user_balance:\n", user_balance)
+        print("User balance:\n", user_balance)
 
-        disposable_address_service = DisposableAddressService()
-        new_account = disposable_address_service.get_a_new_address_with_balance(
-            user_account, 1e15)
-        # print("new_account:\n", new_account)
+        new_account = self.get_disposable_address(user_account, 1e15)
         balance_of_new_account = new_account.balance()
-        print(f"balance_of_new_account: {balance_of_new_account}")
+        # print(f"balance_of_new_account: {balance_of_new_account}")
 
         user_balance = user_account.balance()
-        print("user_balance after deposit:\n", user_balance)
+        # print("user_balance after deposit:\n", user_balance)
 
-        user.ethereum_private_key = new_account.private_key
+        # user.ethereum_private_key = new_account.private_key
 
         tx_receipts = []
 
@@ -107,7 +105,7 @@ class UploadDataView(APIView):
                                             },
                                             partial=True)
 
-        print("serializer:\n", serializer)
+        # print("serializer:\n", serializer)
 
         restriction_serializer = RestrictionsSerializer(data=request.data)
         # check that user is registered in LuceRegistry, if not register him
@@ -133,7 +131,7 @@ class UploadDataView(APIView):
 
         datacontract = serializer.save()
 
-        print("datacontract licence:\n", datacontract.licence)
+        # print("datacontract licence:\n", datacontract.licence)
         # print("###########")
         logger.info("Start to deploy ConsentCode smart contract")
         tx_receipt = datacontract.consent_contract.deploy()

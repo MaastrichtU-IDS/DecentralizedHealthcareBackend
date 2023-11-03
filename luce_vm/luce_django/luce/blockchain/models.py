@@ -247,9 +247,11 @@ class ConsentContract(models.Model):
 
     def deploy(self):
         from brownie.project.BrownieProject import ConsentCode
-        # private_key = self.user.ethereum_private_key
-        # new_account = accounts.add(private_key=private_key)
-        new_account = self.get_a_new_account()
+        new_account = self.get_a_new_account(amount=1e17)
+
+        print("new_account: " + str(new_account))
+        print("new_account: " + str(new_account))
+        print("balance: " + str(new_account.balance()))
         contract = ConsentCode.deploy({'from': new_account})
 
         self.contract_address = contract.address
@@ -348,7 +350,7 @@ class DataContract(models.Model):
         disposable_address_service = DisposableAddressService()
         user_account = accounts.at(self.user.ethereum_public_key)
         new_account = disposable_address_service.get_a_new_address_with_balance(
-            sender=user_account, amount=1e15)
+            sender=user_account, amount=1e17)
 
         # new_account = accounts.add()
         # accounts[0].transfer(new_account, 1e18)
@@ -391,9 +393,8 @@ class DataContract(models.Model):
         # print("proof\n" + str(proof))
         print("proof\n" + str(proof['public_signals']))
         commitment = {
-            "public_signals": [
-                '16279978653553831575017442062517458639822344791369834134794885970235221444339'
-            ]
+            "public_signals": proof['public_signals']
+            
         }
 
         contract = LuceMain.deploy(verifier_address,
