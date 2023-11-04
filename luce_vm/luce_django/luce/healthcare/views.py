@@ -39,10 +39,38 @@ class ContractsListView(APIView):
 class UploadDataView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_a_new_account(self):
-        new_account = accounts.add()
-        accounts[0].transfer(new_account, 1e18)
-        return new_account
+    def get(self, request, format=None):
+        contract_address = request.data.get('contract_address')
+        c = ConsentContract.objects.get(contract_address=contract_address)
+        CCS = ConsentContractSerializer(c)
+        r = c.retrieve_contract_owner()
+        return Response(CCS.data)
+
+    def post(self, request, format=None):
+        link = request.data.get("link", False)
+        if not link:
+            return self.handle_error("link field is required", "Link field is invalid (empty?)")
+
+        if not self.is_luce_registry_deployed():
+            return self.handle_error("luce registry was not deployed", "Luce registry was not deployed!")
+
+        contract_serializer, restriction_serializer = self.initialize_serializers(request)
+
+        if not restriction_serializer.is_valid():
+            return self.handle_serializer_error(restriction_serializer)
+
+        if not contract_serializer.is_valid():
+            return self.handle_serializer_error(contract_serializer)
+
+        datacontract = contract_serializer.save()
+
+        try:
+            tx_receipts = self.handle_smart_contracts(datacontract, link)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+        response = self.get_success_response(contract_serializer, tx_receipts)
+        return Response(response)
 
     def is_luce_registry_deployed(self):
         return LuceRegistry.objects.filter(pk=1).exists()
@@ -54,170 +82,115 @@ class UploadDataView(APIView):
         disposable_address_service = DisposableAddressService()
         return disposable_address_service.get_a_new_address_with_balance(
             user_account, amount)
+    def handle_error(self, user_message, log_message):
+        logger.error(log_message)
+        response = custom_exeptions.custom_message(user_message)
+        return Response(response["body"], response["status"])
 
-    def post(self, request, format=None):
-        user = request.user
-        estimate = request.data.get("estimate", False)
-        link = request.data.get("link", False)
+    def initialize_serializers(self, request):
+        serializer = DataContractSerializer(
+            data=request.data,
+            context={
+                "estimate": request.data.get("estimate", False),
+                "restrictions": request.data,
+                "user": request.user
+            },
+            partial=True
+        )
+        restriction_serializer = RestrictionsSerializer(data=request.data)
+        return serializer, restriction_serializer
 
-        logger.info("Upload data from: " + link)
-
-        if not link:
-            response = custom_exeptions.custom_message(
-                "link field is required")
-
-            logger.error("Link field is invalid (empty?)")
-            return Response(response["body"], response["status"])
-
-        # new_account = self.get_a_new_account()
-        user_account = accounts.at(user.ethereum_public_key)
-        print("User account:\n", user_account)
-        user_balance = user_account.balance()
-        print("User balance:\n", user_balance)
-
-        new_account = self.get_disposable_address(user_account, 1e15)
-        balance_of_new_account = new_account.balance()
-        # print(f"balance_of_new_account: {balance_of_new_account}")
-
-        user_balance = user_account.balance()
-        # print("user_balance after deposit:\n", user_balance)
-
-        # user.ethereum_private_key = new_account.private_key
-
+    def handle_smart_contracts(self, datacontract, link):
         tx_receipts = []
 
-        if not self.is_luce_registry_deployed():
-            response = custom_exeptions.custom_message(
-                "luce registry was not deployed")
+        # Deploy ConsentCode smart contract
+        tx_receipt = self.deploy_consent_code_contract(datacontract)
+        if isinstance(tx_receipt, list):
+            datacontract.delete()
+            raise Exception("Error deploying ConsentCode smart contract")
+        tx_receipts.append(tx_receipt)
 
-            logger.error("Luce registry was not deployed!")
-            return Response(response["body"], response["status"])
+        # Update ConsentCode smart contract
+        tx_receipt0 = self.update_consent_code_contract(datacontract)
+        if isinstance(tx_receipt0, list):
+            datacontract.delete()
+            raise Exception("Error updating ConsentCode smart contract")
+        tx_receipts.append(tx_receipt0)
 
-        luceregistry = LuceRegistry.objects.get(pk=1)
+        # Deploy Dataset smart contract
+        tx_receipt2 = self.deploy_dataset_contract(datacontract)
+        if isinstance(tx_receipt2, list):
+            datacontract.delete()
+            raise Exception("Error deploying Dataset smart contract")
+        tx_receipts.append(tx_receipt2)
 
-        logger.info("LUCE Registry done")
+        # Set registry address
+        registry_address = LuceRegistry.objects.get(pk=1).contract_address
+        tx_receipt3 = self.set_registry_address(datacontract, registry_address)
+        if isinstance(tx_receipt3, list):
+            datacontract.delete()
+            raise Exception("Error setting registry address for Dataset smart contract")
+        tx_receipts.append(tx_receipt3)
 
-        serializer = DataContractSerializer(data=request.data,
-                                            context={
-                                                "estimate": estimate,
-                                                "restrictions": request.data,
-                                                "user": request.user
-                                            },
-                                            partial=True)
+        # Set consent address
+        tx_receipt4 = self.set_consent_address(datacontract)
+        if isinstance(tx_receipt4, list):
+            datacontract.delete()
+            raise Exception("Error setting consent address for Dataset smart contract")
+        tx_receipts.append(tx_receipt4)
 
-        # print("serializer:\n", serializer)
+        # Publish data
+        tx_receipt5 = self.publish_data(datacontract, link)
+        if isinstance(tx_receipt5, list):
+            datacontract.delete()
+            raise Exception("Error publishing data")
+        tx_receipts.append(tx_receipt5)
 
-        restriction_serializer = RestrictionsSerializer(data=request.data)
-        # check that user is registered in LuceRegistry, if not register him
-        is_registered = luceregistry.is_registered(request.user, "provider")
+        return tx_receipts
 
-        # if not is_registered:
-        #     cost = LuceRegistry.objects.get(pk=1).register_provider(
-        #         user, estimate)
-
-        #     if type(cost) is list:
-        #         response = custom_exeptions.blockchain_exception(cost)
-        #         return Response(response["body"], response["status"])
-        #     tx_receipts.append(cost)
-
-        if not restriction_serializer.is_valid():
-            response = custom_exeptions.validation_exeption(
-                restriction_serializer)
-            return Response(response["body"], response["status"])
-
-        if not serializer.is_valid():
-            response = custom_exeptions.validation_exeption(serializer)
-            return Response(response["body"], response["status"])
-
-        datacontract = serializer.save()
-
-        # print("datacontract licence:\n", datacontract.licence)
-        # print("###########")
+    def deploy_consent_code_contract(self, datacontract):
         logger.info("Start to deploy ConsentCode smart contract")
         tx_receipt = datacontract.consent_contract.deploy()
         logger.info("Deploy Consentcode smart contract receipt:")
         logger.info(tx_receipt)
+        return tx_receipt
 
-        # print(tx_receipt)
-
-        # logger.info(type(tx_receipt))
-        if type(tx_receipt) is list:
-            datacontract.delete()
-            response = custom_exeptions.blockchain_exception(tx_receipt)
-            return Response(response["body"], response["status"])
-        tx_receipts.append(tx_receipt)
-
-        # tx_receipt0 = datacontract.consent_contract.upload_data_consent(
-        #     estimate)
-
+    def update_consent_code_contract(self, datacontract):
         logger.info("Start to update ConsentCode smart contract")
-
-        tx_receipt0 = datacontract.consent_contract.update_data_consent()
+        tx_receipt = datacontract.consent_contract.update_data_consent()
         logger.info("Update consent:")
-        logger.info(tx_receipt0)
+        logger.info(tx_receipt)
+        return tx_receipt
 
-        if type(tx_receipt0) is list:
-            datacontract.delete()
-            response = custom_exeptions.blockchain_exception(tx_receipt0)
-            return Response(response["body"], response["status"])
-        tx_receipts.append(tx_receipt0)
-
-        # tx_receipt2 = datacontract.deploy_contract()
+    def deploy_dataset_contract(self, datacontract):
         logger.info("Start to deploy Dataset smart contract")
-
-        tx_receipt2 = datacontract.deploy()
+        tx_receipt = datacontract.deploy()
         logger.info("Datacontract receipt:")
-        logger.info(tx_receipt2)
+        logger.info(tx_receipt)
+        return tx_receipt
 
-        if type(tx_receipt2) is list:
-            datacontract.delete()
-            response = custom_exeptions.blockchain_exception(
-                tx_receipt2, tx_receipts)
-            return Response(response["body"], response["status"])
-        tx_receipts.append(tx_receipt2)
-
-        registry_address = LuceRegistry.objects.get(pk=1).contract_address
-
-        # tx_receipt3 = datacontract.set_registry_address(
-        #     LuceRegistry.objects.get(pk=1), estimate)
-
+    def set_registry_address(self, datacontract, registry_address):
         logger.info("Start to set registry address")
-        tx_receipt3 = datacontract.set_registry_address(registry_address)
+        tx_receipt = datacontract.set_registry_address(registry_address)
         logger.info("Set registry address receipt:")
-        logger.info(tx_receipt3)
+        logger.info(tx_receipt)
+        return tx_receipt
 
-        if type(tx_receipt3) is list:
-            datacontract.delete()
-            response = custom_exeptions.blockchain_exception(
-                tx_receipt3, tx_receipts)
-            return Response(response["body"], response["status"])
-        tx_receipts.append(tx_receipt3)
-
+    def set_consent_address(self, datacontract):
         logger.info("Start to set consent address")
-        tx_receipt4 = datacontract.set_consent_address()
+        tx_receipt = datacontract.set_consent_address()
         logger.info("Set consent address receipt:")
-        logger.info(tx_receipt4)
-        if type(tx_receipt4) is list:
-            datacontract.delete()
-            response = custom_exeptions.blockchain_exception(
-                tx_receipt4, tx_receipts)
-            return Response(response["body"], response["status"])
-        tx_receipts.append(tx_receipt4)
+        logger.info(tx_receipt)
+        return tx_receipt
 
+    def publish_data(self, datacontract, link):
         logger.info("Start to publish data")
-        tx_receipt5 = datacontract.publish_dataset(link)
+        tx_receipt = datacontract.publish_dataset(link)
         logger.info("Publish data receipt:")
-        logger.info(tx_receipt5)
-        if type(tx_receipt5) is list:
-            datacontract.delete()
-            response = custom_exeptions.blockchain_exception(
-                tx_receipt5, tx_receipts)
-            return Response(response["body"], response["status"])
-        tx_receipts.append(tx_receipt5)
+        logger.info(tx_receipt)
+        return tx_receipt
 
-        logger.info(tx_receipts)
-
-        print("###########")
+    def get_success_response(self, serializer, tx_receipts):
         response = get_initial_response()
         response["error"]["code"] = 200
         response["error"]["message"] = "data published successfully"
@@ -226,15 +199,7 @@ class UploadDataView(APIView):
         response["data"] = {}
         response["data"]["contracts"] = serializer.data
         response["data"]["transaction receipts"] = tx_receipts
-        return Response(response)
-
-    def get(self, request, format=None):
-        contract_address = request.data.get('contract_address')
-        c = ConsentContract.objects.get(contract_address=contract_address)
-        CCS = ConsentContractSerializer(c)
-        r = c.retrieve_contract_owner()
-        return Response(CCS.data)
-
+        return response
 
 class RequestDatasetView(APIView):
     """
