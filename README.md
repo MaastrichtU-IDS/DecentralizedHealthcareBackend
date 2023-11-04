@@ -9,6 +9,19 @@
 - [for windows](https://docs.docker.com/desktop/install/windows-install/)
 
 ### 2. Launch LUCE
+
+#### 2.1 Preliminary
+
+As we are going to launch LUCE with docker, we need some preliminaries.
+
+##### 2.1.1. Compile smart contracts with Brownie
+
+Change directory to `luce_vm/brownie` and run `brownie compile`.
+
+> Tips: We recommend compiling smart contracts locally. Attempting to compile them within a Docker container often requires environment configuration, which can sometimes lead to failures.
+
+### 2.2 Launch LUCE
+
 To launch LUCE, run: `docker compose up`.
 
 ### database
