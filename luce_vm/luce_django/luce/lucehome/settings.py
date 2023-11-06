@@ -11,6 +11,18 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+from pathlib import Path
+
+# ==== SETUP BROWNIE ====
+from brownie import network, project
+
+brownie_folder = Path(__file__).parent.parent.parent.parent
+brownie_path = brownie_folder / 'brownie'
+p = project.load(brownie_path, name="BrownieProject")
+
+# It seems that we can load config and connect to network at other places. If so, we can remove these two lines
+p.load_config()
+network.connect('luce')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,45 +42,51 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
-
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'django_filters',
+    # 'sphinxdoc',
+    'haystack',
     'accounts',
-    'luceview',
-
+    'healthcare',
+    # 'blockchain.apps.BlockchainConfig',  # Here, if I just put 'blockchain', it will not execute the ready() function in apps.py
+    'blockchain',
     'django_extensions',
     'rest_framework.authtoken',
 
     # rest framework
     'rest_framework',
-
-    'corsheaders'
+    'corsheaders',
+    'privacy',
 ]
 
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    },
+}
+
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS':
+    'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE':
+    10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # <-- And here
     ],
-    'EXCEPTION_HANDLER': 'utils.custom_exeptions.custom_exception_handler',
+    'EXCEPTION_HANDLER':
+    'utils.custom_exeptions.custom_exception_handler',
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.filters']
-
-
 }
 
 AUTH_USER_MODEL = 'accounts.User'  # changes the built-in user model
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -79,7 +97,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware'
-
 ]
 
 # Re-direct to home view after logout
@@ -119,16 +136,15 @@ CORS_ORIGIN_ALLOW_ALL = True
 #     }
 # }
 
-
 # connect to database: psql -U luce --port 5433 -d lucedb
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'lucedb',
-        'USER': 'vagrant',
-        'PASSWORD': 'luce',
+        'USER': 'luce',
+        'PASSWORD': 'luce123456',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '5433',
     }
 }
 
@@ -144,25 +160,27 @@ DATABASES = {
 #     }
 # f }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
@@ -177,13 +195,12 @@ USE_L10N = True
 
 # USE_TZ = True
 
-
 # ==== SETUP STATIC FILE DIRECTORIES ====
 
 # Simulate a CDN locally:
 # This path is outside django project, usually a CDN like AWS S3
-LOCAL_STATIC_CDN_PATH = os.path.join(os.path.dirname(
-    BASE_DIR), 'luce_static_files/static_cdn_local')
+LOCAL_STATIC_CDN_PATH = os.path.join(os.path.dirname(BASE_DIR),
+                                     'luce_static_files/static_cdn_local')
 
 # Static files (CSS, JavaScript, Images)
 STATIC_ROOT = os.path.join(LOCAL_STATIC_CDN_PATH, 'static')
@@ -192,7 +209,6 @@ STATIC_URL = '/static/'
 # This is where files are uploaded to
 MEDIA_ROOT = os.path.join(LOCAL_STATIC_CDN_PATH, 'media')
 MEDIA_URL = '/media/'
-
 
 # These files live inside django project
 # Local file changes take place here, then at some point they are uploaded to CDN

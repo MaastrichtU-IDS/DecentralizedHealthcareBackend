@@ -170,7 +170,7 @@ async function main() {
     // const contractJson = JSON.parse(contractJsonFile)
 
     // console.log(contractJson)
-    web3 = new Web3('http://127.0.0.1:7545')
+    web3 = new Web3('http://127.0.0.1:8545')
     var netId = await web3.eth.net.getId()
     console.log(netId)
 

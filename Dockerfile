@@ -9,13 +9,15 @@ RUN apt-get update && \
     apt-get install -y wget build-essential software-properties-common libssl-dev  postgresql-client libpq-dev
 
 RUN pip install eth-brownie
-RUN python -m pip install Django
+RUN pip install Django==4.1.12
 RUN pip install django-filter
 RUN pip install django-extensions
 RUN pip3 install djangorestframework
 RUN pip install django-cors-headers
 RUN pip install psycopg2
 RUN pip install matplotlib
+RUN pip install django-haystack
+RUN pip install Sphinx
 # Install Ethereum
 # RUN add-apt-repository -y ppa:ethereum/ethereum && \
 #     apt update && \
@@ -30,11 +32,13 @@ RUN pip install matplotlib
 COPY luce_vm/scripts/entrypoint.sh /entrypoint.sh
 RUN chmod 744 /entrypoint.sh
 
+# brownie networks add [environment] [id] host=[host] [KEY=VALUE, ...]
 RUN brownie networks add LUCE luce host=http://ganache_db:8545 chainid=72
 
 
 
 COPY . .
+# RUN cd luce_vm/brownie && brownie compile
 
 # RUN pip install -e .
 
