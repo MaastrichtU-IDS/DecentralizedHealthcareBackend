@@ -5,7 +5,7 @@
 *.log
 
 .idea
-data
+/data/
 
 luce_vm/js/node_modules/
 
@@ -37,7 +37,7 @@ test_vm/django/dapp/__pycache__/*
 
 # Exclude jupyter checkpoints directory
 luce_vm/jupyter/.ipynb_checkpoints/*
-**/jupyter/.ipynb_checkpoints/*
+# **/jupyter/.ipynb_checkpoints/*
 
 # Exclude safe storage area
 luce_vm/jupyter/safe_storage_area/**
