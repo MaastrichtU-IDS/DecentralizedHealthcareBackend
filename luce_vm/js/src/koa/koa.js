@@ -16,6 +16,53 @@ const app = new Koa()
 app.use(bodyParser())
 
 const router = new Router()
+function hexifyBigInts(o) {
+    if (typeof (o) === "bigint" || (o instanceof bigInt)) {
+        let str = o.toString(16);
+        while (str.length < 64) str = "0" + str;
+        str = "0x" + str;
+        return str;
+    } else if (Array.isArray(o)) {
+        return o.map(hexifyBigInts);
+    } else if (typeof o == "object") {
+        const res = {};
+        for (let k in o) {
+            res[k] = hexifyBigInts(o[k]);
+        }
+        return res;
+    } else {
+        return o;
+    }
+}
+function toSolidityInputPlonkPublicSignals(public_signals) {
+    return hexifyBigInts(ff.utils.unstringifyBigInts(public_signals))
+}
+
+function toHex32(number) {
+    let str = number.toString(16);
+    while (str.length < 64) str = "0" + str;
+    return str;
+}
+
+function toSolidityInputPlonkProof(proof) {
+    const flatProof = ff.utils.unstringifyBigInts(
+        [
+            proof.A[0], proof.A[1],
+            proof.B[0], proof.B[1],
+            proof.C[0], proof.C[1],
+            proof.Z[0], proof.Z[1],
+            proof.T1[0], proof.T1[1],
+            proof.T1[0], proof.T2[0],
+            proof.T3[0], proof.T3[1],
+            proof.eval_a, proof.eval_b,
+            proof.eval_c, proof.eval_s1, proof.eval_s2, proof.eval_zw, proof.eval_r,
+            proof.Wxi[0], proof.Wxi[1],
+            proof.Wxiw[0], proof.Wxiw[1]
+        ]
+    )
+
+    return "0x" + flatProof.map(x => toHex32(x)).join("");
+}
 
 const compute_commitment = async ctx => {
     // const secret = ctx.request.body.secret;
@@ -34,12 +81,18 @@ const compute_commitment = async ctx => {
 
     const { proof, publicSignals } = await snarkjs.plonk.fullProve(input, wasm, zkey)
 
-    console.log(publicSignals)
-    console.log(proof)
+    call_data = await snarkjs.plonk.exportSolidityCallData(proof, publicSignals)
+    console.log(call_data)
+
+    // console.log(publicSignals)
+    // console.log(proof)
 
     const r = {
         proof: proof,
-        public_signals: publicSignals
+        public_signals: publicSignals,
+        solidity_proof: toSolidityInputPlonkProof(proof),
+        solidity_public_signals: toSolidityInputPlonkPublicSignals(publicSignals),
+        call_data: call_data
     }
 
     ctx.body = r

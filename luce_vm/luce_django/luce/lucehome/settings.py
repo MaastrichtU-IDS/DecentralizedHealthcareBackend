@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 from pathlib import Path
+import sys
 
 # ==== SETUP BROWNIE ====
 from brownie import network, project
@@ -22,7 +23,10 @@ p = project.load(brownie_path, name="BrownieProject")
 
 # It seems that we can load config and connect to network at other places. If so, we can remove these two lines
 p.load_config()
-network.connect('luce')
+if 'test' in sys.argv:
+    network.connect('development')
+else:
+    network.connect('luce')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

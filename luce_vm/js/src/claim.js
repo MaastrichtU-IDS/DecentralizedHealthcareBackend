@@ -40,7 +40,7 @@ function Print(info, description = "") {
 async function createDeposit({ secret }) {
 
     wasm = __dirname + '/../build/circuits/commitment_js/commitment.wasm'
-    zkey = __dirname + '/../commitment_final.zkey'
+    zkey = __dirname + '/commitment_final.zkey'
     // secret = (new TextEncoder()).encode("Hello");
 
     const deposit = { secret }
@@ -160,11 +160,6 @@ async function main() {
         console.log("Invalid proof");
     }
 
-    // console.log("Proof: ")
-    // console.log(proof)
-    // console.log("publicSignals: ")
-    // console.log(publicSignals)
-
     var contractJson = require(__dirname + '/../build/contracts/Commitment.json')
     // var contractJsonFile = fs.readFileSync(__dirname + '/../build/contracts/Commitment.json')
     // const contractJson = JSON.parse(contractJsonFile)
@@ -174,7 +169,7 @@ async function main() {
     var netId = await web3.eth.net.getId()
     console.log(netId)
 
-    // console.log(contractJson.networks)
+    console.log(contractJson.networks)
 
     commitmentAddress = contractJson.networks[netId.toString()].address
     // console.log(commitmentAddress)
