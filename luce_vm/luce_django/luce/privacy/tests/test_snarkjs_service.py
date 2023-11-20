@@ -1,6 +1,4 @@
 from django.test import TestCase
-from unittest.mock import patch
-import json
 from privacy.snarkjs_service import SnarkjsService
 
 
@@ -20,26 +18,3 @@ class SnarkjsServiceTests(TestCase):
         response = self.snarkjs_service.generate_proof(payload)
 
         print(type(response))
-
-        # print(response)
-
-    # @patch('requests.post')
-    # def test_generate_proof(self, mock_post):
-    #     # print(mock_post)
-
-    #     mock_response = {'proof': 'some-proof', 'status': 'success'}
-
-    #     # mock_post.return_value = 200
-    #     mock_post.return_value = mock_response
-    #     # print(mock_post.return_value)
-
-    #     # print(mock_post.return_value.status_code)
-
-    #     payload = json.dumps({"secret": "secret"}).encode('utf-8')
-
-    #     response = self.snarkjs_service.generate_proof(payload)
-    # print("here")
-    # print(response)
-
-    # self.assertIsNotNone(response)
-    # self.assertEqual(response, mock_response)

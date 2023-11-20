@@ -28,6 +28,7 @@ contract Dataset is ERC721, Commitment {
     uint256 public profitMargin;
 
     // The keyword "public" makes those variables easily readable from outside.
+    // mapping from user address to token id
     mapping(address => uint256) internal mappedUsers;
     mapping(address => bool) internal requesterCompliance;
     address[] internal addressIndices;
@@ -67,6 +68,11 @@ contract Dataset is ERC721, Commitment {
         require(msg.sender == owner, "Only owner can call this function.");
         _;
     }
+
+    // function claimOwnership(
+    //     int256 dataset_id,
+    //     bytes memory _proof
+    // ) public onlyVerified(_proof) {}
 
     function setScenario(
         uint256 _scenario,
