@@ -1,15 +1,6 @@
 blockchain package
 ==================
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   blockchain.migrations
-   blockchain.tests
-
 Submodules
 ----------
 

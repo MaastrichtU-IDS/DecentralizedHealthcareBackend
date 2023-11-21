@@ -16,8 +16,7 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="privacy.migrations package" href="privacy.migrations.html" />
-    <link rel="prev" title="manage module" href="manage.html" />
+    <link rel="prev" title="healthcare package" href="healthcare.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -36,19 +35,6 @@
             
   <section id="privacy-package">
 <h1>privacy package<a class="headerlink" href="#privacy-package" title="Permalink to this heading">¶</a></h1>
-<section id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="privacy.migrations.html">privacy.migrations package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="privacy.migrations.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="privacy.migrations.html#module-privacy.migrations.0001_initial">privacy.migrations.0001_initial module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="privacy.migrations.html#module-privacy.migrations">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
 </section>
@@ -200,14 +186,45 @@ object the first time, the query is executed.</p>
 </section>
 <section id="module-privacy.snarkjs_service">
 <span id="privacy-snarkjs-service-module"></span><h2>privacy.snarkjs_service module<a class="headerlink" href="#module-privacy.snarkjs_service" title="Permalink to this heading">¶</a></h2>
+<p>This module provides the SnarkjsService class, which interfaces with a snarkjs-based service to generate Zero-Knowledge Proofs (ZKPs).</p>
+<p>The SnarkjsService class allows for sending a secret to a specified server endpoint and receiving a ZKP in return. It handles HTTP requests, response parsing, and error logging.</p>
+<dl class="simple">
+<dt>Dependencies:</dt><dd><ul class="simple">
+<li><p>requests: For making HTTP requests to the snarkjs service.</p></li>
+<li><p>json: For parsing the JSON response from the service.</p></li>
+<li><p>logging: For logging error messages.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><p>service = SnarkjsService()
+proof = service.generate_proof(secret=’my_secret’)</p>
+</dd>
+</dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="privacy.snarkjs_service.SnarkjsService">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">privacy.snarkjs_service.</span></span><span class="sig-name descname"><span class="pre">SnarkjsService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8888'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#privacy.snarkjs_service.SnarkjsService" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">privacy.snarkjs_service.</span></span><span class="sig-name descname"><span class="pre">SnarkjsService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8888'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/compute_commitment'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#privacy.snarkjs_service.SnarkjsService" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>SnarkjsService provides an interface to a snarkjs-based server for generating Zero-Knowledge Proofs (ZKPs).</p>
+<p>It sends a secret to the server and retrieves a ZKP. The class handles the details of making the HTTP request,
+processing the response, and error handling. It is designed to work with a server running snarkjs that exposes
+a <cite>/compute_commitment</cite> endpoint.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>base_url (str): The base URL of the snarkjs server. Defaults to ‘<a class="reference external" href="http://localhost:8888">http://localhost:8888</a>’.
+endpoint (str): The endpoint for computing the commitment. Defaults to ‘/compute_commitment’.</p>
+</dd>
+<dt>Methods:</dt><dd><dl class="simple">
+<dt>generate_proof(secret): Takes a secret, sends it to the snarkjs server, and returns the generated ZKP.</dt><dd><p>Returns None if the server response is not successful or if an error occurs.</p>
+</dd>
+</dl>
+</dd>
+<dt>Example:</dt><dd><p>service = SnarkjsService()
+proof = service.generate_proof(secret=’my_secret’)</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="privacy.snarkjs_service.SnarkjsService.generate_proof">
 <span class="sig-name descname"><span class="pre">generate_proof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">secret</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#privacy.snarkjs_service.SnarkjsService.generate_proof" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Function to generate ZKP proof using snarkjs.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -246,10 +263,7 @@ object the first time, the query is executed.</p>
 <li class="toctree-l2"><a class="reference internal" href="accounts.html">accounts package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="blockchain.html">blockchain package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="healthcare.html">healthcare package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lucehome.html">lucehome package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manage.html">manage module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">privacy package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils.html">utils package</a></li>
 </ul>
 </li>
 </ul>
@@ -259,8 +273,7 @@ object the first time, the query is executed.</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
   <li><a href="modules.html">luce</a><ul>
-      <li>Previous: <a href="manage.html" title="previous chapter">manage module</a></li>
-      <li>Next: <a href="privacy.migrations.html" title="next chapter">privacy.migrations package</a></li>
+      <li>Previous: <a href="healthcare.html" title="previous chapter">healthcare package</a></li>
   </ul></li>
   </ul></li>
 </ul>

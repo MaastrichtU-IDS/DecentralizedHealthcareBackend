@@ -1,15 +1,6 @@
 accounts package
 ================
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   accounts.migrations
-   accounts.tests
-
 Submodules
 ----------
 

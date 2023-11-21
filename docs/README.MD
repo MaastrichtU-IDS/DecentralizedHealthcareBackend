@@ -12,32 +12,87 @@ Before proceeding, ensure you have the following installed:
 
 ## Initial Setup
 
-1. **Clone the Repository:**
+1. Clone the Repository:
+
    Ensure you have the latest version of the codebase.
 
-```
-git clone https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend.git
-
-cd DecentralizedHealthcareBackend
-```
+   ```
+   git clone https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend.git
+   cd DecentralizedHealthcareBackend
+   ```
 
 2. Install Sphinx (if not already installed):
 
-```
-pip install sphinx
-```
+   ```
+   pip install sphinx
+   ```
 
-3. Navigate to the Documentation Directory:
+3. Set Up Sphinx Directory:
 
-```
-cd docs
-```
+   ```
+   sphinx-quickstart docs
+   ```
+
+   This will create a docs directory with basic configuration files.
+
+4. Configure Sphinx:
+
+   - Edit the `conf.py` file in the `docs/source` directory. Set the `sys.path` to include Django project's root directory, so Sphinx can find the modules
+   - Set Django settings modules in `conf.py`:
+
+   ```
+   import os
+   import sys
+   import django
+
+   sys.path.insert(0, os.path.abspath('../../luce_vm/luce_django/luce'))
+
+   os.environ['DJANGO_SETTINGS_MODULE'] = 'lucehome.settings'
+   django.setup()
+   ```
+
+5. Create Documentation with Autodoc:
+
+   Sphinx can automatically generate documentation from your docstrings using the autodoc extension. Enable this in your `conf.py`:
+
+   ```
+   extensions = ['sphinx.ext.autodoc']
+   ```
+
+6. add `modules` in `index.rst`:
+
+   ```
+   ================================
+
+   .. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   modules
+
+   Indices and tables
+   ==================
+
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
+   ```
 
 ## Generating Documentation
 
-Use `sphinx-apidoc` to automatically generate `.rst` files from the codebase.
+1. Automatic .rst File Generation
 
-```
-# Adjust paths as necessary
-sphinx-apidoc -o . ..
-```
+   Use `sphinx-apidoc` to automatically generate `.rst` files from the codebase. Check `sphinx-apidoc --help` for more information
+
+   ```
+   # Adjust paths as necessary
+   sphinx-apidoc -o ./source ../luce_vm/luce_django/luce/ ../**/migrations/* ../**/tests/* ../**/utils/* ../**/lucehome/* ../**/manage.py
+   ```
+
+2. Build the Documentation
+
+   Generate the Documentation
+
+   ```
+   make html
+   ```
