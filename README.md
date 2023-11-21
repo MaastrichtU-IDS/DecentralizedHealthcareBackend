@@ -76,3 +76,6 @@ You can access [LUCE document](https://maastrichtu-ids.github.io/DecentralizedHe
 ```
 
 please deploy a LUCERegistry contract in `admin/deployRegistry/` endpoint.
+
+## Development Manual
+For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/README.MD)
