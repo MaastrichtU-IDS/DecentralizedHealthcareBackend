@@ -7,7 +7,4 @@ luce
    accounts
    blockchain
    healthcare
-   lucehome
-   manage
    privacy
-   utils

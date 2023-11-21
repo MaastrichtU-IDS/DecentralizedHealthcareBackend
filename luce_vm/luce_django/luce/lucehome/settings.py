@@ -25,8 +25,10 @@ p = project.load(brownie_path, name="BrownieProject")
 p.load_config()
 if 'test' in sys.argv:
     network.connect('development')
-else:
+elif 'runserver' in sys.argv:
     network.connect('luce')
+else:
+    print("Just doing some tasks, not connecting to network")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

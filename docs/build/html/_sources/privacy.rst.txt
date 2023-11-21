@@ -1,14 +1,6 @@
 privacy package
 ===============
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   privacy.migrations
-
 Submodules
 ----------
 
