@@ -50,6 +50,9 @@ You can access with [LUCE API](https://documenter.getpostman.com/view/18666298/2
    > Once logged in, you can get a token which is necessary for later operation
 3. Step 3: upload data
 
+## Document
+You can access [LUCE document](https://maastrichtu-ids.github.io/DecentralizedHealthcareBackend/) for details.
+
 ## Tips
 
 1. if you encounter the issue:
