@@ -135,24 +135,24 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # Use sqlite by default (only one VM required, less resources)
 # Can switch to Postgresql via environment variable (see code at the very bottom)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
-
-# connect to database: psql -U luce --port 5433 -d lucedb
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'lucedb',
-        'USER': 'luce',
-        'PASSWORD': 'luce123456',
-        'HOST': 'localhost',
-        'PORT': '5433',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+# connect to database: psql -U luce --port 5433 -d lucedb
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'lucedb',
+#         'USER': 'luce',
+#         'PASSWORD': 'luce123456',
+#         'HOST': 'localhost',
+#         'PORT': '5433',
+#     }
+# }
 
 # Postgresql Database:
 # DATABASES = {
