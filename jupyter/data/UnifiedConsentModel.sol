@@ -40,7 +40,7 @@ contract ConsentCode {
         address _address
     ) internal view returns (Terms storage) {
         if (role == role_provider) {
-            // require(msg.sender == dataProvider);
+            // require(msg.sender == dataProvider, "TermsByRole: Invalid sender");
             return providerMapping[_address];
         } else if (role == role_requester) {
             return requesterMapping[_address];
@@ -81,6 +81,19 @@ contract ConsentCode {
         terms.Months = Months;
     }
 
+    function DisplayDate(
+        uint8 role,
+        address _address
+    ) public view returns (uint16, uint16, uint16, uint16) {
+        Terms storage terms = TermsByRole(role, _address);
+        return (
+            terms.Start_Year,
+            terms.Start_Month,
+            terms.Start_Day,
+            terms.Months
+        );
+    }
+
     function UploadAreaCode(
         uint8 role,
         address _address,
@@ -88,16 +101,16 @@ contract ConsentCode {
         uint8[] memory Country_Code,
         uint64[] memory Country_Group_Code
     ) public {
-        if (Country_Code.length != Country_Group_Code.length) {
-            revert(
-                "UploadCountryCode: Country_Code and Country_Group_Code must have the same length"
-            );
-        }
+        // if (Country_Code.length != Country_Group_Code.length) {
+        //     revert(
+        //         "UploadCountryCode: Country_Code and Country_Group_Code must have the same length"
+        //     );
+        // }
 
         Terms storage terms = TermsByRole(role, _address);
 
         if (role == role_provider) {
-            require(msg.sender == dataProvider);
+            // require(msg.sender == dataProvider);
             for (uint8 i = 0; i < Country_Code.length; i++) {
                 terms.Area_Country_Code_Map[Country_Code[i]] = true;
             }
@@ -128,9 +141,12 @@ contract ConsentCode {
         uint16[] memory Disease_Code_Array
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        for (uint8 i = 0; i < Disease_Code_Array.length; i++) {
-            terms.Disease_Map[Disease_Code_Array[i]] = true;
+        if (role == role_provider) {
+            for (uint8 i = 0; i < Disease_Code_Array.length; i++) {
+                terms.Disease_Map[Disease_Code_Array[i]] = true;
+            }
         }
+        terms.Disease_Code_Array = Disease_Code_Array;
     }
 
     function DisplayDiseaseCode(
@@ -155,24 +171,25 @@ contract ConsentCode {
     }
 
     function CheckCountry(
-        address _provider_address,
-        address _requester_address
+        address _provider,
+        address _requester
     ) public view returns (bool) {
         //check countries, countries of requester must be a subset of countries of provider or the group of countries of requester must be a subset of countries of provider
         for (
             uint index_requester = 0;
             index_requester <
-            requesterMapping[_requester_address].Area_Country_Code.length;
+            requesterMapping[_requester].Area_Country_Code.length;
             index_requester++
         ) {
-            uint8 requester_code = requesterMapping[_requester_address]
+            uint8 requester_code = requesterMapping[_requester]
                 .Area_Country_Code[index_requester];
-            bool validCountry = providerMapping[_provider_address]
+            bool validCountry = providerMapping[_provider]
                 .Area_Country_Code_Map[requester_code] ==
                 true ||
-                providerMapping[_provider_address].Area_Group_Code &
-                    requesterMapping[_requester_address]
-                        .Area_Country_Group_Code[index_requester] >
+                providerMapping[_provider].Area_Group_Code &
+                    requesterMapping[_requester].Area_Country_Group_Code[
+                        index_requester
+                    ] >
                 0;
             if (validCountry == false) {
                 return false;
@@ -181,10 +198,10 @@ contract ConsentCode {
 
         // check groups, group of requester must be a subset of group of provider or the group of requester is 0
         if (
-            requesterMapping[_requester_address].Area_Group_Code == 0 ||
-            providerMapping[_provider_address].Area_Group_Code &
-                requesterMapping[_requester_address].Area_Group_Code ==
-            requesterMapping[_requester_address].Area_Group_Code
+            requesterMapping[_requester].Area_Group_Code == 0 ||
+            providerMapping[_provider].Area_Group_Code &
+                requesterMapping[_requester].Area_Group_Code ==
+            requesterMapping[_requester].Area_Group_Code
         ) {
             return true;
         }
@@ -196,7 +213,6 @@ contract ConsentCode {
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
-        bool disease_flag = false;
         for (
             uint index_requester = 0;
             index_requester <
@@ -205,26 +221,11 @@ contract ConsentCode {
         ) {
             uint16 requester_code = requesterMapping[_requester_address]
                 .Disease_Code_Array[index_requester];
-            disease_flag = false;
-            for (
-                uint index_provider = 0;
-                index_provider <
-                providerMapping[_provider_address].Disease_Code_Array.length;
-                index_provider++
+            if (
+                providerMapping[_provider_address].Disease_Map[
+                    requester_code
+                ] == false
             ) {
-                uint16 provider_code = providerMapping[_provider_address]
-                    .Disease_Code_Array[index_provider];
-                if (
-                    requester_code & provider_code == provider_code &&
-                    requester_code >= provider_code
-                ) {
-                    // ensure the provider code is a subset of the requester code
-                    // given provider 1100,  requester  1110 is granted but 1011 is not
-                    disease_flag = true;
-                    break;
-                }
-            }
-            if (disease_flag == false) {
                 return false;
             }
         }
