@@ -3,7 +3,7 @@ name: Django CI
 on:
   workflow_dispatch:
   push:
-    branches: ["master"]
+    branches: ["48-django-ci"]
   pull_request:
     branches: ["master"]
 
