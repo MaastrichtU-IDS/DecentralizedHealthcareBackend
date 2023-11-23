@@ -42,6 +42,10 @@ jobs:
           pip install matplotlib
           pip install django-haystack
           pip install Sphinx
+      - name: Run zkp_service
+        run: |
+          cd luce_vm/js/src
+          node koa/koa.js &
       - name: Run Tests
         run: |
           cd luce_vm/luce_django/luce
