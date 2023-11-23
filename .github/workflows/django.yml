@@ -25,6 +25,7 @@ jobs:
         run: |
           apt update
           apt install nodejs
+          npm install ganache --global
           python -m pip install --upgrade pip
           pip install eth-brownie
           pip install Django==4.1.12
