@@ -36,4 +36,5 @@ jobs:
           pip install Sphinx
       - name: Run Tests
         run: |
+          cd luce_vm/luce_django/luce
           python manage.py test
