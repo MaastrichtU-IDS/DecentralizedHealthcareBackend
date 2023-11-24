@@ -16,12 +16,15 @@ contract ConsentCode {
         uint16 Start_Month;
         uint16 Start_Day;
         uint16 Months;
-        uint16[] Disease_Code_Array;
         uint64 Area_Group_Code;
         uint8[] Area_Country_Code;
         uint64[] Area_Country_Group_Code;
         mapping(uint8 => bool) Area_Country_Code_Map;
+        mapping(uint8 => uint128) Disease_Map_Hierarchy;
         mapping(uint16 => bool) Disease_Map;
+        uint8[] Disease_Group_Code_Array;
+        uint128[] Disease_Category_Code_Array;
+        uint16[] Disease_Code_Array;
     }
 
     mapping(address => Terms) providerMapping; // data subject
@@ -135,6 +138,33 @@ contract ConsentCode {
         );
     }
 
+    function UploadDiseaseCodeHierarchy(
+        uint8 role,
+        address _address,
+        uint8[] memory Disease_Group_Code_Array,
+        uint128[] memory Disease_Category_Code_Array
+    ) public {
+        Terms storage terms = TermsByRole(role, _address);
+        if (
+            Disease_Group_Code_Array.length !=
+            Disease_Category_Code_Array.length
+        ) {
+            revert(
+                "UploadDiseaseCode: Disease_Group_Code_Array and Disease_Category_Code_Array must have the same length"
+            );
+        }
+        if (role == role_provider) {
+            for (uint8 i = 0; i < Disease_Group_Code_Array.length; i++) {
+                uint8 Disease_Group_Code = Disease_Group_Code_Array[i];
+                terms.Disease_Map_Hierarchy[
+                    Disease_Group_Code
+                ] = Disease_Category_Code_Array[i];
+            }
+        }
+        terms.Disease_Group_Code_Array = Disease_Group_Code_Array;
+        terms.Disease_Category_Code_Array = Disease_Category_Code_Array;
+    }
+
     function UploadDiseaseCode(
         uint8 role,
         address _address,
@@ -157,6 +187,17 @@ contract ConsentCode {
         return terms.Disease_Code_Array;
     }
 
+    function DisplayDiseaseCodeHierarchy(
+        uint8 role,
+        address _address
+    ) public view returns (uint8[] memory, uint128[] memory) {
+        Terms storage terms = TermsByRole(role, _address);
+        return (
+            terms.Disease_Group_Code_Array,
+            terms.Disease_Category_Code_Array
+        );
+    }
+
     function CheckBooleanItems(
         address _provider_address,
         address _requester_address
@@ -170,7 +211,7 @@ contract ConsentCode {
         return false;
     }
 
-    function CheckCountry(
+    function CheckArea(
         address _provider,
         address _requester
     ) public view returns (bool) {
@@ -232,6 +273,32 @@ contract ConsentCode {
         return true;
     }
 
+    // CheckDiseaseHierarchy
+    function CheckDiseaseHierarchy(
+        address _provider_address,
+        address _requester_address
+    ) public view returns (bool) {
+        for (
+            uint index_requester = 0;
+            index_requester <
+            requesterMapping[_requester_address].Disease_Code_Array.length;
+            index_requester++
+        ) {
+            uint8 requester_group_code = requesterMapping[_requester_address]
+                .Disease_Group_Code_Array[index_requester];
+            uint128 requester_category_code = requesterMapping[_requester_address]
+                .Disease_Category_Code_Array[index_requester];
+            uint128 provider_category_code = providerMapping[_provider_address]
+                .Disease_Map_Hierarchy[requester_group_code];
+            if (
+               !(provider_category_code & requester_category_code == requester_category_code)
+            ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     function CheckDate(
         address _provider_address,
         address _requester_address
@@ -282,7 +349,7 @@ contract ConsentCode {
         address _provider_address,
         address _requester_address
     ) public view returns (uint8) {
-        if (CheckCountry(_provider_address, _requester_address) == false) {
+        if (CheckArea(_provider_address, _requester_address) == false) {
             return 1;
         }
 
