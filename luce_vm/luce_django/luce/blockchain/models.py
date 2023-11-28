@@ -1,3 +1,4 @@
+from privacy.snarkjs_service import SnarkjsService
 from django.db import models
 from accounts.models import User
 from brownie import network, project, accounts
@@ -13,7 +14,6 @@ logger = set_logger(__file__)
 # So just import them in the functions where they are used.
 # from brownie.project.BrownieProject import *
 
-from privacy.snarkjs_service import SnarkjsService
 
 snarkjs_service = SnarkjsService()
 
@@ -137,7 +137,7 @@ class LuceRegistryContract(models.Model):
         else:
             print("Deploy LUCERegistry contract failed")
 
-        return receipt.status
+        return receipt
 
     def deploy_contract(self):
         tx_receipt = web3.deploy_registry(self.user)
@@ -202,13 +202,10 @@ class ConsentContract(models.Model):
         from brownie.project.BrownieProject import ConsentCode
         new_account = self.get_a_new_account(amount=1e17)
 
-        print("new_account: " + str(new_account))
-        print("balance: " + str(new_account.balance()))
         transaction_dict = {'from': new_account}
 
         consent_contract = ConsentCode.at(self.contract_address)
 
-        print("consent_contract: " + str(consent_contract))
         transaction_receipt = ConsentCode.at(
             self.contract_address).UploadDataPrimaryCategory(
                 self.user.ethereum_public_key,
@@ -218,26 +215,7 @@ class ConsentContract(models.Model):
                 self.restrictions.open_to_population_and_ancestry_research,
                 self.restrictions.open_to_disease_specific, transaction_dict)
 
-        # ConsentCode.at(self.contract_address).UploadDataSecondaryCategory(
-        #     self.user.ethereum_public_key,
-        #     self.secondary_category.open_to_genetic_studies_only,
-        #     self.secondary_category.research_specific_restrictions,
-        #     self.secondary_category.open_to_research_use_only,
-        #     self.secondary_category.no_general_method_research,
-        #     transaction_dict)
-
-        # ConsentCode.at(self.contract_address).UploadDataRequirements(
-        #     self.user.ethereum_public_key,
-        #     self.requirements.geographic_specific_restriction,
-        #     self.requirements.open_to_non_profit_use_only,
-        #     self.requirements.publication_required,
-        #     self.requirements.collaboration_required,
-        #     self.requirements.ethics_approval_required,
-        #     self.requirements.time_limit_on_use, self.requirements.cost_on_use,
-        #     self.requirements.data_security_measures_required,
-        #     transaction_dict)
-
-        return transaction_receipt.status
+        return transaction_receipt
 
     def upload_data_consent(self, estimate):
         return web3.upload_data_consent(self, estimate)
@@ -249,13 +227,12 @@ class ConsentContract(models.Model):
         from brownie.project.BrownieProject import ConsentCode
         new_account = self.get_a_new_account(amount=1e17)
 
-        print("new_account: " + str(new_account))
-        print("new_account: " + str(new_account))
-        print("balance: " + str(new_account.balance()))
         contract = ConsentCode.deploy({'from': new_account})
 
         self.contract_address = contract.address
         self.save()
+
+        return contract.tx
 
     def deploy_contract(self):
         tx_receipt = web3.deploy_consent(self.user)
@@ -282,7 +259,7 @@ class ConsentContract(models.Model):
 
         # logger.info(receipt)
 
-        return receipt.status
+        return receipt
 
         # tx = web3.give_clinical_research_purpose(self, user, estimate)
         # return tx
@@ -306,7 +283,7 @@ class ConsentContract(models.Model):
             rp.use_for_research_concerning_gender_categories, txn_dict)
 
         # logger.info(receipt)
-        return receipt.status
+        return receipt
 
     def give_general_research_purpose(self, user, estimate):
         from brownie.project.BrownieProject import ConsentCode
@@ -326,7 +303,7 @@ class ConsentContract(models.Model):
 
         # tx = web3.give_general_research_purpose(self, user, estimate)
         # logger.info(receipt)
-        return receipt.status
+        return receipt
 
 
 class DataContract(models.Model):
@@ -394,7 +371,7 @@ class DataContract(models.Model):
         print("proof\n" + str(proof['public_signals']))
         commitment = {
             "public_signals": proof['public_signals']
-            
+
         }
 
         contract = LuceMain.deploy(verifier_address,
@@ -403,7 +380,7 @@ class DataContract(models.Model):
 
         self.contract_address = contract.address
         self.save()
-        return contract.tx.status
+        return contract.tx
 
     def get_commitment(self, secret):
         http = urllib3.PoolManager()
@@ -442,7 +419,7 @@ class DataContract(models.Model):
             self.contract_address).setRegistryAddress(registry_address,
                                                       transaction_dict)
 
-        return transaction_receipt.status
+        return transaction_receipt
 
     # def set_registry_address(self, registry, estimate):
     #     tx_receipt = web3.set_registry_address(self, registry.contract_address,
@@ -458,7 +435,7 @@ class DataContract(models.Model):
             self.contract_address).setConsentAddress(
                 self.consent_contract.contract_address, transaction_dict)
 
-        return transaction_receipt.status
+        return transaction_receipt
 
         # tx_receipt = web3.set_consent_address(
         #     self, self.consent_contract.contract_address, estimate)
@@ -476,7 +453,7 @@ class DataContract(models.Model):
         transaction_receipt = LuceMain.at(self.contract_address).publishData(
             self.description, link, self.licence, transaction_dict)
 
-        return transaction_receipt.status
+        return transaction_receipt
         # tx = web3.publish_dataset(self, user, link)
         # return tx
 

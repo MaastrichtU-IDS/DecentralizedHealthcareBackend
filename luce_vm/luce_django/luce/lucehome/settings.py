@@ -26,7 +26,10 @@ p.load_config()
 if 'test' in sys.argv:
     network.connect('development')
 elif 'runserver' in sys.argv:
-    network.connect('luce')
+    if os.environ.get('DOCKER_RUNTIME') is not None:
+        network.connect('luce')
+    else:
+        network.connect('development')
 else:
     print("Just doing some tasks, not connecting to network")
 

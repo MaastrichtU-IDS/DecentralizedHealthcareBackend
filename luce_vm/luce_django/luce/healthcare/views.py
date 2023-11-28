@@ -46,7 +46,8 @@ class UploadDataView(APIView):
         if not self.is_luce_registry_deployed():
             return self.handle_error("luce registry was not deployed", "Luce registry was not deployed!")
 
-        contract_serializer, restriction_serializer = self.initialize_serializers(request)
+        contract_serializer, restriction_serializer = self.initialize_serializers(
+            request)
 
         if not restriction_serializer.is_valid():
             return self.handle_serializer_error(restriction_serializer)
@@ -74,6 +75,7 @@ class UploadDataView(APIView):
         disposable_address_service = DisposableAddressService()
         return disposable_address_service.get_a_new_address_with_balance(
             user_account, amount)
+
     def handle_error(self, user_message, log_message):
         logger.error(log_message)
         response = custom_exeptions.custom_message(user_message)
@@ -97,21 +99,22 @@ class UploadDataView(APIView):
 
         # Deploy ConsentCode smart contract
         tx_receipt = self.deploy_consent_code_contract(datacontract)
-        if isinstance(tx_receipt, list):
+        if tx_receipt.status != 1:
             datacontract.delete()
             raise Exception("Error deploying ConsentCode smart contract")
         tx_receipts.append(tx_receipt)
 
         # Update ConsentCode smart contract
         tx_receipt0 = self.update_consent_code_contract(datacontract)
-        if isinstance(tx_receipt0, list):
+        print("tx_receipt0: ", tx_receipt0)
+        if tx_receipt0.status != 1:
             datacontract.delete()
             raise Exception("Error updating ConsentCode smart contract")
         tx_receipts.append(tx_receipt0)
 
         # Deploy Dataset smart contract
         tx_receipt2 = self.deploy_dataset_contract(datacontract)
-        if isinstance(tx_receipt2, list):
+        if tx_receipt2.status != 1:
             datacontract.delete()
             raise Exception("Error deploying Dataset smart contract")
         tx_receipts.append(tx_receipt2)
@@ -119,23 +122,26 @@ class UploadDataView(APIView):
         # Set registry address
         registry_address = LuceRegistry.objects.get(pk=1).contract_address
         tx_receipt3 = self.set_registry_address(datacontract, registry_address)
-        if isinstance(tx_receipt3, list):
+        if tx_receipt3.status != 1:
             datacontract.delete()
-            raise Exception("Error setting registry address for Dataset smart contract")
+            raise Exception(
+                "Error setting registry address for Dataset smart contract")
         tx_receipts.append(tx_receipt3)
 
         # Set consent address
         tx_receipt4 = self.set_consent_address(datacontract)
-        if isinstance(tx_receipt4, list):
+        if tx_receipt4.status != 1:
             datacontract.delete()
-            raise Exception("Error setting consent address for Dataset smart contract")
+            raise Exception(
+                "Error setting consent address for Dataset smart contract")
         tx_receipts.append(tx_receipt4)
 
         # Publish data
         tx_receipt5 = self.publish_data(datacontract, link)
-        if isinstance(tx_receipt5, list):
+        if tx_receipt5.status != 1:
             datacontract.delete()
             raise Exception("Error publishing data")
+
         tx_receipts.append(tx_receipt5)
 
         return tx_receipts
@@ -190,8 +196,16 @@ class UploadDataView(APIView):
         response["error"]["details"] = ["SUCCESS"]
         response["data"] = {}
         response["data"]["contracts"] = serializer.data
-        response["data"]["transaction receipts"] = tx_receipts
+        # response["data"]["transaction receipts"] = tx_receipts
+        response["data"]["gas"] = self.gas_used(tx_receipts)
         return response
+
+    def gas_used(self, tx_receipts):
+        gas = 0
+        for receipt in tx_receipts:
+            gas += receipt.gas_used
+        return gas
+
 
 class RequestDatasetView(APIView):
     """
@@ -460,20 +474,22 @@ class LuceRegistryView(APIView):
         estimate = request.data.get('estimate', False)
         user = request.user
 
+        gas = 0
+        tx_receipt = []
+
         # Deploy verifier
         from blockchain.models import PlonkVerifierContract
         if not PlonkVerifierContract.objects.filter(pk=1).exists():
             verifier = PlonkVerifierContract.objects.create(pk=1)
-            verifier.deploy()
-            # verifier.save()
+
+            verifier_receipt = verifier.deploy()
+            gas += verifier_receipt.gas_used
+            tx_receipt.append(verifier_receipt.status)
 
         if user.ethereum_public_key is None or user.ethereum_private_key is None:
             response = custom_exeptions.custom_message(
                 "user must connect a wallet first")
             return Response(response["body"], response["status"])
-
-        if (estimate):
-            return self.estimated_gas
 
         # get contract if doesn't exist create it
         if LuceRegistry.objects.filter(pk=1).exists():
@@ -482,10 +498,10 @@ class LuceRegistryView(APIView):
             registry = LuceRegistry.objects.create(pk=1, user=user)
 
         registry.user = user
-        tx_receipt = registry.deploy()
-        if type(tx_receipt) is list:
-            response = custom_exeptions.blockchain_exception(tx_receipt)
-            return Response(response["body"], response["status"])
+
+        registry_contract = registry.deploy()
+        gas += registry_contract.gas_used
+        tx_receipt.append(registry_contract.status)
 
         registry.save()
         serializer = RegestryContractSerializer(registry)
@@ -498,5 +514,6 @@ class LuceRegistryView(APIView):
         response["data"] = {}
         response["data"]["contracts"] = [serializer.data]
         response["data"]["transaction receipts"] = [tx_receipt]
+        response["data"]["gas"] = gas
 
         return Response(response)

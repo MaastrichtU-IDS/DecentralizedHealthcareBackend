@@ -8,5 +8,7 @@ urlpatterns = [
     path('authenticated/', PrivateUserInfoView.as_view()),
     path('authenticated/update/', UserUpdateView.as_view()),
     path('all/', UserListView.as_view()),
-    path('login/', ObtainAuthToken.as_view(), name='login'),
+    # path('login/', ObtainAuthToken.as_view(), name='login'),
+    path('login/', LoginView.as_view(), name='login'),
+
 ]

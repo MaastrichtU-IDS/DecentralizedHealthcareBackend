@@ -1,64 +1,82 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework import permissions, generics, filters, parsers, renderers, status
+from rest_framework import permissions, parsers, renderers, status
 from rest_framework.compat import coreapi, coreschema
 from rest_framework.schemas import ManualSchema
 from rest_framework.schemas import coreapi as coreapi_schema
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
 
-from utils.utils import get_initial_response, set_logger
+from utils.utils import get_initial_response
+from utils import custom_exeptions
 
 from .serializers import UserSerializer, PublicUserSerializer
 from rest_framework.response import Response
 from accounts.models import User
+import logging
 
-logger = set_logger(__file__)
-# Create your views here.
+logger = logging.getLogger(__name__)
 
 
 class UserRegistration(APIView):
     """
     Register a new user
     """
+
     def post(self, request, format=None):
 
         # Create an account for fake user
-        createWallet = request.data.get("create_wallet")
-        createWallet = True
+        create_wallet = request.data.get("create_wallet")
+        create_wallet = True
 
-        logger.info("Register a new user: " + str(request.data))
-        # logger.info(request.data)
+        logger.info("Registering a new user: %s", request.data)
 
-        serializer = UserSerializer(data=request.data,
-                                    context={"create_wallet": createWallet})
+        serializer = UserSerializer(
+            data=request.data,
+            context={"create_wallet": create_wallet}
+        )
 
         # serializer validation
         if not serializer.is_valid():
-            print(serializer.errors)
+            logger.error("Registration failed: %s", serializer.errors)
             response = custom_exeptions.validation_exeption(serializer)
-            logger.error("Register failed: " +
-                         response['body']["error"]["message"])
             return Response(response["body"], response["status"])
 
         instance = serializer.save()
 
-        tx_receipt = self.address_get_or_create(instance, createWallet)
+        tx_receipt = self._address_get_or_create(instance, create_wallet)
 
-        # blockchain error handling
-        if type(tx_receipt) is list:
-            instance.delete()
-            response = custom_exeptions.blockchain_exception(tx_receipt)
-            return Response(response["body"], response["status"])
+        return Response(
+            {
+                "error": {
+                    "code": 200,
+                    "message": "registration successfull",
+                    "status": "OK",
+                    "details": [{"reason": "SUCCESS"}]
+                },
+                "data": {
+                    "transaction_id": [tx_receipt.txid]
+                }
+            },
 
-        response = get_initial_response()
-        response["error"]["code"] = 200
-        response["error"]["message"] = "registration successfull"
-        response["error"]["status"] = "OK"
-        response["error"]["details"] = [{"reason": "SUCCESS"}]
-        response["data"]["transaction_id"] = [tx_receipt.txid]
+            status=status.HTTP_200_OK
+        )
 
-        return Response(response, status=status.HTTP_200_OK)
+        # response = get_initial_response()
+        # response["error"]["code"] = 200
+        # response["error"]["message"] = "registration successfull"
+        # response["error"]["status"] = "OK"
+        # response["error"]["details"] = [{"reason": "SUCCESS"}]
+        # response["data"]["transaction_id"] = [tx_receipt.txid]
+
+        # return Response(response, status=status.HTTP_200_OK)
+
+    def _address_get_or_create(self, user, create_wallet):
+        if create_wallet:
+            tx_receipt = user.create_wallet()
+            user.save()
+            return tx_receipt
+        return None
 
     def address_get_or_create(self, instance, createWallet):
         if (createWallet):
@@ -72,7 +90,7 @@ class UserRegistration(APIView):
         return tx_receipt
 
 
-class ObtainAuthToken(APIView):
+class LoginView(APIView):
     # user/login
     throttle_classes = ()
     permission_classes = ()

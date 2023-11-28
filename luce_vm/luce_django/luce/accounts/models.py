@@ -135,8 +135,7 @@ class UserManager(BaseUserManager):
             last_name,
             password=password,
             ethereum_public_key="0x43e196c418b4b7ebf71ba534042cc8907bd39dc9",
-            ethereum_private_key=
-            "0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
+            ethereum_private_key="0x5714ad5f65fb27cb0d0ab914db9252dfe24cf33038a181555a7efc3dcf863ab3"
         )
         user.staff = True
         user.admin = True

@@ -1,18 +1,28 @@
 from django.test import TestCase
-
 from django.urls import reverse
+from rest_framework.test import APIClient
+
 from accounts.models import User
+from brownie import network
 
 
 class RegistrationTestCase(TestCase):
-    def test_valid_registration(self):
-        data = {
+    def setUp(self):
+        self.data = {
             'username': 'testuser',
             'email': 'test@email.com',
             'password': 'testpassword',
         }
-        response = self.client.post(reverse('user_registration'), data)
-        # print("here")
-        # print(response.data)
-        self.assertEqual(response.status_code, 200)  # expecting a redirect
-        self.assertEqual(User.objects.count(), 1)  # a user should be created
+        self.client = APIClient()
+        self.registration_url = reverse('user_registration')
+
+    def test_valid_registration(self):
+        response = self.client.post(self.registration_url, self.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(User.objects.count(), 1)
+
+        is_connected = network.is_connected()
+        print("is_connected: ", is_connected)
+        if is_connected:
+            network.disconnect()
