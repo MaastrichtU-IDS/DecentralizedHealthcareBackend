@@ -79,6 +79,7 @@ You can access with [LUCE API](https://documenter.getpostman.com/view/18666298/2
 
 ## Document
 
+
 You can access [LUCE document](https://maastrichtu-ids.github.io/DecentralizedHealthcareBackend/) for details.
 
 ## Tips
@@ -107,6 +108,8 @@ please deploy a LUCERegistry contract in `admin/deployRegistry/` endpoint.
 
 ## Development Manual
 
-For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/README.MD)
+
+For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/LUCE_Documentation_Setup.MD)
+
 
 For how to develop in LUCE, please refer to: [LUCE development tips](./manual/LUCE%20development%20tips.pdf)
