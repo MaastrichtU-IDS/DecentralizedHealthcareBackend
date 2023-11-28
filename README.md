@@ -1,5 +1,32 @@
 # LUCE Technical Prototype
 
+## Architecture
+
+The architecture of LUCE is shown below.
+
+![Architucture](./images/luce_architecture.png)
+
+1. Users:
+
+   - Hospital: represents medical institutions that need to access and input data.
+   - Patient: Patients whose data is being managed and exchanged.
+   - Institution: Other entities that may need access to the data, possibly for administrative or research purposes.
+
+2. LUCE Data Exchange Interface:
+
+   - The interface supports different platforms, and it communicates with a backend using a RESTful API, a popular choice for web services.
+
+3. LUCE Data Exchange modules:
+
+   - Data Exchange: This module is responsible for the transfer of data between parties.
+   - Consent: It ensures that data is not exchanged without the consent of the data owner.
+   - Privacy: A module dedicated to maintaining privacy.
+   - Smart contract: uses blockchain technology to enforce contracts regarding data access and usage.
+
+4. Storage:
+   - On-Chain Storage: Utilizes blockchain technology, storing shared data and meta-data.
+   - Off-Chain Storage: Utilizing local storage or cloud storage, to store the raw data and administrative data
+
 ## How to launch LUCE (Debug purpose)
 
 ### 1. Install docker
@@ -51,6 +78,7 @@ You can access with [LUCE API](https://documenter.getpostman.com/view/18666298/2
 3. Step 3: upload data
 
 ## Document
+
 You can access [LUCE document](https://maastrichtu-ids.github.io/DecentralizedHealthcareBackend/) for details.
 
 ## Tips
@@ -78,4 +106,5 @@ You can access [LUCE document](https://maastrichtu-ids.github.io/DecentralizedHe
 please deploy a LUCERegistry contract in `admin/deployRegistry/` endpoint.
 
 ## Development Manual
+
 For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/README.MD)
