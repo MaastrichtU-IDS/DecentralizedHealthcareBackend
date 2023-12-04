@@ -109,4 +109,4 @@ please deploy a LUCERegistry contract in `admin/deployRegistry/` endpoint.
 
 For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/README.MD)
 
-For how to develop in LUCE, please refer to: [LUCE development tips](./manual/LUCE%20development%20tips.pdf)
+For how to develop in LUCE, please refer to: [LUCE development tips](./manual/LUCE%20Development%20tips.MD)
