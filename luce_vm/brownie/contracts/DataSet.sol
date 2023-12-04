@@ -1,11 +1,27 @@
 // SPDX-License-Identifier: AFL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
-import "./LuceRegistry.sol";
-import "./Token.sol";
-import "./Commitment.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/token/ERC721/ERC721.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.8.0/contracts/utils/structs/EnumerableMap.sol";
 
-contract Dataset is ERC721, Commitment {
+import "./LuceRegistry.sol";
+import "./Commitment.sol";
+import "./ConsentCode.sol";
+
+contract Dataset is ERC721 {
+    using EnumerableMap for EnumerableMap.UintToAddressMap;
+    struct LUCEToken {
+        // address requester;
+        uint license;
+        uint purposeCode; // this may become part of the hash?
+        uint accessTime; // this is needed, since the expiryDate for each token will be different
+        bytes32 tokenHash;
+        // bool burned;
+    }
+
+    EnumerableMap.UintToAddressMap private _tokenUsers;
+    LUCEToken[] internal tokens; // an alternative where this is private could be in combination with a function that returns all tokens and their settings
+
     // Contract testing variables
     uint256 public scenario;
 
@@ -41,6 +57,10 @@ contract Dataset is ERC721, Commitment {
         uint256 license
     );
     event updateDataset(address to, string uspdateDescr);
+    /**
+     * @dev Emitted when a new token is generated.
+     */
+    event NewToken(uint tokenID, uint licenseType, uint purposeCode);
 
     /**
      * @dev This modifier calculates the gas cost of any function that is called with it and adds the result to the contract's
@@ -62,6 +82,51 @@ contract Dataset is ERC721, Commitment {
         // Add gas cost to total
         // currentCost = currentCost.add(gasCost);
         currentCost = currentCost + gasCost;
+    }
+
+    /**
+     * @dev This functions creates a token that can be manupulated according to the ERC721 standard... sort of, since it has no real use
+     * inside the ERC721 standard, but I'm not sure what that use could even be, since I've never seen any application other than as an
+     * alternative currency.
+     * @param _purposeCode ....
+     */
+    function _createRequestedToken(
+        uint _license,
+        uint _purposeCode,
+        uint _accessTime
+    ) internal {
+        uint id;
+        bytes32 lastHash;
+        if (tokens.length < 1) {
+            id = 1;
+            lastHash = keccak256(
+                abi.encodePacked(uint(1), msg.sender, _license, _purposeCode)
+            );
+        } else {
+            lastHash = tokens[tokens.length - 1].tokenHash;
+            id = tokens.length + 1;
+        }
+        bytes32 tokenHash = keccak256(
+            abi.encodePacked(
+                // id.add(uint(lastHash)),
+                id + uint(lastHash),
+                msg.sender,
+                _license,
+                _purposeCode
+            )
+        );
+        tokens.push(
+            LUCEToken(
+                _license,
+                _purposeCode,
+                // block.timestamp.add(_accessTime),
+                block.timestamp + _accessTime,
+                tokenHash
+            )
+        );
+
+        // introduce checksum composed of unique values to make sure token access can be verified easily
+        emit NewToken(id, _license, _purposeCode); // not sure this is needed...
     }
 
     modifier onlyOwner() {
@@ -212,6 +277,10 @@ contract Dataset is ERC721, Commitment {
         profitMargin = _profitMargin;
     }
 
+    function userOf(uint256 tokenId) public view returns (address) {
+        return _tokenUsers.get(tokenId);
+    }
+
     /**
      * @dev This function allows the dataProvider to control what percentage of the current contract cost (currentCost)
      * any requester should pay.
@@ -227,10 +296,7 @@ contract Dataset is ERC721, Commitment {
         costDiv = div;
     }
 
-    constructor(
-        IVerifier _verifier,
-        uint256[] memory _commitment
-    ) ERC721("Test", "TST") Commitment(_verifier, _commitment) {
+    constructor() ERC721("Test", "TST") {
         owner = payable(msg.sender);
         dataProvider = msg.sender;
         currentCost = 1e9; // hopefully this is 1 shannon (giga wei)
