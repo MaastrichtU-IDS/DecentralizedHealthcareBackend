@@ -5,10 +5,7 @@ import "./DataSet.sol";
 
 //import "./generateToken.sol";
 contract LuceMain is Dataset {
-    constructor(
-        IVerifier _verifier,
-        uint256[] memory _commitment
-    ) Dataset(_verifier, _commitment) {}
+    constructor() Dataset() {}
 
     bool private burnPermission = false;
 

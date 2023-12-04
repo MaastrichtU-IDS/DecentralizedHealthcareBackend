@@ -49,18 +49,18 @@ def test_verify_commitment(commitment):
     # verify commitment
     # assert commitment.verify_commitment() == True
     c = get_commitment(TEST_STRING)
-    proof = c["solidity_proof"]
+    # proof = c["solidity_proof"]
     call_data = c["call_data"]
     parms = call_data.split(',')
-    print(parms)
+    # print(parms)
     # print(c)
     # print(call_data)
     # decoded_input = commitment.decode_input(call_data)
 
-    sender = accounts[0]
+    # sender = accounts[0]
     # sender.transfer(commitment, data=call_data)
     # print(decoded_input)
     # print(proof)
     verifying_result = commitment.verify(parms[0])
-    print(verifying_result.return_value)
-    assert verifying_result.return_value == True
+    # print(verifying_result.return_value)
+    assert verifying_result.return_value is True
