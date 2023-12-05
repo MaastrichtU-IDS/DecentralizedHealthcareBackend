@@ -45,7 +45,10 @@ Once you've developed your smart contracts and modeled them using [Django Models
 1. Test with Brownie
 
 If you prefer testing within Brownie, ensure you've completed step 2.2.
-Follow the guide on [Writing Unit Tests](https://eth-brownie.readthedocs.io/en/stable/tests-pytest-intro.html#pytest) for Brownie.
+Follow the guide on [Writing Unit Tests](https://eth-brownie.readthedocs.io/en/stable/tests-pytest-intro.html#pytest) for Brownie and test your smart contracts with the development network. For example, in the `luce_vm/brownie` directory, run:
+```
+brownie test --network development -s
+```
 
 2. Test with Django
    For testing within Django, consult this [tutorial](https://docs.djangoproject.com/en/5.0/intro/tutorial05/) for detailed instructions.
