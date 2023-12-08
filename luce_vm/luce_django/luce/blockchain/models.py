@@ -1,9 +1,12 @@
 from django.db import models
-from accounts.models import User
-from brownie import network, project, accounts
 from django.core.exceptions import ObjectDoesNotExist
-from utils.utils import get_initial_response, set_logger
-from .singleton import SingletonModel, SingletonContractModel
+
+from accounts.models import User
+from brownie import accounts
+
+from utils.utils import set_logger
+
+from privacy.snarkjs_service import SnarkjsService
 from privacy.disposable_address import DisposableAddressService
 
 logger = set_logger(__file__)
@@ -13,7 +16,6 @@ logger = set_logger(__file__)
 # So just import them in the functions where they are used.
 # from brownie.project.BrownieProject import *
 
-from privacy.snarkjs_service import SnarkjsService
 
 snarkjs_service = SnarkjsService()
 
@@ -394,7 +396,7 @@ class DataContract(models.Model):
         print("proof\n" + str(proof['public_signals']))
         commitment = {
             "public_signals": proof['public_signals']
-            
+
         }
 
         contract = LuceMain.deploy(verifier_address,
@@ -514,3 +516,46 @@ class DataContract(models.Model):
     def checkAccess(self, user, researchpurpose):
         hasAccess = web3.checkAccess(self, user, researchpurpose)
         return hasAccess
+
+
+class PrivacyShieldDatasetContract(DataContract):
+
+    def _get_a_new_account(self):
+        disposable_address_service = DisposableAddressService()
+        logger.info("self.user.ethereum_public_key: %s",
+                    self.user.ethereum_public_key)
+        user_account = accounts.at(self.user.ethereum_public_key)
+        new_account = disposable_address_service.get_a_new_address_with_balance(
+            sender=user_account, amount=1e17)
+
+        return new_account
+
+    def deploy(self):
+        proof = snarkjs_service.generate_proof("hello")
+
+        self.require_verifier_deployed()
+        verifier_address = PlonkVerifierContract.objects.get(pk=1).address
+
+        deploy_result = self._deploy(verifier_address, proof)
+
+        return deploy_result
+
+    def _deploy(self, verifier_address, proof):
+        from brownie.project.BrownieProject import PrivacyShieldDataset
+        new_account = self._get_a_new_account()
+
+        logger.info("new_account: %s", new_account)
+        logger.info("balance: %s", new_account.balance())
+        logger.info("verifier_address: %s", verifier_address)
+        logger.info("proof: %s", proof)
+        contract = PrivacyShieldDataset.deploy(
+            verifier_address,
+            proof['public_signals'],
+            {
+                'from': new_account
+            }
+        )
+
+        self.contract_address = contract.address
+        self.save()
+        return contract.tx.status

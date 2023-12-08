@@ -1,6 +1,7 @@
 # from django.db import models
 from brownie import accounts
-from blockchain.models import SingletonContractModel
+# from blockchain.models import SingletonContractModel
+from utils.singleton import SingletonContractModel
 
 
 class MimicMixingServiceContract(SingletonContractModel):

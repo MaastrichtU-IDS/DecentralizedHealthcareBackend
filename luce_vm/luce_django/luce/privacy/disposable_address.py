@@ -1,5 +1,13 @@
+import logging
+
 from brownie import accounts
 from .models import MimicMixingServiceContract
+
+# Configure logging at the start of your script
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s: [%(levelname)s] %(message)s'
+)
 
 
 class DisposableAddressService:
@@ -11,7 +19,7 @@ class DisposableAddressService:
 
     def __new__(cls):
         if cls._instance is None:
-            print("Creating a new DisposableAddressService instance.")
+            logging.info("Creating a new DisposableAddressService instance.")
             cls._instance = super(DisposableAddressService, cls).__new__(cls)
         return cls._instance
 
@@ -41,37 +49,32 @@ class DisposableAddressService:
         new_address = accounts.add()
 
         mixing_service = MimicMixingServiceContract.load()
-        print(f"mixing_service: {mixing_service}")
-        print(f"mixing_service.is_deployed(): {mixing_service.is_deployed()}")
-        print(
-            f"mixing_service.contract_address: {mixing_service.contract_address}"
+        logging.info("mixing_service: %s", mixing_service)
+        logging.info(
+            "mixing_service.is_deployed(): %s",
+            mixing_service.is_deployed()
         )
-        print(f"mixing_service.contract_name: {mixing_service.contract_name}")
+
+        logging.info(
+            "mixing_service.contract_address: %s",
+            mixing_service.contract_address
+        )
 
         if not mixing_service.is_deployed():
             mixing_service.deploy()
 
         balance_before_deposit = mixing_service.balance()
-        print(f"balance_before_deposit: {balance_before_deposit}")
+        logging.info("balance_before_deposit: %s", balance_before_deposit)
 
         deposited = mixing_service.deposit(sender, amount)
 
         balance_after_deposit = mixing_service.balance()
-        print(f"balance_after_deposit: {balance_after_deposit}")
+        logging.info("balance_after_deposit: %s", balance_after_deposit)
 
         withdrawn = mixing_service.withdraw(new_address, amount)
-        # print(f"withdrawn: {withdrawn}")
+        # logging.info(f"withdrawn: {withdrawn}")
 
         new_address_balance = new_address.balance()
-        print(f"balance of {new_address}: {new_address_balance}")
+        logging.info("balance of %s : %s", new_address, new_address_balance)
 
         return new_address
-
-
-# # Test the Singleton implementation
-# service1 = DisposableAddressService()
-# service2 = DisposableAddressService()
-
-# # Should print "Creating a new DisposableAddressService instance." only once
-# # Both service1 and service2 will point to the same object
-# print(service1 is service2)  # Should print True
