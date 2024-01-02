@@ -107,7 +107,9 @@ contract ConsentCode {
         // Country_Group_baseline = _Country_Group_Code_8;
         for (uint8 i = 0; i < _Country_Code_8.length; i++) {
             // uint8 country = _Country_Code_8[i];
-            Country_Group_Code_Mapping[_Country_Code_8[i]] = _Country_Group_Code_8[i];
+            Country_Group_Code_Mapping[
+                _Country_Code_8[i]
+            ] = _Country_Group_Code_8[i];
             // for (uint8 j = 0; j < _Country_Group_Code_32[i].length; j++) {
             //     uint32 group = _Country_Group_Code_32[i][j];
             //     Country_Group_Code_Mapping_Mapping[country][group] = true;
@@ -356,6 +358,7 @@ contract ConsentCode {
         ) {
             uint256 rest_county = requester_Area_Country_Code_256 &
                 ~provider_Area_Country_Code_256;
+
             uint256[] memory group_country_data = requesterMapping[
                 _requester_address
             ].Area_Country_Group_Code_Data;
