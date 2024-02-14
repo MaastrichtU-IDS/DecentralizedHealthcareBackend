@@ -12,7 +12,7 @@ RUN pip install eth-brownie
 RUN pip install Django==4.1.12
 RUN pip install django-filter
 RUN pip install django-extensions
-RUN pip3 install djangorestframework
+RUN pip install djangorestframework
 RUN pip install django-cors-headers
 RUN pip install psycopg2
 RUN pip install matplotlib
@@ -28,6 +28,8 @@ RUN pip install Sphinx
 # ADD requirements.txt .
 
 # RUN pip install -r requirements.txt
+
+RUN brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.0
 
 COPY luce_vm/scripts/entrypoint.sh /entrypoint.sh
 RUN chmod 744 /entrypoint.sh

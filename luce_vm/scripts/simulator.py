@@ -3,7 +3,7 @@ import json
 
 http = urllib3.PoolManager()
 
-registration_data = {   
+registration_data = {
     "last_name":"piccini",
     "email":"email90@email.com",
     "password":"password123",
@@ -39,8 +39,8 @@ def Login(url, user):
 registration_url = "http://localhost:8000/user/register/"
 def Register(registration_url, registration_data):
     r = http.request(
-        'POST', 
-        registration_url, 
+        'POST',
+        registration_url,
         body=json.dumps(registration_data).encode('utf-8'),
         headers={
             'Content-Type':'application/json'
@@ -57,7 +57,7 @@ def Register(registration_url, registration_data):
 token = Login(url, user)
 # print(token)
 
-uploaded_data = {   
+uploaded_data = {
     "estimate":False,
     "description":"ds",
     "link":"http://link.com",

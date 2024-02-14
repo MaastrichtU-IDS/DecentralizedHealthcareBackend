@@ -149,7 +149,8 @@ DATABASES = {
         'NAME': 'lucedb',
         'USER': 'luce',
         'PASSWORD': 'luce123456',
-        'HOST': 'localhost',
+        'HOST': 'postgres_db',
+        # 'HOST': 'localhost',
         'PORT': '5433',
     }
 }
