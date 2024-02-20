@@ -1,5 +1,10 @@
-version: '3'
+version: "3"
 services:
+  webapp:
+    image: kunlium/luceweb
+    ports:
+      - 8000:80
+    restart: unless-stopped
 
   ganache_db:
     image: trufflesuite/ganache:v7.7.3
@@ -13,7 +18,6 @@ services:
       - LETSENCRYPT_HOST=ganache.luce.137.120.31.102.nip.io
     volumes:
       - ${STORAGE_PATH:-./data}/ganache_db:/ganache_db
-
 
   postgres_db:
     image: postgres
@@ -80,7 +84,6 @@ services:
   #     - JUPYTER_TOKEN=password
   #     - GRANT_SUDO=yes
   #     - JUPYTER_ENABLE_LAB=yes
-
 
   # ethereum-node:
   #   image: ethereum/client-go
