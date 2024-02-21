@@ -1,55 +1,24 @@
 version: "3"
+
+# Docker compose to use top deploy database in development
+# Backend and webapp are expected to be run separately
+
 services:
-  webapp:
-    image: kunlium/luceweb
+  image: kunlium/luceweb
     ports:
       - 8001:80
     restart: unless-stopped
-
-  luce_server:
-    build:
-      context: .
-      # NOTE: required when building on Mac M1/M2
-      # platform: linux/amd64
-    # entrypoint: sleep infinity
-    depends_on:
-      - postgres_db
-      - ganache_db
-    ports:
-      - 8000:8000
-    restart: unless-stopped
-    # volumes:
-    #   - ./:/luce
-    environment:
-      - JUPYTER_TOKEN=luce
-      # Nginx reverse proxy
-      - VIRTUAL_PORT=8000
-      - VIRTUAL_HOST=luce.137.120.31.102.nip.io
-      - LETSENCRYPT_HOST=luce.137.120.31.102.nip.io
-      # PostgreSQL config
-      - DJANGO_USE_PSQL=true
-      - POSTGRES_PASSWORD=luce123456
-      - POSTGRES_USER=luce
-      - POSTGRES_DB=lucedb
-      # Ganache config
-      - GANACHE_PORT=8545
-      # Ideally the users/password should be defined here
-      # And automatically added to the database at start
-      - PROVIDER_USER=provider@luce.com
-      - PROVIDER_PASSWORD=provider
-      - REQUESTER_USER=requester@luce.com
-      - REQUESTER_PASSWORD=requester
-
+  
   ganache_db:
     image: trufflesuite/ganache:v7.7.3
     restart: unless-stopped
     command: -l 300000000 --database.dbPath /ganache_db --chain.chainId 72 -h 0.0.0.0 --wallet.accounts "0xd49df1af2d195c2c56cb4aa9119d188889c8c28c011501a339a1eafcdcb790d8, 1000000000000000000000000" --wallet.accounts "0x56c6de6fd54438dbb31530f5fdeeaada0b1517880c91dfcd46a4e5fec59a9c79, 1000000000000000000000000" "0xcd4fc6fe57bb44764562df4abae6e9673a4b9db250ea94a0a42ac8500e0275eb, 1000000000000000000000000"
-    # ports:
-    #   - 8545:8545
-    environment:
-      - VIRTUAL_PORT=8545
-      - VIRTUAL_HOST=ganache.luce.137.120.31.102.nip.io
-      - LETSENCRYPT_HOST=ganache.luce.137.120.31.102.nip.io
+    ports:
+      - 8545:8545
+    # environment:
+    #   - VIRTUAL_PORT=8545
+    #   - VIRTUAL_HOST=ganache.luce.137.120.31.102.nip.io
+    #   - LETSENCRYPT_HOST=ganache.luce.137.120.31.102.nip.io
     volumes:
       - ${STORAGE_PATH:-./data}/ganache_db:/ganache_db
 
@@ -58,8 +27,8 @@ services:
     restart: unless-stopped
     depends_on:
       - ganache_db
-    # ports:
-    #   - 5432:5432
+    ports:
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=luce123456
       - POSTGRES_USER=luce

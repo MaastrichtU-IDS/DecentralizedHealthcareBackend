@@ -3,15 +3,15 @@
 # This will override the DATABASES variable in settings.py
 
 # Use Postgresql Database:
-#connect to database: psql -U vagrant --port 5432 -d lucedb
+# connect to database: psql -U vagrant --port 5432 -d lucedb
 import os
 if os.environ.get('SIMULATION') == 'true':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'lucedb',
-            'USER': 'vagrant',
-            'PASSWORD': 'luce',
+            'USER': 'luce',
+            'PASSWORD': 'luce123456',
             'HOST': '127.0.0.1',
             'PORT': '5432',
         }
