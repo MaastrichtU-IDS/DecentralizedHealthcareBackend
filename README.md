@@ -112,3 +112,17 @@ please deploy a LUCERegistry contract in `admin/deployRegistry/` endpoint.
 For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/README.MD)
 
 For how to develop in LUCE, please refer to: [LUCE development tips](./manual/LUCE%20Development%20tips.MD)
+
+1. Start the database and blockchain in docker for development:
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+2. Start the backend:
+
+```bash
+
+```
+
+3. Start the frontend:
