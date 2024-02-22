@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - given-names: Visara Urovi
+    email: v.urovi@maastrichtuniversity.nl
+    affiliation: Institute of Data Science, Maastricht University
+  - email: vincent.emonet@gmail.com
+    given-names: Vincent Emonet
+    affiliation: Institute of Data Science, Maastricht University
+    orcid: https://orcid.org/0000-0002-1501-1082
+  - given-names: Vikas Jaiman
+    affiliation: Institute of Data Science, Maastricht University
+  - given-names: Kun Li
+    affiliation: Institute of Data Science, Maastricht University
+  - given-names: Arno Angerer
+title: "LUCE: A Blockchain-based data sharing platform for monitoring data license accountability and compliance"
+doi: 10.48550/arXiv.2202.11646
+repository-code: https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend
+date-released: 2022-02-23
+# url: https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend

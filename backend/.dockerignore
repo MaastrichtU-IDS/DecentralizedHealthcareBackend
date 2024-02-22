@@ -8,21 +8,10 @@ nohup.out
 de/
 .idea
 data/
-db.sqlite3
 
 # JS
 node_modules/
-.expo/
-dist/
-npm-debug.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-*.orig.*
-web-build/
-.env
+db.sqlite3
 
 # Python
 __pycache__/

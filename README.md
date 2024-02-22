@@ -1,10 +1,12 @@
-# LUCE Technical Prototype
+# 🤝 License accoUntability and CompliancE (LUCE)
 
-## Architecture
+A Blockchain-based data sharing platform for monitoring data license accountability and compliance.
+
+## 🗺️ Architecture
 
 The architecture of LUCE is shown below.
 
-![Architucture](./images/luce_architecture.png)
+![Architecture](./docs/luce_architecture.png)
 
 1. Users:
 
@@ -27,7 +29,7 @@ The architecture of LUCE is shown below.
    - On-Chain Storage: Utilizes blockchain technology, storing shared data and meta-data.
    - Off-Chain Storage: Utilizing local storage or cloud storage, to store the raw data and administrative data
 
-## How to launch LUCE (Debug purpose)
+## 🚀 How to launch LUCE
 
 ### 1. Install docker
 
@@ -37,36 +39,50 @@ The architecture of LUCE is shown below.
 
 ### 2. Launch LUCE
 
-#### 2.1 Preliminary
+Clone the repository:
 
-As we are going to launch LUCE with docker, we need some preliminaries.
+```bash
+git clone https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend
+cd DecentralizedHealthcareBackend
+```
 
-##### 2.1.1. Compile smart contracts with Brownie
+To launch LUCE, run:
 
-Change directory to `luce_vm/brownie` and run `brownie compile`.
+````
+docker compose up
+````
 
-> Tips: We recommend compiling smart contracts locally. Attempting to compile them within a Docker container often requires environment configuration, which can sometimes lead to failures.
+## 🧩 Technical overview
 
-### 2.2 Launch LUCE
+Each component of the LUCE stack is deployed in a different docker container, defined in `docker-compose.yml`
 
-To launch LUCE, run: `docker compose up`.
+### Django API
 
-### database
+User login and access to the contract is managed by a python Django API
 
-LUCE use PostgresQL to keep user information, just run:
-`docker compose up`
-this command will launch a `postgres_db` container，you can configure it in Django project settings
+Code in the `backend` folder. Django settings in `backend/src/luce/lucehome/settings.py`
+
+### Webapp
+
+React-native ([expo](https://expo.dev/)) JavaScript webapp for users to upload and search for contracts. It uses the Django API
+
+Code in the `frontend` folder
+
+### Zero-Knowledge Proofs
+
+[Snarkjs](https://github.com/iden3/snarkjs)-based server for generating Zero-Knowledge Proofs (ZKPs).
+
+Code in the `zkp_service` folder
+
+### Database
+
+LUCE use PostgresQL to keep user information, you can configure it in Django project settings
 
 ### Ganache
 
-As ganache-cli has upgrade into a full functional application - [Ganache](https://trufflesuite.com/ganache/), which brings many useful features for debuging. You can configure it as a `HttpProvider`
+[Ganache](https://trufflesuite.com/ganache/) is used to deploy an Ethereum blockchain network for LUCE, available through HTTP
 
-### Django server
-
-activate your devlopment environment, and start a Django server; generally, go into the root directory of Django project, `luce_django/luce` in this case, and run:
-`python manage.py runserver`
-
-## How to access LUCE
+## ℹ️ How to access LUCE
 
 You can access with [LUCE API](https://documenter.getpostman.com/view/18666298/2s93sZ7aDm), or with [app](https://github.com/klifish/DecentralizedHealthcare)
 
@@ -79,11 +95,41 @@ You can access with [LUCE API](https://documenter.getpostman.com/view/18666298/2
 
 For more details, please refer to [Understanding the Login Related Process](./manual/understanding%20the%20login%20related%20process.md)
 
-## Document
+## 🧑‍💻 Development Manual
 
-You can access [LUCE document](https://maastrichtu-ids.github.io/DecentralizedHealthcareBackend/) for details.
+For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/README.MD)
 
-## Tips
+For how to develop in LUCE, please refer to: [LUCE development tips](./manual/LUCE%20Development%20tips.MD)
+
+Install development dependencies:
+
+```bash
+pip install hatch
+npm install -g expo-cli
+```
+
+1. Start the database and blockchain in docker for development:
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+2. Start the backend:
+
+```bash
+cd backend
+hatch run dev
+```
+
+3. Start the frontend:
+
+```bash
+cd frontend
+npm install
+npm run start
+```
+
+### Tips
 
 1. if you encounter the issue:
 
@@ -106,23 +152,3 @@ You can access [LUCE document](https://maastrichtu-ids.github.io/DecentralizedHe
 ```
 
 please deploy a LUCERegistry contract in `admin/deployRegistry/` endpoint.
-
-## Development Manual
-
-For how to maintain the documentation, please refer to: [Documentation mantaince](./docs/README.MD)
-
-For how to develop in LUCE, please refer to: [LUCE development tips](./manual/LUCE%20Development%20tips.MD)
-
-1. Start the database and blockchain in docker for development:
-
-```bash
-docker compose -f docker-compose.dev.yml up
-```
-
-2. Start the backend:
-
-```bash
-
-```
-
-3. Start the frontend:

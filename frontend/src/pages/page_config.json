@@ -1,0 +1,185 @@
+{
+    "pageConfig": {
+        "consentStatementItems": [
+            "no_restrictions",
+            "open_to_general_research_and_clinical_care",
+            "open_to_HMB_research",
+            "open_to_population_and_ancestry_research",
+            "open_to_disease_specific"
+        ],
+        "consentStatementItemsPro": [
+            {
+                "Name": "No restrictions",
+                "Key": "no_restrictions",
+                "Abbreviation": "NRES",
+                "Description": "No restrictions on using the data"
+            },
+            {
+                "Name": "Open to general research and clinical care",
+                "Key": "open_to_general_research_and_clinical_care",
+                "Abbreviation": "GRU-CC",
+                "Description": "For health, medical, or bioedical purposes, includes population origin or ancestry study"
+            },
+            {
+                "Name": "Open to health, medical or biomedical research and clinical care",
+                "Key": "open_to_HMB_research",
+                "Abbreviation": "HMB-CC",
+                "Description": "Limited to Health, Medical or Biomedical research, excludes population origin or ancestry study"
+            },
+            {
+                "Name": "Open to population and ancestry research",
+                "Key": "open_to_population_and_ancestry_research",
+                "Abbreviation": "POA",
+                "Description": "Use of the data limited to study of population origins or ancestry"
+            },
+            {
+                "Name": "Open to disease specific research and clinical care",
+                "Key": "open_to_disease_specific",
+                "Abbreviation": "DS-[XX]-CC",
+                "Description": "Use of the data must be related to a disease"
+            }
+        ],
+        "registerDetailItems": [
+            {
+                "key": "first_name",
+                "description": "First Name"
+            },
+            {
+                "key": "last_name",
+                "description": "Last Name"
+            },
+            {
+                "key": "age",
+                "description": "Age"
+            },
+            {
+                "key": "email",
+                "description": "E-mail"
+            },
+            {
+                "key": "institution",
+                "description": "Institution"
+            },
+            {
+                "key": "country",
+                "description": "Country"
+            },
+            {
+                "key": "password",
+                "description": "Password"
+            },
+            {
+                "key": "gender",
+                "description": "Gender"
+            }
+        ],
+        "purposeStatementItems": [
+            "For methods development",
+            "For reference or control material",
+            "For populations research",
+            "For ancestry research",
+            "For health and biomedical research"
+        ],
+        "purposeStatementItemsPro": [
+            {
+                "Name": "Research purpose",
+                "Key": "general_research_purpose",
+                "Abbreviation": "GRU",
+                "Subcategories": [
+                    {
+                        "Name": "methods development",
+                        "Key": "use_for_methods_development",
+                        "Abbreviation": "NMDS",
+                        "Description": "Use for methods development"
+                    },
+                    {
+                        "Name": "reference or control material",
+                        "Key": "use_for_reference_or_control_material",
+                        "Abbreviation": "RS-XX",
+                        "Description": "Use for reference or control material"
+                    },
+                    {
+                        "Name": "research concerning populations",
+                        "Key": "use_for_research_concerning_populations",
+                        "Abbreviation": "PO",
+                        "Description": "Use for research concerning populations"
+                    },
+                    {
+                        "Name": "research ancestry",
+                        "Key": "use_for_research_ancestry",
+                        "Abbreviation": "ANS",
+                        "Description": "Use for research ancestry"
+                    },
+                    {
+                        "Name": "biomedical research",
+                        "Key": "use_for_biomedical_research",
+                        "Abbreviation": "HMB",
+                        "Description": "Use for biomedical research"
+                    }
+                ]
+            },
+            {
+                "Name": "Health, Medical or Biomedical (HMB) research purpose",
+                "Key": "HMB_research_purpose",
+                "Abbreviation": "HMB",
+                "Subcategories": [
+                    {
+                        "Name": "research concerning fundamental biology",
+                        "Key": "use_for_research_concerning_fundamental_biology",
+                        "Abbreviation": "FB",
+                        "Description": "use for research concerning fundamental biology"
+                    },
+                    {
+                        "Name": "research concerning genetics",
+                        "Key": "use_for_research_concerning_genetics",
+                        "Abbreviation": "GSO",
+                        "Description": "Use for research concerning genetics"
+                    },
+                    {
+                        "Name": "research concerning drug development",
+                        "Key": "use_for_research_concerning_drug_development",
+                        "Abbreviation": "DD",
+                        "Description": "Use for research concerning drug development"
+                    },
+                    {
+                        "Name": "research concerning any disease",
+                        "Key": "use_for_research_concerning_any_disease",
+                        "Abbreviation": "DS-XX",
+                        "Description": "Use for research concerning any disease"
+                    },
+                    {
+                        "Name": "research concerning age categories",
+                        "Key": "use_for_research_concerning_age_categories",
+                        "Abbreviation": "AGE",
+                        "Description": "Use for research concerning age categories"
+                    },
+                    {
+                        "Name": "research concerning gender categories",
+                        "Key": "use_for_research_concerning_gender_categories",
+                        "Abbreviation": "GEN",
+                        "Description": "Use for research concerning gender categories"
+                    }
+                ]
+            },
+            {
+                "Name": "Clinical purpose",
+                "Key": "clinical_purpose",
+                "Abbreviation": "CC",
+                "Subcategories": [
+                    {
+                        "Name": "decision support",
+                        "Key": "use_for_decision_support",
+                        "Abbreviation": "DSO",
+                        "Description": "Use for decision support"
+                    },
+                    {
+                        "Name": "disease support",
+                        "Key": "use_for_disease_support",
+                        "Abbreviation": "DS",
+                        "Description": "Use for disease support"
+                    }
+                ]
+            }
+        ]
+    }
+}

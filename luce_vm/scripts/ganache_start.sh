@@ -1,1 +1,0 @@
-ganache-cli -l 20000000000000 --mnemonic luce --db ~/.ganache_db --networkId 72 --host 0.0.0.0 --accounts 3 --defaultBalanceEther 1000000
