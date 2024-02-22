@@ -23,6 +23,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend/src:/app/backend/src
+      - ./backend/scripts:/app/backend/scripts
     environment:
       # PostgreSQL config
       - DJANGO_USE_PSQL=true

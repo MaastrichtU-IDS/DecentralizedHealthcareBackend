@@ -79,6 +79,7 @@ post-install-commands = [
 [tool.hatch.envs.default.scripts]
 dev = [
     "python src/luce/manage.py migrate",
+    "python scripts/init_luce_registry.py",
     "python src/luce/manage.py runserver localhost:8000 {args}",
 ]
 test = "python src/luce/manage.py test {args}"

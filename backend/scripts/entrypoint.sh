@@ -40,12 +40,13 @@ python /app/src/luce/manage.py migrate
 # echo "provider@luce.com   | provider"
 # echo "requester@luce.com  | requester"
 
+# python /app/scripts/init_luce_registry.py
+
+
 echo "🚀 Access the LUCE backend API on http://localhost:8000"
 
 
 # Start Django on port 8000
 python /app/src/luce/manage.py runserver 0.0.0.0:8000
-
-
 
 # curl -H "Authorization: XXX" -H "Content-Type: application/json" -X POST http://localhost8000/admin/deployRegistry

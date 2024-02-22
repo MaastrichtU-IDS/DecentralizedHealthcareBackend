@@ -107,7 +107,6 @@ class PlonkVerifierContract(models.Model):
         super().save(*args, **kwargs)
 
     def deploy(self):
-        from brownie import accounts
         from brownie.project.BrownieProject import PlonkVerifier
 
         # 1. deploy contract
@@ -125,7 +124,6 @@ class LuceRegistryContract(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def deploy(self):
-        # from brownie import accounts
         from brownie.project.BrownieProject import LUCERegistry
 
         # account[0] as the administrator
@@ -394,7 +392,7 @@ class DataContract(models.Model):
         print("proof\n" + str(proof['public_signals']))
         commitment = {
             "public_signals": proof['public_signals']
-            
+
         }
 
         contract = LuceMain.deploy(verifier_address,
