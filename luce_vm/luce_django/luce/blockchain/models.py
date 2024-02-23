@@ -1,3 +1,4 @@
+from privacy.snarkjs_service import SnarkjsService
 from django.db import models
 from accounts.models import User
 from brownie import network, project, accounts
@@ -13,7 +14,6 @@ logger = set_logger(__file__)
 # So just import them in the functions where they are used.
 # from brownie.project.BrownieProject import *
 
-from privacy.snarkjs_service import SnarkjsService
 
 snarkjs_service = SnarkjsService()
 
@@ -192,9 +192,12 @@ class ConsentContract(models.Model):
 
     def get_a_new_account(self, amount=1e15):
         disposable_address_service = DisposableAddressService()
-        user_account = accounts.at(self.user.ethereum_public_key)
+        user_account = accounts.add(self.user.ethereum_private_key)
+
+        print("user_account: " + str(user_account))
         new_account = disposable_address_service.get_a_new_address_with_balance(
             sender=user_account, amount=amount)
+        print("new_account: " + str(new_account))
 
         return new_account
 
@@ -249,6 +252,7 @@ class ConsentContract(models.Model):
         from brownie.project.BrownieProject import ConsentCode
         new_account = self.get_a_new_account(amount=1e17)
 
+        logger.info("new_account: " + str(new_account))
         print("new_account: " + str(new_account))
         print("new_account: " + str(new_account))
         print("balance: " + str(new_account.balance()))
@@ -348,7 +352,7 @@ class DataContract(models.Model):
 
     def get_a_new_account(self):
         disposable_address_service = DisposableAddressService()
-        user_account = accounts.at(self.user.ethereum_public_key)
+        user_account = accounts.add(self.user.ethereum_private_key)
         new_account = disposable_address_service.get_a_new_address_with_balance(
             sender=user_account, amount=1e17)
 
@@ -386,20 +390,24 @@ class DataContract(models.Model):
         self.require_verifier_deployed()
         verifier_address = PlonkVerifierContract.objects.get(pk=1).address
         # print(verifier_address)
+        logger.info("verifier_address: ")
+        logger.info(verifier_address)
 
         # commitment = self.get_commitment("hello")
         proof = snarkjs_service.generate_proof("hello")
 
-        # print("proof\n" + str(proof))
-        print("proof\n" + str(proof['public_signals']))
+        logger.info("proof")
+        logger.info(str(proof['public_signals']))
+
         commitment = {
             "public_signals": proof['public_signals']
-            
+
         }
 
-        contract = LuceMain.deploy(verifier_address,
-                                   commitment['public_signals'],
-                                   {'from': new_account})
+        contract = LuceMain.deploy({'from': new_account})
+
+        logger.info("contract")
+        logger.info(contract)
 
         self.contract_address = contract.address
         self.save()

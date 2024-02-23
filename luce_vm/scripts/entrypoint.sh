@@ -51,7 +51,7 @@ echo "👤 Demo accounts:"
 echo "provider@luce.com   | provider"
 echo "requester@luce.com  | requester"
 
-echo "🚀 Access the LUCE user interface on http://localhost:8000"
+echo "🚀 Access the LUCE user interface on http://localhost:8001"
 
 
 # Start Django on port 8000

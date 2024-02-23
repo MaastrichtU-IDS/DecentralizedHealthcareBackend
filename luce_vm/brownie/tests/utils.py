@@ -4,7 +4,7 @@ import json
 
 def get_commitment(secret):
     http = urllib3.PoolManager()
-    snark_service_url = "http://127.0.0.1:8888/compute_commitment"
+    snark_service_url = "http://zkp_service:8888/compute_commitment"
     body_json = json.dumps({"secret": secret}).encode('utf-8')
     r = http.request('POST',
                      snark_service_url,

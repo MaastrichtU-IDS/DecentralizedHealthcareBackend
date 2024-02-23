@@ -40,13 +40,16 @@ class UploadDataView(APIView):
 
     def post(self, request, format=None):
         link = request.data.get("link", False)
+        # print(request.data)
+        logger.info(request.data)
         if not link:
             return self.handle_error("link field is required", "Link field is invalid (empty?)")
 
         if not self.is_luce_registry_deployed():
             return self.handle_error("luce registry was not deployed", "Luce registry was not deployed!")
 
-        contract_serializer, restriction_serializer = self.initialize_serializers(request)
+        contract_serializer, restriction_serializer = self.initialize_serializers(
+            request)
 
         if not restriction_serializer.is_valid():
             return self.handle_serializer_error(restriction_serializer)
@@ -74,6 +77,7 @@ class UploadDataView(APIView):
         disposable_address_service = DisposableAddressService()
         return disposable_address_service.get_a_new_address_with_balance(
             user_account, amount)
+
     def handle_error(self, user_message, log_message):
         logger.error(log_message)
         response = custom_exeptions.custom_message(user_message)
@@ -121,14 +125,16 @@ class UploadDataView(APIView):
         tx_receipt3 = self.set_registry_address(datacontract, registry_address)
         if isinstance(tx_receipt3, list):
             datacontract.delete()
-            raise Exception("Error setting registry address for Dataset smart contract")
+            raise Exception(
+                "Error setting registry address for Dataset smart contract")
         tx_receipts.append(tx_receipt3)
 
         # Set consent address
         tx_receipt4 = self.set_consent_address(datacontract)
         if isinstance(tx_receipt4, list):
             datacontract.delete()
-            raise Exception("Error setting consent address for Dataset smart contract")
+            raise Exception(
+                "Error setting consent address for Dataset smart contract")
         tx_receipts.append(tx_receipt4)
 
         # Publish data
@@ -192,6 +198,7 @@ class UploadDataView(APIView):
         response["data"]["contracts"] = serializer.data
         response["data"]["transaction receipts"] = tx_receipts
         return response
+
 
 class RequestDatasetView(APIView):
     """

@@ -8,6 +8,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.models import Token
 
 from utils.utils import get_initial_response, set_logger
+from utils import custom_exeptions
 
 from .serializers import UserSerializer, PublicUserSerializer
 from rest_framework.response import Response
@@ -21,6 +22,7 @@ class UserRegistration(APIView):
     """
     Register a new user
     """
+
     def post(self, request, format=None):
 
         # Create an account for fake user

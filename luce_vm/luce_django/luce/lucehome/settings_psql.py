@@ -3,7 +3,7 @@
 # This will override the DATABASES variable in settings.py
 
 # Use Postgresql Database:
-# connect to database: psql -U vagrant --port 5432 -d lucedb
+# connect to database: psql -U luce --port 5432 -d lucedb
 import os
 if os.environ.get('SIMULATION') == 'true':
     DATABASES = {

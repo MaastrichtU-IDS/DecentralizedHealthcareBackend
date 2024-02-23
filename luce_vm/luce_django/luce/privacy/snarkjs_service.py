@@ -39,7 +39,7 @@ class SnarkjsService:
         proof = service.generate_proof(secret='my_secret')
     """
 
-    def __init__(self, base_url="http://localhost:8888", endpoint="/compute_commitment"):
+    def __init__(self, base_url="http://zkp_service:8888", endpoint="/compute_commitment"):
         self.base_url = base_url
         self.endpoint = endpoint
 
