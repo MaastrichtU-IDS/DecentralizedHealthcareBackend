@@ -364,10 +364,14 @@ class GetLink(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, format=None):
+        logger.info(request.data)
         estimate = request.data.pop("estimate", False)
         access_time = request.data.pop("access_time", 1000)
         purpose_code = request.data.pop("purpose_code", 1)
-        dataset_address = request.data.pop("dataset_address", False)
+        dataset_addresses = request.data.pop("dataset_addresses", False)
+
+        # Get the first dataset address for test
+        dataset_address = dataset_addresses[0]
         logger.info(dataset_address)
 
         if not DataContract.objects.filter(
@@ -427,7 +431,8 @@ class SearchContract(APIView):
             response = custom_exeptions.validation_exeption(RP_serializer)
             return Response(response["body"], response["status"])
         researchPurpose = RP_serializer.save()
-        print(researchPurpose)
+        # print(researchPurpose)
+        logger.info(researchPurpose)
 
         final_result = []
         contracts = DataContract.objects.filter(

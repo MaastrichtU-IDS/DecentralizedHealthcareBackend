@@ -519,6 +519,72 @@ class DataContract(models.Model):
 
         # return 0
 
+    # def checkAccess(self, user, researchpurpose):
+    #     hasAccess = web3.checkAccess(self, user, researchpurpose)
+    #     return hasAccess
+
     def checkAccess(self, user, researchpurpose):
-        hasAccess = web3.checkAccess(self, user, researchpurpose)
-        return hasAccess
+        from brownie.project.BrownieProject import LuceMain, ConsentCode
+        new_account = self.get_a_new_account()
+        transaction_dict = {'from': new_account}
+
+        # 1. get restrictions from dataset
+        restrictions = self.consent_contract.restrictions
+
+        # 2. get all restrictions and purposes
+        all_restrictions_and_purposes = self.getAllRestrictionsAndPurposes(
+            restrictions, researchpurpose)
+
+        consent_contract_address = self.consent_contract.contract_address
+        consent_contract = ConsentCode.at(consent_contract_address)
+
+        access_granted = consent_contract.CheckAccess(
+            all_restrictions_and_purposes, transaction_dict
+        )
+
+        return access_granted
+
+    def getAllRestrictionsAndPurposes(self, restrictions, researchpurpose):
+        final = [False for x in range(0, 49)]
+
+        restrictions_ids = {
+            0: "no_restrictions",
+            1: "open_to_general_research_and_clinical_care",
+            16: "open_to_population_and_ancestry_research",
+            19: "open_to_disease_specific",
+            8: "open_to_HMB_research"
+        }
+        generalResearchPurpose_ids = {
+            2: "use_for_methods_development",
+            3: "use_for_reference_or_control_material",
+            17: "use_for_research_concerning_populations",
+            18: "use_for_research_ancestry",
+            4: "use_for_biomedical_research"
+        }
+        hmbPurpose_ids = {
+            9: "use_for_research_concerning_fundamental_biology",
+            10: "use_for_research_concerning_genetics",
+            11: "use_for_research_concerning_drug_development",
+            12: "use_for_research_concerning_any_disease",
+            13: "use_for_research_concerning_age_categories",
+            14: "use_for_research_concerning_gender_categories"
+        }
+
+        for id in restrictions_ids.keys():
+            final[id] = getattr(restrictions, restrictions_ids[id]) if hasattr(
+                restrictions, restrictions_ids[id]) else False
+
+        for id in generalResearchPurpose_ids.keys():
+            final[id] = getattr(researchpurpose.general_research_purpose,
+                                generalResearchPurpose_ids[id]) if hasattr(
+                                    researchpurpose.general_research_purpose,
+                                    generalResearchPurpose_ids[id]) else False
+
+        for id in hmbPurpose_ids.keys():
+            final[id] = getattr(researchpurpose.HMB_research_purpose,
+                                hmbPurpose_ids[id]) if hasattr(
+                                    researchpurpose.HMB_research_purpose,
+                                    hmbPurpose_ids[id]) else False
+        # for x in range(0,49):
+        # print(str(final[x])+" ["+str(x)+"]")
+        return final
