@@ -10,6 +10,22 @@ contract ConsentCode {
         dataProvider = msg.sender;
     }
 
+    struct BooleanItems {
+        bool ClinicalProfessionals;
+        bool AcademicProfessionals;
+        bool ReferenceOrControlMaterial;
+        bool MethodsDevelopment;
+        bool PopulationsResearch;
+        bool AncestryResearch;
+        bool FundamentalBioResearch;
+        bool DrugDevelopmentResearch;
+        bool AgeCategoriesResearch;
+        bool GenderCategoriesResearch;
+        bool ProfitPurpose;
+        bool ProfitMakingProfessionals;
+        bool FormalApprovalRequired;
+    }
+
     // MARK: - Terms
     struct Terms {
         uint16 Simple_Items;
@@ -48,7 +64,7 @@ contract ConsentCode {
     uint8 role_requester = 2;
     uint256[] Country_Group_Code_Data;
     uint32[] Country_Group_Code_Index;
-    uint8[][] Country_Group_baseline;
+    // uint8[][] Country_Group_baseline;
 
     uint16 Area_Simple_Version = 0;
 
@@ -281,6 +297,12 @@ contract ConsentCode {
         );
     }
 
+    function test() public pure returns (uint64) {
+        uint64 newVariableName = 1111111111111;
+        return newVariableName;
+    }
+
+    // MARK: - CheckBooleanItems
     function CheckBooleanItems(
         address _provider_address,
         address _requester_address
@@ -393,7 +415,9 @@ contract ConsentCode {
             uint8 requester_code = requester_terms.Area_Group_List_Baseline[
                 index_requester
             ];
-            if (provider_terms.Area_Group_Map_Baseline[requester_code] == false) {
+            if (
+                provider_terms.Area_Group_Map_Baseline[requester_code] == false
+            ) {
                 return false;
             }
         }
@@ -498,6 +522,7 @@ contract ConsentCode {
         return true;
     }
 
+    // MARK: - AccessData
     function AccessData(
         address _provider_address,
         address _requester_address

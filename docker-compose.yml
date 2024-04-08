@@ -4,7 +4,7 @@ services:
   ganache_db:
     image: trufflesuite/ganache:v7.7.3
     restart: unless-stopped
-    command:   --chain.chainId 72 -h 0.0.0.0 --accounts 30 -e 100000000000000000
+    command: --accounts 50 -e 10000000000000000000
     ports:
       - 8545:8545
     environment:
