@@ -297,9 +297,9 @@ contract ConsentCode {
         );
     }
 
-    function test() public pure returns (uint64) {
-        uint64 newVariableName = 1111111111111;
-        return newVariableName;
+    function test() public pure returns (bool) {
+        // uint64 newVariableName = 1111111111111;
+        return true;
     }
 
     // MARK: - CheckBooleanItems
@@ -527,21 +527,22 @@ contract ConsentCode {
         address _provider_address,
         address _requester_address
     ) public view returns (uint8) {
+        uint8 result = 0;
         if (CheckAreaBaseline(_provider_address, _requester_address) == false) {
-            return 1;
+            result += 1;
         }
 
         if (CheckDisease(_provider_address, _requester_address) == false) {
-            return 2;
+            result += 2;
         }
 
         if (CheckDate(_provider_address, _requester_address) == false) {
-            return 3;
+            result += 4;
         }
 
         if (CheckBooleanItems(_provider_address, _requester_address) == false) {
-            return 4;
+            result += 8;
         }
-        return 0;
+        return result;
     }
 }
