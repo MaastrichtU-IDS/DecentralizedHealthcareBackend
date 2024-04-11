@@ -461,6 +461,8 @@ class LuceRegistryView(APIView):
         estimate = request.data.get('estimate', False)
         user = request.user
 
+        print("DEPLOYING LUCE REGISTRY")
+
         # Deploy verifier
         from blockchain.models import PlonkVerifierContract
         if not PlonkVerifierContract.objects.filter(pk=1).exists():
@@ -480,6 +482,7 @@ class LuceRegistryView(APIView):
         if LuceRegistry.objects.filter(pk=1).exists():
             registry = LuceRegistry.objects.get(pk=1)
         else:
+            print("CREATE NEW REGISTRY")
             registry = LuceRegistry.objects.create(pk=1, user=user)
 
         registry.user = user
@@ -488,6 +491,7 @@ class LuceRegistryView(APIView):
             response = custom_exeptions.blockchain_exception(tx_receipt)
             return Response(response["body"], response["status"])
 
+        print("tx_receipt", tx_receipt)
         registry.save()
         serializer = RegestryContractSerializer(registry)
 

@@ -3,11 +3,31 @@ services:
   webapp:
     build:
       context: ./frontend
-    depends_on:
-      - luce_server
+    # depends_on:
+    #   - luce_server
     ports:
       - 8001:80
     restart: unless-stopped
+
+  fastapi:
+    build: ./fastapi
+    restart: unless-stopped
+    depends_on:
+      - postgres_db
+      - ganache_db
+    entrypoint: uvicorn src.luce.main:app --host 0.0.0.0 --port 80 --reload
+    ports:
+      - 8000:80
+    # environment:
+    #   - SQL_URL=mysql://dsri-user:${DB_PASSWORD-password}@mysql:3306/dsri-db
+    #   - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN-xoxb}
+    #   - SLACK_CHANNEL=${SLACK_CHANNEL-UQL6BCQJH}
+    #   - CLUSTER_USER=${CLUSTER_USER-Vincent.Emonet}
+    #   - CLUSTER_PASSWORD=${CLUSTER_PASSWORD-password}
+    #   - API_PASSWORD=${API_PASSWORD-password}
+    volumes:
+      - ./fastapi:/app
+
 
   luce_server:
     build:
@@ -33,8 +53,8 @@ services:
       # Ganache config
       - GANACHE_PORT=8545
       # TODO: should we define an admin user to create at start?
-      # - PROVIDER_USER=provider@luce.com
-      # - PROVIDER_PASSWORD=provider
+      - ADMIN_EMAIL=vincent.emonet@gmail.com
+      - ADMIN_PASSWORD=password
       # Nginx reverse proxy
       - VIRTUAL_PORT=8000
       - VIRTUAL_HOST=luce.137.120.31.102.nip.io
@@ -67,8 +87,8 @@ services:
     restart: unless-stopped
     depends_on:
       - ganache_db
-    # ports:
-    #   - 5432:5432
+    ports:
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=luce123456
       - POSTGRES_USER=luce
@@ -85,6 +105,32 @@ services:
       - VIRTUAL_PORT=8888
       - VIRTUAL_HOST=zkp.luce.137.120.31.102.nip.io
       - LETSENCRYPT_HOST=zkp.luce.137.120.31.102.nip.io
+
+  pgadmin:
+    depends_on:
+      - postgres_db
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "vincent.emonet@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "password"
+    ports:
+      - "16543:80"
+
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin:latest
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - postgres_db
+  #   ports:
+  #     - 8083:80
+  #   environment:
+  #     - PMA_PASSWORD=${DB_PASSWORD-luce123456}
+  #     - MYSQL_ROOT_PASSWORD=${DB_PASSWORD-luce123456}
+  #     - MYSQL_PASSWORD=${DB_PASSWORD-luce123456}
+  #     - PMA_HOST=postgres_db:5432
+
+
 
   # jupyterlab:
   #   image: jupyter/base-notebook

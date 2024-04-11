@@ -104,8 +104,14 @@ For how to develop in LUCE, please refer to: [LUCE development tips](./manual/LU
 Install development dependencies:
 
 ```bash
-pip install hatch
+pip install hatch uv
 npm install -g expo-cli
+```
+
+Compile `requirements.txt` from `pyproject.toml`:
+
+```bash
+uv pip compile pyproject.toml -o requirements.txt
 ```
 
 1. Start the database and blockchain in docker for development:

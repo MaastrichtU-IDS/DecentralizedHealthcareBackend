@@ -1,0 +1,175 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+version = "0.1.0"
+requires-python = ">=3.9"
+name = "luce"
+description = "LUCE: A Blockchain-based data sharing platform for monitoring data license accountability and compliance."
+license = "MIT"
+authors = [
+    { name = "Vincent Emonet", email = "vincent.emonet@gmail.com" },
+    { name = "Vikas Jaiman" },
+    { name = "Kun Li" },
+]
+keywords = [
+    "data sharing",
+    "blockchain",
+    "ethereum",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "uvicorn",
+    "sqlmodel",
+    "pydantic >=2.0.0",
+    "pydantic-settings",
+    "psycopg2-binary",
+    "pyyaml !=6.0.0,!=5.4.0,!=5.4.1", # https://github.com/yaml/pyyaml/issues/724
+    "eth-brownie",
+    "matplotlib",
+    # "web3 <6.0.0",
+]
+
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "black",
+]
+dev = [
+    "pre-commit",
+    "ipykernel",
+    "pip-tools",
+    "uv",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend"
+Documentation = "https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend"
+History = "https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend/releases"
+Tracker = "https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend/issues"
+Source = "https://github.com/MaastrichtU-IDS/DecentralizedHealthcareBackend"
+
+
+# ENVIRONMENTS AND SCRIPTS
+[tool.hatch.envs.default]
+features = [
+    "test",
+    "dev",
+]
+post-install-commands = [
+    "brownie pm install OpenZeppelin/openzeppelin-contracts@4.8.0",
+    # "pre-commit install",
+]
+
+[tool.hatch.envs.default.scripts]
+dev = [
+    "python src/luce/manage.py migrate",
+    "python scripts/init_luce_registry.py",
+    "python src/luce/manage.py runserver localhost:8000 {args}",
+]
+test = "python src/luce/manage.py test {args}"
+cov = "test --cov src {args}"
+fmt = [
+    "black src",
+    "ruff src --fix",
+]
+check = [
+    "ruff src",
+    "black src --check",
+    "mypy src",
+]
+# compile = "pip-compile -o requirements.txt pyproject.toml"
+compile = "pip-compile pyproject.toml"
+all = [
+    "fmt",
+    "check",
+    "cov",
+]
+
+# TOOLS
+[tool.hatch.build.targets.wheel]
+packages = ["src/luce"]
+
+
+[tool.mypy]
+strict = true
+implicit_reexport = true
+follow_imports = "normal"
+ignore_missing_imports = true
+pretty = true
+show_column_numbers = true
+warn_no_return = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+# disallow_untyped_calls = false
+# disallow_untyped_defs = false
+# disallow_any_generics = false
+
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:httpx.*:"
+]
+
+[tool.black]
+color = true
+line-length = 120
+target-version = ['py37']
+skip-string-normalization = false
+
+
+# https://github.com/charliermarsh/ruff#supported-rules
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+select = [
+    "A",
+    "B",   # flake8-bugbear
+    "C",   # flake8-comprehensions
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    # "FBT", # flake8-boolean-trap
+    # "I",   # isort
+    "ICN",
+    "N",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "Q",
+    "RUF",
+    "S",
+    "SIM",
+    "T",
+    "TID",
+    "UP",
+    "W",  # pycodestyle warnings
+    "YTT",
+]
+
+ignore = [
+    "E501", # line too long
+    "B008", # do not perform function calls in argument defaults
+    "B006", # do not use mutable data structures for argument defaults
+    "C901", # too complex
+    "S101", # Use of `assert` detected
+    "T201", "T203", # remove print and pprint
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]

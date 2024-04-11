@@ -6,7 +6,8 @@ FROM python:3.9
 USER root
 WORKDIR /app
 
-ENV USE_TZ=False
+ENV USE_TZ=False \
+    PYTHONUNBUFFERED='1'
 
 RUN apt-get update && \
     apt-get install -y wget build-essential software-properties-common libssl-dev postgresql-client libpq-dev
