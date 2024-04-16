@@ -40,7 +40,7 @@ contract ConsentCode {
         uint16 Area_Simple_Version;
         // end binary
         // uint64 Area_Country_Group_Code_32;
-
+        bool allow_all_area;
         uint32[] Area_Country_Group_Code;
         // uint256[] Area_Country_Group_Code_Data;
         // uint32[] Area_Country_Group_Code_Index;
@@ -52,6 +52,7 @@ contract ConsentCode {
         // start desease
         mapping(uint8 => uint128) Disease_Map_Hierarchy;
         mapping(uint16 => bool) Disease_Map;
+        bool allow_all_disease;
         uint8[] Disease_Group_Code_Array;
         uint128[] Disease_Category_Code_Array;
         uint16[] Disease_Code_Array;
@@ -75,13 +76,25 @@ contract ConsentCode {
     mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
 
     //MARK: - UpdateAreaSimple
-    function UpdateAreaSimple(
+    function UpdateCountryGroupRelation(
         uint256[] memory _Country_Group_Code_Data,
         uint32[] memory _Country_Group_Code_Index
     ) public {
         Country_Group_Code_Data = _Country_Group_Code_Data;
         Country_Group_Code_Index = _Country_Group_Code_Index;
         Area_Simple_Version += 1;
+    }
+
+    function DisplayCountryGroupRelation()
+        public
+        view
+        returns (uint256[] memory, uint32[] memory, uint16)
+    {
+        return (
+            Country_Group_Code_Data,
+            Country_Group_Code_Index,
+            Area_Simple_Version
+        );
     }
 
     // MARK: - UpdateAreaBaseline
@@ -166,13 +179,18 @@ contract ConsentCode {
     function UploadAreaSimple(
         uint8 role,
         address _address,
+        bool allow_all,
         uint16 Group_Code,
         uint256 Country_Code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        terms.Area_Group_Simple = Group_Code;
-        terms.Area_Country_Simple = Country_Code;
-        terms.Area_Simple_Version = Area_Simple_Version;
+        if (allow_all) {
+            terms.allow_all_area = true;
+        } else {
+            terms.Area_Group_Simple = Group_Code;
+            terms.Area_Country_Simple = Country_Code;
+            terms.Area_Simple_Version = Area_Simple_Version;
+        }
     }
 
     // MARK: - UploadAreaOnly
@@ -234,6 +252,7 @@ contract ConsentCode {
     function UploadDiseaseBinary(
         uint8 role,
         address _address,
+        bool allow_all,
         uint8[] memory Disease_Group_Code_Array,
         uint128[] memory Disease_Category_Code_Array
     ) public {
@@ -245,6 +264,10 @@ contract ConsentCode {
             revert(
                 "UploadDiseaseCode: Disease_Group_Code_Array and Disease_Category_Code_Array must have the same length"
             );
+        }
+        if (allow_all) {
+            terms.allow_all_disease = true;
+            return;
         }
         if (role == role_provider) {
             for (uint8 i = 0; i < Disease_Group_Code_Array.length; i++) {
@@ -331,6 +354,12 @@ contract ConsentCode {
         }
         Terms storage requester_terms = requesterMapping[_requester_address];
         Terms storage provider_terms = providerMapping[_provider_address];
+        if (provider_terms.allow_all_area == true) {
+            return true;
+        }
+        if (requester_terms.allow_all_area == true) {
+            return false;
+        }
 
         uint64 provider_group = provider_terms.Area_Group_Simple;
         uint64 requester_group = requester_terms.Area_Group_Simple;
@@ -364,8 +393,6 @@ contract ConsentCode {
     }
 
     // MARK: - CheckAreaBaseline
-    // tags checkArea
-    //   === Initialization ===
     function CheckAreaBaseline(
         address _provider,
         address _requester
@@ -453,6 +480,12 @@ contract ConsentCode {
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
+        if (providerMapping[_provider_address].allow_all_disease == true) {
+            return true;
+        }
+        if (requesterMapping[_requester_address].allow_all_disease == true) {
+            return false;
+        }
         for (
             uint index_requester = 0;
             index_requester <
@@ -528,11 +561,14 @@ contract ConsentCode {
         address _requester_address
     ) public view returns (uint8) {
         uint8 result = 0;
-        if (CheckAreaBaseline(_provider_address, _requester_address) == false) {
+        if (CheckAreaSimple(_provider_address, _requester_address) == false) {
             result += 1;
         }
 
-        if (CheckDisease(_provider_address, _requester_address) == false) {
+        if (
+            CheckDiseaseHierarchy(_provider_address, _requester_address) ==
+            false
+        ) {
             result += 2;
         }
 
