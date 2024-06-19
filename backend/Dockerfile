@@ -1,5 +1,5 @@
-FROM python:3.9
-# FROM --platform=linux/amd64 python:3.9
+# FROM python:3.9
+FROM --platform=linux/amd64 python:3.9
 # 3.10: 6.15.0
 # 3.9: 5.31.3
 

@@ -1,4 +1,4 @@
-version: "3"
+# version: "3"
 services:
   webapp:
     build:
@@ -12,8 +12,7 @@ services:
   luce_server:
     build:
       context: ./backend
-      # NOTE: required when building on Mac M1/M2
-      # platform: linux/amd64
+      dockerfile: Dockerfile
     # entrypoint: sleep infinity
     depends_on:
       - postgres_db
@@ -39,7 +38,6 @@ services:
       - VIRTUAL_PORT=8000
       - VIRTUAL_HOST=luce.137.120.31.102.nip.io
       - LETSENCRYPT_HOST=luce.137.120.31.102.nip.io
-
 
   ganache_db:
     image: trufflesuite/ganache:v7.7.3
@@ -85,24 +83,3 @@ services:
       - VIRTUAL_PORT=8888
       - VIRTUAL_HOST=zkp.luce.137.120.31.102.nip.io
       - LETSENCRYPT_HOST=zkp.luce.137.120.31.102.nip.io
-
-  # jupyterlab:
-  #   image: jupyter/base-notebook
-  #   restart: unless-stopped
-  #   user: root
-  #   ports:
-  #     - 8888:8888
-  #   volumes:
-  #     - ./notebooks:/home/jovyan/work
-  #   environment:
-  #     - JUPYTER_TOKEN=password
-  #     - GRANT_SUDO=yes
-  #     - JUPYTER_ENABLE_LAB=yes
-
-  # ethereum-node:
-  #   image: ethereum/client-go
-  #   ports:
-  #     - "30303:30303"
-  #   command: "--rpc --rpcaddr 0.0.0.0"
-  #   volumes:
-  #     - ./data/ethereum:/root/.ethereum

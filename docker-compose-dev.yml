@@ -1,4 +1,4 @@
-version: "3"
+# version: "3"
 services:
   webapp:
     build:
@@ -8,6 +8,36 @@ services:
     ports:
       - 8001:80
     restart: unless-stopped
+
+  luce_server:
+    build:
+      context: ./backend
+      dockerfile: .Dockerfile
+    # entrypoint: sleep infinity
+    depends_on:
+      - postgres_db
+      - ganache_db
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./backend/scripts:/app/backend/scripts
+    environment:
+      # PostgreSQL config
+      - DJANGO_USE_PSQL=true
+      - POSTGRES_PASSWORD=luce123456
+      - POSTGRES_USER=luce
+      - POSTGRES_DB=lucedb
+      # Ganache config
+      - GANACHE_PORT=8545
+      # TODO: should we define an admin user to create at start?
+      # - PROVIDER_USER=provider@luce.com
+      # - PROVIDER_PASSWORD=provider
+      # Nginx reverse proxy
+      - VIRTUAL_PORT=8000
+      - VIRTUAL_HOST=luce.137.120.31.102.nip.io
+      - LETSENCRYPT_HOST=luce.137.120.31.102.nip.io
 
   ganache_db:
     image: trufflesuite/ganache:v7.7.3
@@ -53,24 +83,3 @@ services:
       - VIRTUAL_PORT=8888
       - VIRTUAL_HOST=zkp.luce.137.120.31.102.nip.io
       - LETSENCRYPT_HOST=zkp.luce.137.120.31.102.nip.io
-
-  # jupyterlab:
-  #   image: jupyter/base-notebook
-  #   restart: unless-stopped
-  #   user: root
-  #   ports:
-  #     - 8888:8888
-  #   volumes:
-  #     - ./notebooks:/home/jovyan/work
-  #   environment:
-  #     - JUPYTER_TOKEN=password
-  #     - GRANT_SUDO=yes
-  #     - JUPYTER_ENABLE_LAB=yes
-
-  # ethereum-node:
-  #   image: ethereum/client-go
-  #   ports:
-  #     - "30303:30303"
-  #   command: "--rpc --rpcaddr 0.0.0.0"
-  #   volumes:
-  #     - ./data/ethereum:/root/.ethereum

@@ -39,19 +39,6 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/docs/', permanent=True)),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
-    # path('user/register/', UserRegistration.as_view()),
-    # path('user/<int:id>/', PublicUserInfoView.as_view()),
-    # path('user/authenticated/', PrivateUserInfoView.as_view()),
-    # path('user/authenticated/update/', UserUpdateView.as_view()),
-    # path('user/all/', UserListView.as_view()),
-    # path('user/login/', ObtainAuthToken.as_view()),
-    # path('contract/all/', ContractsListView.as_view()),
-    # path('contract/dataUpload/', UploadDataView.as_view()),
-    # path('contract/requestAccess/', RequestDatasetView.as_view()),
-    # path('contract/getLink/', GetLink.as_view()),
-    # path('contract/<int:id>/', RetrieveContractByUserIDView.as_view()),
-    # path('contract/search/', SearchContract.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
