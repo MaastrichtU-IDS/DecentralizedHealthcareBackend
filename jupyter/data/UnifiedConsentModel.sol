@@ -75,7 +75,7 @@ contract ConsentCode {
     mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
     mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
 
-    //MARK: - UpdateAreaSimple
+    //MARK - UpdateAreaSimple
     function UpdateCountryGroupRelation(
         uint256[] memory _Country_Group_Code_Data,
         uint32[] memory _Country_Group_Code_Index
@@ -339,8 +339,8 @@ contract ConsentCode {
         return false;
     }
 
-    // MARK: - CheckAreaSimple
-    function CheckAreaSimple(
+    // MARK: - CheckAreaHierarchy(_provider_address, _requester_address);
+    function CheckAreaHierarchy(
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
@@ -561,7 +561,7 @@ contract ConsentCode {
         address _requester_address
     ) public view returns (uint8) {
         uint8 result = 0;
-        if (CheckAreaSimple(_provider_address, _requester_address) == false) {
+        if (CheckAreaHierarchy(_provider_address, _requester_address) == false) {
             result += 1;
         }
 
