@@ -28,14 +28,14 @@ contract ConsentCode {
 
     // MARK: - Terms
     struct Terms {
-        uint16 Simple_Items;
+        uint32 Simple_Items;
         uint16 Start_Year;
         uint16 Start_Month;
         uint16 Start_Day;
         uint16 Months;
         // start area
         // start binary
-        uint64 Area_Group_Simple;
+        uint32 Area_Group_Simple;
         uint256 Area_Country_Simple;
         uint16 Area_Simple_Version;
         // end binary
@@ -133,7 +133,7 @@ contract ConsentCode {
     function UploadSimpleItems(
         uint8 role,
         address _address,
-        uint16 Simple_Items
+        uint32 Simple_Items
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         terms.Simple_Items = Simple_Items;
@@ -142,7 +142,7 @@ contract ConsentCode {
     function DisplaySimpleItems(
         uint8 role,
         address _address
-    ) public view returns (uint16) {
+    ) public view returns (uint32) {
         Terms storage terms = TermsByRole(role, _address);
         return terms.Simple_Items;
     }
@@ -180,7 +180,7 @@ contract ConsentCode {
         uint8 role,
         address _address,
         bool allow_all,
-        uint16 Group_Code,
+        uint32 Group_Code,
         uint256 Country_Code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
@@ -197,9 +197,9 @@ contract ConsentCode {
     function UploadAreaOnly(
         uint8 role,
         address _address,
-        uint64 Group_Code,
+        uint32 Group_Code,
         uint256 Country_Code,
-        uint64 country_group_code
+        uint32 country_group_code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         terms.Area_Group_Simple = Group_Code;
@@ -330,8 +330,8 @@ contract ConsentCode {
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
-        uint16 providerData = providerMapping[_provider_address].Simple_Items;
-        uint16 requesterData = requesterMapping[_requester_address]
+        uint32 providerData = providerMapping[_provider_address].Simple_Items;
+        uint32 requesterData = requesterMapping[_requester_address]
             .Simple_Items;
         if ((requesterData & providerData) == requesterData) {
             return true;
