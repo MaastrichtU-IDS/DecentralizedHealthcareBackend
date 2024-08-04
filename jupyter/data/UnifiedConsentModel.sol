@@ -30,12 +30,12 @@ contract ConsentCode {
     struct Terms {
         uint32 Simple_Items;
         uint16 Start_Year;
-        uint16 Start_Month;
+        uint8 Start_Month;
         uint16 Start_Day;
-        uint16 Months;
+        uint8 Months;
         // start area
         // start binary
-        uint32 Area_Group_Simple;
+        uint16 Area_Group_Simple;
         uint256 Area_Country_Simple;
         uint16 Area_Simple_Version;
         // end binary
@@ -56,6 +56,17 @@ contract ConsentCode {
         uint8[] Disease_Group_Code_Array;
         uint128[] Disease_Category_Code_Array;
         uint16[] Disease_Code_Array;
+
+    }
+
+    struct Requester {
+        address requester_address;
+        Terms terms;
+    }
+
+    struct Provider {
+        address provider_address;
+        Terms terms;
     }
 
     mapping(address => Terms) providerMapping; // data subject
@@ -151,9 +162,9 @@ contract ConsentCode {
         uint8 role,
         address _address,
         uint16 Start_Year,
-        uint16 Start_Month,
+        uint8 Start_Month,
         uint16 Start_Day,
-        uint16 Months
+        uint8 Months
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         terms.Start_Year = Start_Year;
@@ -174,13 +185,13 @@ contract ConsentCode {
             terms.Months
         );
     }
-
+  
     // MARK: - UploadAreaSimple
     function UploadAreaSimple(
         uint8 role,
         address _address,
         bool allow_all,
-        uint32 Group_Code,
+        uint16 Group_Code,
         uint256 Country_Code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
@@ -197,9 +208,9 @@ contract ConsentCode {
     function UploadAreaOnly(
         uint8 role,
         address _address,
-        uint32 Group_Code,
+        uint16 Group_Code,
         uint256 Country_Code,
-        uint32 country_group_code
+        uint16 country_group_code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         terms.Area_Group_Simple = Group_Code;
@@ -270,6 +281,9 @@ contract ConsentCode {
             return;
         }
         if (role == role_provider) {
+                // terms.Disease_Group_Code_Array = Disease_Group_Code_Array;
+                // terms.Disease_Category_Code_Array = Disease_Category_Code_Array;
+
             for (uint8 i = 0; i < Disease_Group_Code_Array.length; i++) {
                 uint8 Disease_Group_Code = Disease_Group_Code_Array[i];
                 terms.Disease_Map_Hierarchy[
@@ -283,7 +297,7 @@ contract ConsentCode {
         }
     }
 
-    // MARK: - UploadDisease
+    // MARK: UploadDisease
     function UploadDisease(
         uint8 role,
         address _address,
