@@ -280,6 +280,7 @@ contract ConsentCode {
             terms.allow_all_disease = true;
             return;
         }
+        terms.allow_all_disease = false;
         if (role == role_provider) {
                 // terms.Disease_Group_Code_Array = Disease_Group_Code_Array;
                 // terms.Disease_Category_Code_Array = Disease_Category_Code_Array;
@@ -326,18 +327,15 @@ contract ConsentCode {
     function DisplayDiseaseCodeHierarchy(
         uint8 role,
         address _address
-    ) public view returns (uint8[] memory, uint128[] memory) {
+    ) public view returns (uint8[] memory, uint128[] memory, bool) {
         Terms storage terms = TermsByRole(role, _address);
         return (
             terms.Disease_Group_Code_Array,
-            terms.Disease_Category_Code_Array
+            terms.Disease_Category_Code_Array,
+            terms.allow_all_disease
         );
     }
 
-    function test() public pure returns (bool) {
-        // uint64 newVariableName = 1111111111111;
-        return true;
-    }
 
     // MARK: - CheckBooleanItems
     function CheckBooleanItems(
@@ -497,6 +495,7 @@ contract ConsentCode {
         if (providerMapping[_provider_address].allow_all_disease == true) {
             return true;
         }
+
         if (requesterMapping[_requester_address].allow_all_disease == true) {
             return false;
         }
@@ -509,10 +508,10 @@ contract ConsentCode {
             uint8 requester_group_code = requesterMapping[_requester_address]
                 .Disease_Group_Code_Array[index_requester];
             uint128 requester_category_code = requesterMapping[
-                _requester_address
-            ].Disease_Category_Code_Array[index_requester];
+                _requester_address].Disease_Category_Code_Array[index_requester];
             uint128 provider_category_code = providerMapping[_provider_address]
                 .Disease_Map_Hierarchy[requester_group_code];
+                
             if (
                 !(provider_category_code & requester_category_code ==
                     requester_category_code)
