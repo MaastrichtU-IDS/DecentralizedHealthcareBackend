@@ -329,11 +329,26 @@ contract ConsentCode {
         address _address
     ) public view returns (uint8[] memory, uint128[] memory, bool) {
         Terms storage terms = TermsByRole(role, _address);
+        if(role == role_provider) {
+            uint8[] memory Disease_Group_Code_Array=new uint8[](26);
+            uint128[] memory Disease_Category_Code_Array=new uint128[](26);
+            for(uint8 i = 1; i < 26; i++) {
+                Disease_Group_Code_Array[i] = i;
+                Disease_Category_Code_Array[i] = terms.Disease_Map_Hierarchy[i];
+            }
+            return (
+                Disease_Group_Code_Array,
+                Disease_Category_Code_Array,
+                terms.allow_all_disease
+            );
+        }
+        else{
         return (
             terms.Disease_Group_Code_Array,
             terms.Disease_Category_Code_Array,
             terms.allow_all_disease
         );
+        }
     }
 
 
@@ -502,7 +517,7 @@ contract ConsentCode {
         for (
             uint index_requester = 0;
             index_requester <
-            requesterMapping[_requester_address].Disease_Code_Array.length;
+            requesterMapping[_requester_address].Disease_Group_Code_Array.length;
             index_requester++
         ) {
             uint8 requester_group_code = requesterMapping[_requester_address]
