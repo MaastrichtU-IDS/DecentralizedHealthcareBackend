@@ -1,0 +1,2106 @@
+# %% [markdown]
+# ### Deploy and Interact with Consent based Smart Contract
+#
+# The aim of this notebook is to compile, deploy and interact with consent based smart contract
+#
+
+# %% [markdown]
+# # Compile contract from file
+#
+
+# %%
+# Import libraries
+import json
+
+# import web3
+from datetime import datetime
+from tkinter import CURRENT
+from web3 import Web3
+
+# import py_solc_x as px
+import solcx
+from web3.contract import Contract
+import os
+import pandas as pd
+import logging
+from pathlib import Path 
+
+CURRENT_DIR = Path(__file__).resolve().parent
+DATA_DIR = Path("data")
+os.chdir(CURRENT_DIR)
+# print("CURRENT_DIR", CURRENT_DIR)
+# Configure the logger
+# import logging
+
+# Create a custom logger
+logger = logging.getLogger()
+logger.setLevel(logging.ERROR)
+
+# Create handlers
+file_handler = logging.FileHandler("smarter_consent.log", mode="w")
+console_handler = logging.StreamHandler()
+
+# Set level for handlers
+# file_handler.setLevel(logging.INFO)
+# console_handler.setLevel(logging.INFO)
+
+# Create formatters and add them to handlers
+formatter = logging.Formatter(
+    "[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)s - %(funcName)20s() ] - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# Example log messages
+logger.info("This is an info message  1")
+# logger.warning("This is a warning message")
+# logger.error("This is an error message")
+
+# from brownie import  web3
+
+# import icd10
+
+# %%
+# Read in LUCE contract code
+# solcx.install_solc('0.8.0')
+print(os.getcwd())
+consent_fp = r"data\UnifiedConsentModel.sol"
+# consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
+with open(consent_fp) as file:
+    contract_source_code = file.read()
+
+# Compile & Store Compiled source code
+# print(contract_source_code)
+solcx_version = "0.8.0"
+# solcx_version = '0.5.16'
+solcx.install_solc(solcx_version)
+# compiled_sol = solcx.compile_source(source=contract_source_code,
+#   solc_binary="/snap/bin/solc")
+compiled_sol = solcx.compile_source(
+    source=contract_source_code,
+    # solc_binary='/usr/bin/solc',
+    # optimize_runs=200,
+    output_values=["abi", "bin", "bin-runtime"],
+    optimize=True,
+    solc_version=solcx_version,
+    # evm_version="byzantium",
+)
+
+# compiled_sol = solcx.compile_files(source_files=consent_fp,
+#                                     # solc_binary='/usr/bin/solc',
+#                                     # optimize_runs=200,
+#                                     output_values=["abi", "bin",'bin-runtime'],
+#                                     # optimize=True,
+#                                     solc_version = solcx_version
+#                                     )
+
+print(compiled_sol.keys())
+# Extract full interface as dict from compiled contract
+contract_interface = compiled_sol["<stdin>:ConsentCode"]
+# contract_interface = compiled_sol['data/ConsentContractDate.sol:ConsentCode']
+print(contract_interface.keys())
+# contract_interface
+# Extract abi and bytecode
+abi = contract_interface["abi"]
+bytecode = contract_interface["bin"]
+bytecode_runtime = contract_interface["bin-runtime"]
+### Deploy
+startTime = datetime.now()
+# Use Ganache for web3 instance
+w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
+
+# compiled_contract = web3.eth.compile_contract(contract_source)
+# abi = compiled_contract["abi"]
+# bytecode = compiled_contract["bytecode"]
+# contract_address = web3.eth.contract(abi=abi, bytecode=bytecode).deploy()
+
+# assert True is w3.isConnected()
+# Use local Ganache GUI on macOS
+# w3 = Web3(Web3.HTTPProvider("HTTP://192.168.72.1:7545"))
+# Set pre-funded ganache account #0 as sender
+w3.eth.defaultAccount = w3.eth.accounts[0]
+print("length ", len(w3.eth.accounts))
+# The default `eth.defaultAccount` address is used as the default "from" property for request_1_address dictionaries if no other explicit "from" property is specified.
+# Create contract blueprint
+contract = w3.eth.contract(abi=abi, bytecode=bytecode)
+# Submit the request_1_address that deploys the contract
+provider_address = w3.eth.accounts[0]
+provider_address_sum = Web3.to_checksum_address(provider_address)
+balance_provider = w3.eth.get_balance(provider_address)
+print("balance_provider", balance_provider)
+
+request_1_address = w3.eth.accounts[1]
+request_1_address_sum = Web3.to_checksum_address(request_1_address)
+
+request_2_address = w3.eth.accounts[2]
+request_2_address_sum = Web3.to_checksum_address(request_1_address)
+
+tx_hash = contract.constructor().transact(
+    {
+        "from": provider_address,
+        "gas": int(5e6),
+        "gasPrice": w3.to_wei(5, "ether"),
+        # "gaslimit": int(1e9),
+    }
+)
+
+### Obtain Transcation Receipt
+
+tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120, poll_latency=0.1)
+assert tx_receipt["status"] == 1
+
+print("tx_receipt status", tx_receipt["status"])
+# We obtain the block number under which it is deployed
+# global contract_block
+contract_block = w3.eth.block_number
+print("The contract is deployed with block number", contract_block, ".")
+# With obtain the final address of the contract
+
+# global contract_address
+contract_address = tx_receipt.contractAddress
+contract_code = w3.eth.get_code(contract_address)
+
+print("The contract has the address", contract_address)
+# print("contract_code ", contract_code)
+
+gas_limit = int(2e7)
+provider_dict = {
+    "from": provider_address,
+    "to": contract_address,
+    "value": 0,
+    "gas": gas_limit,
+    # 'gasPrice': w3.eth.gas_price*0.1,
+    # 'nonce': 33 ,
+}
+
+requester_1_dict = {
+    "from": request_1_address,
+    "to": contract_address,
+    "value": 0,
+    "gas": gas_limit,
+    # 'gasPrice': w3.eth.gas_price*0.1,
+    # 'nonce': 33 ,
+}
+
+requester_2_dict = {
+    "from": request_2_address,
+    "to": contract_address,
+    "value": 0,
+    "gas": gas_limit,
+    # 'gasPrice': w3.eth.gas_price*0.1,
+    # 'nonce': 33 k,
+}
+### Interact with contract
+# Create python instance of deployed contract
+# caddress = '0x3FEAfC9084e95BC5B07FBbBd197Af22422A46019'
+contract = w3.eth.contract(
+    address=contract_address,
+    abi=abi,
+    # bytecode=bytecode,
+)
+# Extract default accounts created by ganache
+accounts = w3.eth.accounts.copy()
+print("account size", len(accounts))
+
+import time
+
+# Sleep for 5 seconds
+time.sleep(1)
+
+# %% [markdown]
+# # Test cases
+#
+# ## Disease Name
+#
+
+# %%
+import re
+
+pattern = r"^[A-Z][0-9\*]{2}$"
+pattern_compiled = re.compile(pattern)
+
+
+def diseaseCode2IntHierarchy(code: str):
+    #  the code is a string like A00,B11, etc.
+    #  return the int code for chapter, group as a tuple
+    # print(f"code is {code}")
+    if not pattern_compiled.match(code):
+        print(f"The string {code} not matches the pattern")
+        return 0
+    chapter_str = code[0]
+    # if chapter_str == "*":
+    #     return 2**8-1,2**128-1
+    chapter_int = int(ord(code[0]) - ord("A")) + 1
+    group_str = code[1:3]
+    if group_str == "**":
+        return chapter_int, 2**128 - 1
+    group_int = 1 << int(group_str)
+    # represent group_int as 128 bits
+    return chapter_int, group_int, code
+
+
+def diseaseCode2Int(code: str) -> int:
+    # r = fx.UInt16(0)
+    # print(bin(r))
+    # since A00.0 is a correct code, so plus 1 for each level
+    if not pattern_compiled.match(code):
+        print(f"The string {code} not matches the pattern")
+        return 0
+    chapter_str = code[0]
+    group_str = code[1:3]
+    category_str = code[-1]
+    result = 0
+    if chapter_str == "*":
+        return 0
+        # chapter_int = 0
+    else:
+        chapter_int = int(ord(code[0]) - ord("A")) + 1
+        b_chapter = (chapter_int) << 11
+
+    if group_str == "**" or group_str == "*":
+        return b_chapter
+    else:
+        group_int = int(code[1:3]) + 1
+        b_group = (group_int) << 4
+
+    # if category_str == "*":
+    #     return b_chapter + b_group
+    # else:
+    #     category_int = int(code[-1]) + 1
+    # return b_chapter + b_group + category_int
+    return b_chapter + b_group
+
+
+def int2DiseaseCode(code: int) -> str:
+    if code == 0:
+        return "*00.0"
+    chapter_int = code >> 11
+    chapter_str = chr(chapter_int + ord("A") - 1)
+    group_int = (code >> 4) & 0b1111111
+    group_str = str(group_int - 1).zfill(2)
+    category_int = code & 0b1111
+    category_str = str(category_int - 1)
+    return f"{chapter_str}{group_str}.{category_str}"
+
+# %% [markdown]
+# ## BooleanItems
+#
+
+# %%
+# print(contract.address)
+# print(contract.functions)
+
+
+# print(contract.checkAccess(requester_1_dict))
+
+import random
+
+
+class BooleanItems:
+    abbr_dict = {
+        "CP": "ClinicalProfessionals",
+        "AP": "AcademicProfessionals",
+        "RCM": "ReferenceOrControlMaterial",
+        "MD": "MethodsDevelopment",
+        "PR": "PopulationsResearch",
+        "AR": "AncestryResearch",
+        "FBR": "FundamentalBioResearch",
+        "DDR": "DrugDevelopmentResearch",
+        "ACR": "AgeCategoriesResearch",
+        "GCR": "GenderCategoriesResearch",
+        "PP": "ProfitPurpose",
+        "PMP": "ProfitMakingProfessionals",
+        "FAR": "FormalApprovalRequired",
+    }
+
+    full_dict = {v: k for k, v in abbr_dict.items()}
+
+    name_index_dict = {
+        "ClinicalProfessionals": 1,
+        "AcademicProfessionals": 2,
+        "ReferenceOrControlMaterial": 4,
+        "MethodsDevelopment": 8,
+        "PopulationsResearch": 16,
+        "AncestryResearch": 32,
+        "FundamentalBioResearch": 64,
+        "DrugDevelopmentResearch": 128,
+        "AgeCategoriesResearch": 256,
+        "GenderCategoriesResearch": 512,
+        "ProfitPurpose": 1024,
+        "ProfitMakingProfessionals": 2048,
+        "FormalApprovalRequired": 4096,
+    }
+    index_full_dict = {v: k for k, v in name_index_dict.items()}
+
+    def __init__(self, true_prob=None):
+        self.true_set = set()
+        if true_prob is not None:
+            for k, _ in self.name_index_dict.items():
+                rand_num = random.random()
+                if rand_num <= true_prob:
+                    self.true_set.add(k)
+            #         print(f"rand_num {rand_num} true_prob {true_prob} add {k}")
+
+            # print("true_prob", true_prob, "true_set", self.true_set)
+
+    def to_int(self):
+        result = 0
+        for tname in self.true_set:
+            result += self.name_index_dict[tname]
+        # print("type of result ", result, type(result))
+        return result
+
+    def decode_from_int(self, int_value):
+        true_item = set()
+        for k, v in self.name_index_dict.items():
+            if int_value & v:
+                true_item.add(k)
+        return true_item
+
+
+role_provider = 1
+role_requester = 2
+simple_1 = BooleanItems(true_prob=0.5)
+print(simple_1.to_int())
+
+# %%
+from re import L
+import time
+
+
+import random
+import icd10
+
+
+def expand_code_range(code_range):
+    # Split the range into start and end codes
+    start_code, end_code = code_range.split("-")
+
+    # Extract letters and numbers
+    start_letter, start_number = start_code[0], int(start_code[1:])
+    end_letter, end_number = end_code[0], int(end_code[1:])
+    # print(f"start_letter {start_letter}, start_number {start_number}")
+    # print(f"end_letter {end_letter}, end_number {end_number}")
+
+    # Initialize variables
+    codes = []
+    current_letter = start_letter
+    current_number = start_number
+
+    # Loop until the current code matches the end code
+    while current_letter <= end_letter:
+        while current_number <= 99:  # Maximum number in the range
+            # Add the current code to the list
+            codes.append(f"{current_letter}{current_number:02}")
+            if current_letter == end_letter and current_number == end_number:
+                break  # Stop if the end code is reached
+            current_number += 1  # Increment the number part
+
+        # Reset for the next letter if not yet at the end
+        # if current_letter < end_letter:
+        current_letter = chr(ord(current_letter) + 1)  # Move to the next letter
+        current_number = 0  # Reset number to 0 for the next letter
+
+    return codes
+
+
+# disease_list = []
+disease_dict = {}
+for c in icd10.chapters:
+    codes = expand_code_range(c[1])
+    for code in codes:
+        letter = code[0]
+        if letter not in disease_dict:
+            disease_dict[letter] = []
+        disease_dict[letter].append(code)
+
+
+country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
+
+for k in country_name_code_dict.keys():
+    country_name_code_dict[k]["position_index"] = 2 ** country_name_code_dict[k]["index"]
+
+group_index_dict = json.load(open("data/group_index.json", "r"))
+country_index_dict = json.load(open("data/country_index.json", "r"))
+# allowed_group_names = {"EUROPEAN_UNION"}
+
+group_order_index_dict = {
+    name: index for index, name in enumerate(group_index_dict.keys())
+}
+
+country_code_name_dict = {v["index"]: k for k, v in country_name_code_dict.items()}
+
+all_countries_name = list(country_name_code_dict.keys())
+
+all_group_names = list(group_index_dict.keys())
+
+def decode_country_code(country_code: int):
+    countries = []
+    for name, index in country_index_dict.items():
+        if index & country_code:
+            countries.append(name)
+    return countries
+
+def decode_group_code(group_code: int):
+    groups = []
+    for k, v in group_index_dict.items():
+        if v & group_code:
+            groups.append(k)
+    return groups
+    
+    # disease_list.extend(expand_code_range(c[1]))
+# codes = expand_code_range("A00-A10")
+# print(codes)
+
+# %% [markdown]
+# ## Person
+#
+
+# %%
+from pickle import INT
+from venv import logger
+import json
+
+
+class Person:
+
+    def __init__(
+        self,
+        name="",
+        description="",
+        # contract=contract,
+        person_dict=None,
+        address=None,
+        bool_items=None,
+        **kwargs,
+    ):
+
+        self.name = name
+        self.estimate_gas = False
+        self.print_time = False
+
+        if address is not None:
+
+            self.address = address
+
+            balance = w3.eth.get_balance(address)
+
+            # print(f"balance of {address} is {balance}")
+
+        if bool_items is not None:
+
+            self.bool_items = bool_items
+
+        person_dict = {
+            "from": self.address,
+            "to": contract_address,
+            "value": 0,
+            "gas": gas_limit,
+            "gasPrice": int(1e9),
+        }
+
+        self.description = description
+
+        self.contract = contract
+
+        # 'gasPrice': w3.eth.gas_price*0.1,
+
+        self.person_dict = person_dict
+
+        # print("w3.eth.accounts", w3.eth.accounts)
+
+        # for k, v in self.country_name_code_dict.items():
+
+        #     v["groups"] = [g for g in v["groups"] if g in self.allowed_group_names]
+
+        # #  generate index of allowed_group_names
+
+        # self.group_index_dict = {
+
+        #     g: 2**i for i, g in enumerate(self.allowed_group_names)
+
+        # }
+
+        self.debug = False
+        self.disease_items = []
+
+    def upload_simple_items(self):
+        simple_value = self.bool_items.to_int()
+        # logging.info(
+        #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
+        # )
+
+        upload_func = self.contract.functions.UploadSimpleItems(
+            self.role, self.address, simple_value
+        )
+
+        return self.forward(upload_func)
+
+    # display_simple_items
+    def display_simple_items(self):
+
+        func = self.contract.functions.DisplaySimpleItems(self.role, self.address)
+
+        if self.estimate_gas:
+
+            gas = func.estimate_gas()
+
+            logging.info(f"Estimated gas cost for displaySimpleItems: {gas}")
+
+        result = func.call()
+
+        boolItems = BooleanItems()
+
+        boolItems.decode_from_int(result)
+
+        print(f"{self.name} displaySimpleItems is {boolItems.show_true_items()}")
+
+    def upload_area_code_baseline(self):
+
+        country_codes = [
+            self.country_name_code_dict[c]["index"] for c in self.country_names
+        ]
+
+        # print("UploadCountryItems", country_codes)
+
+        group_codes = [self.group_order_index_dict[g] for g in self.group_names]
+
+        func = self.contract.functions.UploadAreaBaseline(
+            self.role,
+            self.address,
+            group_codes,
+            country_codes,
+        )
+
+        # print("UploadAreaCode role", self.role)
+
+        return self.forward(func)
+
+    def update_area_group_relation(self):
+
+        country_group_dict = {}
+
+        for country_name, country_dict in country_name_code_dict.items():
+
+            groups = country_dict["groups"]
+
+            if len(groups) == 0:
+
+                continue
+
+            for g in groups:
+
+                if g not in group_index_dict:
+                    continue
+
+                g_index = group_index_dict[g]
+
+                if g_index not in country_group_dict:
+
+                    country_group_dict[g_index] = 0
+
+                country_group_dict[g_index] |= country_dict["index"]
+
+        country_group_data = list(country_group_dict.values())
+
+        country_group_index = list(country_group_dict.keys())
+
+        # print("country_group_dict", country_group_dict)
+
+        func = self.contract.functions.UpdateCountryGroupRelation(
+            country_group_data, country_group_index
+        )
+
+        # func.transact(self.person_dict)
+
+        return self.forward(func, label="update_area_group_relation")
+
+    def update_area_group_code_baseline(self, part_number=20):
+
+        def split(a, n):
+
+            k, m = divmod(len(a), n)
+
+            return tuple(
+                a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n)
+            )
+
+        country_group_dict = {}
+
+        for c in self.country_names:
+
+            if c not in self.country_name_code_dict:
+
+                print(f"{c} not in country_dict")
+
+                return
+
+            country_dict = self.country_name_code_dict[c]
+
+            country_group_dict[country_dict["index"]] = [
+                self.group_order_index_dict[g] for g in country_dict["groups"]
+            ]
+
+        country_code_list = list(country_group_dict.keys())
+
+        country_group_index_list = list(country_group_dict.values())
+
+        country_number = len(country_code_list)
+
+        # print("country_group_dict", country_group_dict)
+
+        country_code_list_part = split(country_code_list, part_number)
+
+        country_group_index_list_part = split(country_group_index_list, part_number)
+
+        gas = 0
+
+        for i in range(part_number):
+
+            func = self.contract.functions.UpdateAreaBaseline(
+                country_code_list_part[i], country_group_index_list_part[i]
+            )
+
+            func_gas = func.estimate_gas()
+
+            gas += func_gas
+        return gas
+
+    def upload_area_smarter(self):
+
+        if "*" in self.country_names:
+
+            func = self.contract.functions.UploadAreaSmarter(
+                self.role, self.address, True, 0, 0
+            )
+            logger.debug("allow all countries")
+
+            return self.forward(func)
+
+        country_codes = [
+            country_index_dict[c] for c in self.country_names
+        ]
+        group_codes = [group_index_dict[g] for g in self.group_names]
+
+        group_code = sum(group_codes)
+        country_code = sum(country_codes)
+
+        decoded_countries = decode_country_code(country_code)
+        missed_countries = set(self.country_names) - set(decoded_countries)
+        if len(missed_countries) > 0:
+            logger.error(f"missed_countries {missed_countries}")
+        # print("country_group_data length", len(country_group_data))
+
+        logging.info(
+            f"upload_area_code_simple role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}"
+        )
+
+        func = self.contract.functions.UploadAreaSmarter(
+            self.role, self.address, False, group_code, country_code
+        )
+
+        # print("UploadAreaCode role", self.role)
+
+        return self.forward(func)
+
+    def display_area_smarter(self):
+        group_code, country_code, version, Allow_all_area = (
+            self.contract.functions.DisplayAreaSmarter(self.role, self.address).call()
+        )
+        countries = decode_country_code(country_code)
+        groups = decode_group_code(group_code)
+
+        return groups, countries
+
+    def upload_area_code_only(self):
+
+        country_codes = [
+            self.country_name_code_dict[c]["index"] for c in self.country_names
+        ]
+
+        # print("UploadCountryItems", country_codes)
+
+        group_codes = [self.group_index_dict[g] for g in self.group_names]
+
+        country_group_code = 0
+
+        for c in self.country_names:
+
+            if c not in self.country_name_code_dict:
+
+                logging.error(f"{c} not in country_dict")
+
+                return
+
+            groups = self.country_name_code_dict[c]["groups"]
+
+            if len(groups) == 0:
+
+                continue
+
+            for g in groups:
+
+                country_group_code += self.group_index_dict[g]
+
+        group_code = sum(group_codes)
+
+        country_code = sum(country_codes)
+
+        func = self.contract.functions.UploadAreaOnly(
+            self.role,
+            self.address,
+            group_code,
+            country_code,
+            country_group_code,
+        )
+
+        # print("UploadAreaCode role", self.role)
+
+        return self.forward(func)
+
+    def display_area_codes(self):
+        (
+            Group_Code,
+            Country_Codes,
+            Country_Group_Codes,
+        ) = self.contract.functions.DisplayAreaCode(self.role, self.address).call()
+
+        # groupp_code is a int of the sum of the value of group_index_dict, decode it according to the group_index_dict
+
+        group_names = []
+
+        for k, v in self.group_index_dict.items():
+
+            if v & Group_Code:
+
+                group_names.append(k)
+
+        # print("displayAreaCodes", Country_Codes)
+
+        # print("Country_Group_Codes", Country_Group_Codes)
+
+        country_names = [self.country_code_name_dict[c] for c in Country_Codes]
+
+        result = {"group_names": group_names, "country_codes": country_names}
+
+        logging.info(f"displayAreaCodes is {result}")
+
+    def upload(self):
+        self.upload_simple_items()
+
+        self.upload_area_smarter()
+
+        self.upload_disease_items_hierarchy()
+        self.upload_date()
+
+    def upload_disease_items(self):
+
+        disease_codes = [diseaseCode2Int(d) for d in self.disease_items]
+
+        func = self.contract.functions.UploadDisease(
+            self.role, self.address, disease_codes
+        )
+
+        return self.forward(func)
+
+    def upload_disease_items_hierarchy(self):
+
+        if "*" in self.disease_items:
+
+            func = self.contract.functions.UploadDiseaseBinary(
+                self.role, self.address, True, [], []
+            )
+            logger.debug("allow all disease")
+
+            return self.forward(func)
+
+        disease_codes = [diseaseCode2IntHierarchy(d) for d in self.disease_items]
+        # print(f"name {self.name}  disease_codes {disease_codes} ")
+        self.disease_dict = {}
+
+        for d in disease_codes:
+
+            if d[0] not in self.disease_dict:
+
+                self.disease_dict[d[0]] = 0
+
+            self.disease_dict[d[0]] |= d[1]
+
+        disease_group_codes, disease_chapter_codes = (
+            list(self.disease_dict.keys()),
+            list(self.disease_dict.values()),
+        )
+        # print(f"name {self.name} disease_dict {disease_dict}")
+
+        func = self.contract.functions.UploadDiseaseBinary(
+            self.role, self.address, False, disease_group_codes, disease_chapter_codes
+        )
+
+        return self.forward(func)
+
+    def display_disease_items(self):
+
+        disease_codes = self.contract.functions.DisplayDiseaseCode(
+            self.role, self.address
+        ).call()
+
+        disease_names = []
+
+        for d in disease_codes:
+
+            disease_names.append(int2DiseaseCode(d))
+
+        result = {"disease_names": disease_names}
+
+        logging.info(f"displayDiseaseItems is {result}")
+
+    def upload_date(self):
+
+        try:
+
+            func = self.contract.functions.UploadDate(
+                self.role,
+                self.address,
+                self.start_year,
+                self.start_month,
+                self.start_day,
+                self.months,
+            )
+
+        except Exception as e:
+            print(f"error in upload_date {e}")
+            logger.error(
+                f"error in upload_date, role {self.role}, address {self.address}, start_year {self.start_year}, start_month {self.start_month}, start_day {self.start_day}, months {self.months}"
+            )
+
+        return self.forward(func)
+
+        # return self.forward(func)
+
+    def display_date(self):
+
+        (
+            Start_Year,
+            Start_Month,
+            Start_Day,
+            Months,
+        ) = self.contract.functions.DisplayDate(self.role, self.address).call()
+
+        print(
+            f"displayDate: Start_Year is {Start_Year}, Start_Month is {Start_Month}, Start_Day is {Start_Day}, Months {Months}"
+        )
+
+        return Start_Year, Start_Month, Start_Day, Months
+
+    def display_disease_herarchical(self):
+        categories, codes, allow_all = (
+            self.contract.functions.DisplayDiseaseCodeHierarchy(
+                self.role, self.address
+            ).call()
+        )
+        return categories, codes, allow_all
+
+    def forward(self, func, call=False, label=""):
+
+        if self.estimate_gas:
+
+            gas = func.estimate_gas()
+
+            return gas
+
+        else:
+
+            if call:
+
+                start_time = time.time_ns()
+
+                result = func.call()
+
+                end_time = time.time_ns()
+
+                if self.print_time:
+
+                    time_diff = (end_time - start_time) / 10**6
+
+                    print(
+                        f"Time cost for call {label}  is {(end_time-start_time)/10**6}"
+                    )
+                    return time_diff
+
+                return result
+
+            else:
+
+                start_time = time.time_ns()
+
+                recipt = func.transact(self.person_dict)
+
+                end_time = time.time_ns()
+
+                if self.print_time:
+
+                    time_diff = (end_time - start_time) / 10**6
+
+                    print(f"Time cost for transact {label} is {time_diff}")
+                    return time_diff
+                return recipt
+
+    def __str__(self):
+
+        return f"Person: {self.name},  {self.description}, {self.role}"
+
+# %% [markdown]
+# ## Provider
+
+# %%
+import string
+
+profile_strict = "strict"
+profile_medium = "medium"
+profile_open = "open"
+
+
+class Provider(Person):
+
+    # def __init__(self):
+
+    #     # super().__init__(*args,**kwargs)
+
+    profiles = {
+        "strict": {
+            "simple_items": 0.2,
+            "group_code": 0.05,
+            "country_code": 0.2,
+            "disease_items": 0.2,
+            "months": 6,
+        },
+        "medium": {
+            "simple_items": 0.5,
+            "group_code": 0.2,
+            "country_code": 0.5,
+            "disease_items": 0.5,
+            "months": 12,
+        },
+        "open": {
+            "simple_items": 1,
+            "group_code": 1,
+            "country_code": 1,
+            "disease_items": 1,
+            "months": 2**8 - 1,
+        },
+    }
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.role = role_provider
+
+        # risk_level = kwargs.get("risk_level", None)
+
+        self.profile = kwargs.get("profile", "medium")
+
+        profile_dict = self.profiles[self.profile]
+
+        # if risk_level is not None:
+
+        self.bool_items = BooleanItems(true_prob=profile_dict["simple_items"])
+        if self.profile == profile_open:
+            self.start_year = 2020
+        else:
+            self.start_year = random.randint(2023, 2025)
+
+        self.start_month = random.randint(1, 12)
+
+        self.start_day = random.randint(1, 28)
+
+        self.months = profile_dict["months"]
+
+        # while True:
+        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+        #     if len(disease_list) > 0:
+        #         break
+        if profile_dict["disease_items"] == 1:
+            self.disease_items = ["*"]
+        else:
+            disease_list = disease_dict["A"]
+            self.disease_items = random.choices(
+                disease_list,
+                k=int(profile_dict["disease_items"] * len(disease_list)),
+            )
+
+        self.country_names = random.sample(
+            all_countries_name,
+            k=int(profile_dict["country_code"] * len(all_countries_name)),
+        )
+
+        self.group_names = random.sample(
+            all_group_names,
+            k=int(profile_dict["group_code"] * len(all_group_names)),
+        )
+        logger.info(
+            f"{self.profile} country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
+        )
+
+
+# p = Person("test", "test", contract, address=w3.eth.accounts[1])
+
+
+# recipe = p.update_area_group_code()
+
+
+# assert recipe["status"] == 1
+
+# %% [markdown]
+# ## Requester
+#
+
+# %%
+import dis
+
+
+area_error_code = 1
+disease_error_code = 2
+date_error_code = 4
+simple_error_code = 8
+
+area_error = "area_error"
+disease_error = "disease_error"
+date_error = "date_error"
+simple_error = "simple_error"
+
+
+class Requester(Person):
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.role = role_requester
+
+        self.bool_items = BooleanItems(true_prob=random.uniform(0,0.2))
+        # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
+
+        self.start_year = random.randint(2024, 2025)
+
+        self.start_month = random.randint(1, 12)
+
+        self.start_day = random.randint(1, 28)
+
+        self.months = random.randint(1, 24)
+
+        # generate icd-10 codes
+        # while True:
+        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+        #     if len(disease_list) > 0:
+        #         break
+        disease_list = disease_dict["A"]
+        self.disease_items = random.choices(
+            disease_list,
+            k=int(random.uniform(0,0.05) * len(disease_list)),
+        )
+
+        self.country_names = random.sample(
+            all_countries_name,
+            k=int(random.uniform(0, 0.05) * len(all_countries_name)),
+        )
+
+        self.group_names = random.sample(
+            all_group_names,
+            k=int(random.uniform(0,0.2) * len(all_group_names)),
+        )
+        logger.info(
+            f"country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
+        )
+
+    def _check_role(self, provider: Provider):
+
+        if provider.role != role_provider:
+
+            raise Exception("requestAccess: provider is not a Provider")
+
+        if self.role != role_requester:
+
+            raise Exception("requestAccess: requester is not a Requester")
+
+    def request_access(self, provider: Provider):
+
+        if provider.role != role_provider:
+
+            print("requestAccess: provider is not a Provider")
+            return
+
+        if self.role != role_requester:
+
+            print("requestAccess: requester is not a Requester")
+            return
+
+        func = self.contract.functions.AccessData(provider.address, self.address)
+
+        # print(f"sef.address {self.address}, provider.address {provider.address}")
+
+        result = self.forward(func, True)
+        result_set = set()
+        if result & area_error_code:
+            result_set.add("area_error")
+        if result & disease_error_code:
+            result_set.add("disease_error")
+        if result & date_error_code:
+            result_set.add("date_error")
+        if result & simple_error_code:
+            result_set.add("simple_error")
+        return result_set
+
+    def access_disease(self, provider: Provider):
+
+        if provider.role != role_provider:
+
+            print("requestAccess: provider is not a Provider")
+            return
+
+        if self.role != role_requester:
+
+            print("requestAccess: requester is not a Requester")
+            return
+
+        func = self.contract.functions.CheckDisease(provider.address, self.address)
+
+        return self.forward(func, True)
+
+    def access_disease_hierarchy(self, provider: Provider):
+
+        if provider.role != role_provider:
+
+            print("requestAccess: provider is not a Provider")
+            return
+
+        if self.role != role_requester:
+
+            print("requestAccess: requester is not a Requester")
+            return
+
+        func = self.contract.functions.CheckDiseaseHierarchy(
+            provider.address, self.address
+        )
+
+        return self.forward(func, True)
+
+    def access_area_baseline(self, provider: Provider):
+
+        if provider.role != role_provider:
+
+            print("requestAccess: provider is not a Provider")
+            return
+
+        if self.role != role_requester:
+
+            print("requestAccess: requester is not a Requester")
+            return
+
+        func = self.contract.functions.CheckAreaBaseline(provider.address, self.address)
+
+        return self.forward(func, True)
+
+    def access_area_simple(self, provider: Provider):
+
+        self._check_role(provider)
+
+        func = self.contract.functions.CheckAreaSimple(provider.address, self.address)
+
+        return self.forward(func, True)
+
+    def access_boolean_items(self, provider: Provider):
+
+        self._check_role(provider)
+
+        func = self.contract.functions.CheckBooleanItems(provider.address, self.address)
+
+        result = func.call()
+
+        # result = func.call({"from": provider_address_sum})
+
+        # print(f"access_boolean_items is {result}")
+
+        # print(self.contract.functions.CheckBooleanItems)
+
+        # func.call(block_identifier="latest")
+        return result
+
+# %% [markdown]
+# ## test Disease
+#
+
+# %%
+def test_disease():
+    provider1 = Provider(
+        name="Provider_disease",
+        description="Provider1",
+        contract=contract,
+        person_dict=provider_dict,
+    )
+    requester1 = Requester(
+        name="Requester_disease",
+        description="Requester1",
+        contract=contract,
+        person_dict=requester_1_dict,
+    )
+
+    def generate_disease_items(chapters=["A"], numbers=[10]):
+        result = []
+        chapter = "A"
+        for i in range(len(chapters)):
+            chapter = chapters[i]
+            number = numbers[i]
+            if number > 99:
+                raise ValueError("numbers should be less than 100")
+
+            for i in range(number):
+                result.append(chapter + str(i).zfill(2))
+
+        return result
+
+    intevals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    # intevals = [1]
+    provider1.estimate_gas = True
+    requester1.estimate_gas = True
+
+    disease_data = []
+    for interval in intevals:
+        disease_items = generate_disease_items(numbers=[interval])
+        provider1.disease_items = disease_items
+        requester1.disease_items = disease_items
+
+        gas_provider = provider1.upload_disease_items()
+        gas_requester = requester1.upload_disease_items()
+        gas_access = requester1.request_access(provider1)
+
+        gas_provider_binary = provider1.upload_disease_items_hierarchy()
+        gas_requester_binary = requester1.upload_disease_items_hierarchy()
+        # gas_access_disease = requester1.access_disease(provider1)
+        gas_access_binary = requester1.access_disease_hierarchy(provider1)
+
+        disease_data.append(
+            {
+                "interval": interval,
+                "gas_provider_binary": gas_provider_binary,
+                "gas_requester_binary": gas_requester_binary,
+                "gas_access_binary": gas_access_binary,
+                "gas_provider": gas_provider,
+                "gas_requester": gas_requester,
+                "gas_access": gas_access,
+            }
+        )
+
+    disease_data_frame = pd.DataFrame(disease_data)
+    return disease_data_frame
+
+# %%
+def plot_disease():
+    factor = 1e3
+    import matplotlib.pyplot as plt
+
+    disease_data_frame = test_disease()
+    intervals = disease_data_frame["interval"]
+    data_plot = pd.DataFrame()
+    data_plot["interval"] = intervals
+    role = "provider"
+    line_role_baseline = f"gas_{role}"
+    line_role_binary = f"gas_{role}_binary"
+
+    data_plot[line_role_baseline] = disease_data_frame[line_role_baseline] / factor
+    data_plot[line_role_binary] = disease_data_frame[line_role_binary] / factor
+    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
+    ax = data_plot.plot.line(
+        x="interval",
+        y=[line_role_baseline, line_role_binary],
+        style=["o-", "*-"],
+        xlabel="Number of diseases",
+        ylabel="Gas cost (1e3)",
+        label=["base", "binary"],
+        # title="Gas cost for uploading area code of providers",
+        # annotate=True,
+    )
+
+    plt.annotate(
+        data_plot[line_role_baseline].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot[line_role_baseline].iloc[-1]),
+        xytext=(intervals.iloc[-1] - 15, data_plot[line_role_baseline].iloc[-1]),
+    )
+    plt.annotate(
+        data_plot[line_role_binary].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot[line_role_binary].iloc[-1]),
+        xytext=(intervals.iloc[-1] - 8, data_plot[line_role_binary].iloc[-1] + 50),
+    )
+    plt.savefig(f"figs/disease_gas_{role}.pdf")
+    plt.show()
+
+    role = "requester"
+    line_role_baseline = f"gas_{role}"
+    line_role_binary = f"gas_{role}_binary"
+    data_plot[line_role_baseline] = disease_data_frame[line_role_baseline] / factor
+    data_plot[line_role_binary] = disease_data_frame[line_role_binary] / factor
+    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
+    ax = data_plot.plot.line(
+        x="interval",
+        y=[line_role_baseline, line_role_binary],
+        style=["o-", "*-"],
+        xlabel="Number of diseases",
+        ylabel="Gas cost (1e3)",
+        label=["base", "binary"],
+        # title="Gas cost for uploading area code of requesters",
+        # annotate=True,
+    )
+
+    plt.annotate(
+        data_plot[line_role_baseline].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot[line_role_baseline].iloc[-1]),
+        xytext=(intervals.iloc[-1] - 13, data_plot[line_role_baseline].iloc[-1]),
+    )
+    plt.annotate(
+        data_plot[line_role_binary].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot[line_role_binary].iloc[-1]),
+        xytext=(intervals.iloc[-1] - 8, data_plot[line_role_binary].iloc[-1] + 5),
+    )
+    plt.savefig(f"figs/disease_gas_{role}.pdf")
+    plt.show()
+
+# %% [markdown]
+# ## Area
+#
+
+# %%
+def test_area():
+    provider1 = Provider(
+        name="Provider_area",
+        description="Provider1",
+        person_dict=provider_dict,
+    )
+    requester1 = Requester(
+        name="Requester_area",
+        description="Requester1",
+        person_dict=requester_1_dict,
+    )
+
+    countries = list(provider1.country_name_code_dict.keys())[:100]
+    provider1.country_names = countries
+    requester1.country_names = countries
+    provider1.group_names = ["EUROPEAN_UNION"]
+    requester1.group_names = ["EUROPEAN_UNION"]
+    provider1.estimate_gas = False
+    provider1.update_area_group_relation()
+    provider1.estimate_gas = True
+    requester1.estimate_gas = True
+    gas_update_area_group_code = provider1.update_area_group_relation()
+    gas_provider_simple = provider1.upload_area_smarter()
+    gas_requester_simple = requester1.upload_area_smarter()
+    gas_access_simple = requester1.access_area_simple(provider1)
+    data_base = []
+    data_base.append(
+        {
+            "interval": interval,
+            "gas_provider": gas_provider_simple,
+            "gas_requester": gas_requester_simple,
+            "gas_access": gas_access_simple,
+            "gas_update_area_group_code": gas_update_area_group_code,
+        }
+    )
+    data_frame_base = pd.DataFrame(data_base)
+    print(data_frame_base.to_string(index=False))
+
+    provider1.estimate_gas = False
+    # provider1.update_area_group_code_baseline()
+    provider1.estimate_gas = True
+    requester1.estimate_gas = True
+    gas_update_area_group_code = provider1.update_area_group_code_baseline()
+    # gas_provider_simple = provider1.upload_area_code_baseline()
+    # gas_requester_simple = requester1.upload_area_code_baseline()
+    # gas_access_simple = requester1.access_area_baseline(provider1)
+    data_base = []
+    data_base.append(
+        {
+            "interval": interval,
+            "gas_provider": gas_provider_simple,
+            "gas_requester": gas_requester_simple,
+            "gas_access": gas_access_simple,
+            "gas_update_area_group_code": gas_update_area_group_code,
+        }
+    )
+    data_frame_base = pd.DataFrame(data_base)
+    print(data_frame_base.to_string(index=False))
+    data_frame_base.plot.bar(x="interval", y="gas_update_area_group_code")
+
+# %%
+import json
+
+
+def analysis_countries_group():
+    file_name = "data/countries_enrich.json"
+    country_name_code_dict = json.load(open(file_name, "r"))
+    group_counts = {}
+    for k, v in country_name_code_dict.items():
+        groups = v["groups"]
+        for g in groups:
+            if g not in group_counts:
+                group_counts[g] = 0
+            group_counts[g] += 1
+        # print(k, v)
+    # print(country_name_code_dict)
+
+    count_list = sorted(list(group_counts.items()), key=lambda x: x[1], reverse=True)
+    print(count_list)
+
+
+def generate_group_index():
+    groups = [
+        "EUROPEAN_UNION",
+        "ASIAN_PACIFIC_ECONOMIC_COOPERATION",
+        "G20",
+        "G7",
+        "OPEC",
+        "ASEAN",
+        "NAFTA",
+        "MERCOSUR",
+        "OECD",
+        "ARAB_GROUP",
+    ]
+    group_index = {g: 2**i for i, g in enumerate(groups)}
+    json.dump(group_index, open("data/group_index.json", "w"), indent=4)
+
+def generate_country_index():
+    file_name = "data/countries_enrich.json"
+    country_index_file = "data/country_index.json"
+    country_name_code_dict = json.load(open(file_name, "r"))
+    country_index = {k: 1<<v["index"] for k, v in country_name_code_dict.items()}
+
+    json.dump(country_index, open(country_index_file, "w"), indent=4)
+
+generate_country_index()
+
+
+# generate_group_index()
+
+# %%
+def test_group():
+
+    provider1.estimate_gas = True
+    requester1.estimate_gas = True
+    data = []
+    data_simple = []
+    data_only = []
+
+    for interval in range(1, 180, 20):
+        countries = list(provider1.country_name_code_dict.keys())[:interval]
+        provider1.country_names = countries
+        requester1.country_names = countries
+        provider1.group_names = ["EUROPEAN_UNION"]
+        requester1.group_names = ["EUROPEAN_UNION"]
+
+        gas_provider = provider1.upload_area_code_baseline()
+        gas_requester = requester1.upload_area_code_baseline()
+        gas_access = requester1.access_area_baseline(provider1)
+
+        gas_provider_simple = provider1.upload_area_code_simple()
+        gas_requester_simple = requester1.upload_area_code_simple()
+        gas_access_simple = requester1.access_area_simple(provider1)
+
+        data.append(
+            {
+                "interval": interval,
+                "gas_provider": gas_provider,
+                "gas_requester": gas_requester,
+                "gas_access": gas_access,
+                "gas_provider_simple": gas_provider_simple,
+                "gas_requester_simple": gas_requester_simple,
+                "gas_access_simple": gas_access_simple,
+                "category": "binary",
+            }
+        )
+
+    data_frame = pd.DataFrame(data)
+
+
+# data_frame_simple = pd.DataFrame(data_simple)
+# data_frame_only = pd.DataFrame(data_only)
+# print(data_frame.to_string(index=False))
+# print(data_frame_simple.to_string(index=False))
+# print(data_frame_only.to_string(index=False))
+
+# %%
+# area_data = pd.concat([data_frame, data_frame_simple])
+# line_style = {
+#     "base": "o-",
+#     "binary": "*-",
+# }
+# columns = ["gas_provider", "gas_requester"]
+# fig, axes = plt.subplots(nrows=1, ncols=len(columns), figsize=(15, 5))
+def plot_group():
+    factor = 1e3
+    import matplotlib.pyplot as plt
+
+    intervals = data_frame["interval"]
+    data_plot = pd.DataFrame()
+    data_plot["interval"] = intervals
+    data_plot["gas_provider"] = data_frame["gas_provider"] / factor
+    data_plot["gas_provider_simple"] = data_frame["gas_provider_simple"] / factor
+    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
+    ax = data_plot.plot.line(
+        x="interval",
+        y=["gas_provider", "gas_provider_simple"],
+        style=["o-", "*-"],
+        xlabel="Number of countries",
+        ylabel="Gas cost (1e3)",
+        label=["base", "binary"],
+        # title="Gas cost for uploading area code of providers",
+        # annotate=True,
+    )
+
+    plt.annotate(
+        data_plot["gas_provider"].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot["gas_provider"].iloc[-1]),
+        xytext=(intervals.iloc[-1] - 25, data_plot["gas_provider"].iloc[-1]),
+    )
+    plt.annotate(
+        data_plot["gas_provider_simple"].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot["gas_provider_simple"].iloc[-1]),
+        xytext=(
+            intervals.iloc[-1] - 10,
+            data_plot["gas_provider_simple"].iloc[-1] + 50,
+        ),
+    )
+    plt.savefig("figs/area_gas_provider.pdf")
+    plt.show()
+
+    line_role_baseline = "gas_requester"
+    line_role_binary = "gas_requester_simple"
+    data_plot[line_role_baseline] = data_frame[line_role_baseline] / factor
+    data_plot[line_role_binary] = data_frame[line_role_binary] / factor
+    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
+    ax = data_plot.plot.line(
+        x="interval",
+        y=[line_role_baseline, line_role_binary],
+        style=["o-", "*-"],
+        xlabel="Number of countries",
+        ylabel="Gas cost (1e3)",
+        label=["base", "binary"],
+        # title="Gas cost for uploading area code of requesters",
+        # annotate=True,
+    )
+
+    plt.annotate(
+        data_plot[line_role_baseline].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot[line_role_baseline].iloc[-1]),
+        xytext=(intervals.iloc[-1] - 22, data_plot[line_role_baseline].iloc[-1]),
+    )
+    plt.annotate(
+        data_plot[line_role_binary].iloc[-1],
+        xy=(intervals.iloc[-1], data_plot[line_role_binary].iloc[-1]),
+        xytext=(intervals.iloc[-1] - 10, data_plot[line_role_binary].iloc[-1] + 5),
+    )
+    plt.savefig("figs/area_gas_requester.pdf")
+    plt.show()
+
+# %% [markdown]
+# ## Date
+#
+
+# %%
+def test_date():
+    provider1.Start_Year = 2021
+    provider1.Start_Month = 1
+    provider1.Start_Day = 1
+    provider1.Months = 12
+    date_gas = provider1.upload_date()
+
+    requester1.Start_Year = 2021
+    requester1.Start_Month = 1
+    requester1.Start_Day = 1
+    requester1.Months = 12
+    date_gas = requester1.upload_date()
+
+
+# %%
+def test_simple():
+    provider = Provider(
+        name=f"provider",
+        description=f"provider",
+        person_dict=provider_dict,
+
+        address=accounts.pop(),
+        profile="open",
+    )
+
+    requester = Requester(
+        name=f"requester",
+        description=f"requester",
+        person_dict=requester_1_dict,
+
+        address=accounts.pop(),
+    )
+
+    provider.upload()
+
+    provider.update_area_group_relation()
+
+    requester.upload()
+
+    categories, codes, allow_all = provider.display_disease_herarchical()
+
+    # print(f"categories {categories}, codes {codes}, allow_all {allow_all}")
+
+    requester_categories, requester_codes, requester_allow_all = (
+        requester.display_disease_herarchical()
+    )
+
+    # print(
+
+    #     f"requester_categories {requester_categories}, requester_codes {requester_codes}, requester_allow_all {requester_allow_all}"
+
+    # )
+
+    stored_provider_dict = {k: v for k, v in zip(categories, codes)}
+
+    stored_requester_dict = {
+        k: v for k, v in zip(requester_categories, requester_codes)
+    }
+
+    # logger.info(f"allow all provider {allow_all} requester {requester_allow_all}")
+
+    # for k, v in stored_requester_dict.items():
+
+    #     if k not in stored_provider_dict:
+
+    #         logger.info(f"key {k} not in stored_provider_dict")
+    #         continue
+
+    #     provider_v = stored_provider_dict[k]
+    #     logger.info(
+    #         f" key {k}, requester value {v} provider value {provider_v} result {v & provider_v == v }"
+    #     )
+
+    provider_groups, provider_countries = provider.display_area_smarter()
+
+    requester_groups, requester_countries = requester.display_area_smarter()
+
+    logger.info(f"provider_groups {provider_groups}, provider_countries {provider_countries}")
+    logger.info(
+
+        f"requester_groups {requester_groups}, requester_countries {requester_countries}"
+    )
+    country_grant = list(set(requester_countries) - set(provider_countries))
+    group_grant = list(set(requester_groups) - set(provider_groups))
+    logger.info(f"country_grant {country_grant}, group_grant {group_grant}")
+
+    access = requester.request_access(provider)
+
+    logger.info(f"access {access}")
+
+    access_disease = requester.access_disease_hierarchy(provider)
+
+    logger.info(f"access_disease {access_disease}")
+
+
+# provider_gas = provider.upload_simple_items()
+
+
+# requester_gas = provider.upload_simple_items()
+
+
+# access_gas = provider.request_access(provider)
+
+
+# print(
+
+
+#     f"upload_simple_items provider_gas {provider_gas}, requester_gas {requester_gas}, access_gas {access_gas}"
+
+
+# )
+
+# %% [markdown]
+# ## Simulation
+#
+
+# %%
+
+
+# %%
+
+area_error_code = 1
+disease_error_code = 2
+date_error_code = 4
+simple_error_code = 8
+
+
+from tqdm import tqdm
+
+profile_list = [
+    profile_open,
+    profile_medium,
+    profile_strict,
+]
+
+
+class Scenarios:
+    def __init__(self, proportion: list, size, requesters: list) -> None:
+        self.proportion = proportion
+        self.size = size
+
+        self.levels = [
+            profile_list[i]
+            for i, p in enumerate(proportion)
+            for _ in range(int(p * size))
+        ]
+        random.shuffle(self.levels)
+        logger.info("levels", self.levels)
+        self.provider_list = self.initial_scenarios()
+        self.requester_list = requesters
+
+    def initial_scenarios(self):
+        provider_list = []
+        for i in self.levels:
+            provider = Provider(
+                name=f"provider_{i}",
+                description=f"provider_{i}",
+                person_dict=provider_dict,
+                address=accounts.pop(),
+                profile=i,
+            )
+            provider.upload()
+            provider_list.append(provider)
+        return provider_list
+
+    def start(self):
+        result_map = {}
+        for provider in tqdm(self.provider_list):
+
+            for requester in self.requester_list:
+
+                result = requester.request_access(provider)
+                if provider.profile not in result_map:
+                    result_map[provider.profile] = {
+                        "total": 0,
+                        "success": 0,
+                        "error": {
+                            "area_error": 0,
+                            "disease_error": 0,
+                            "date_error": 0,
+                            "simple_error": 0,
+                        },
+                    }
+                result_map[provider.profile]["total"] += 1
+                if not result:
+                    result_map[provider.profile]["success"] += 1
+                else:
+                    if area_error in result:
+                        result_map[provider.profile]["error"]["area_error"] += 1
+                    if disease_error in result:
+                        result_map[provider.profile]["error"]["disease_error"] += 1
+                    if date_error in result:
+                        result_map[provider.profile]["error"]["date_error"] += 1
+                    if simple_error in result:
+                        result_map[provider.profile]["error"]["simple_error"] += 1
+
+        return result_map
+
+def test_scenarios():
+    requester_number = 100
+    provider_number = 100
+    requester_list = []
+
+    for i in range(requester_number):
+        requester = Requester(
+            name=f"requester_{i}",
+            description=f"requester_{i}",
+            person_dict=requester_1_dict,
+            address=accounts.pop(),
+        )
+        requester.upload()
+        requester_list.append(requester)
+
+    print(random.random())
+    requester_list[0].update_area_group_relation()
+
+    scenarios_1 = Scenarios([1, 0, 0], provider_number, requester_list)
+    scenarios_2 = Scenarios([0.5, 0.25, 0.25], provider_number, requester_list)
+    scenarios_3 = Scenarios([0.2, 0.4, 0.4], provider_number, requester_list)
+
+    result_map_1 = scenarios_1.start()
+    logger.critical(json.dumps(result_map_1, indent=4))
+    result_map_2 = scenarios_2.start()
+    logger.critical(json.dumps(result_map_2, indent=4))
+    result_map_3 = scenarios_3.start()
+    logger.critical(json.dumps(result_map_3, indent=4))
+
+
+# %% [markdown]
+# ## Case studay
+#
+
+# %%
+import numpy as np
+from io import StringIO
+
+result_map = {
+    1: r"\faFlag[regular]",
+    2: r"\faCapsules",
+    4: r"\faCalendar*[regular]",
+    8: r"\circletfillhl",
+}
+# accounts.pop()
+
+
+def case_study():
+    accounts = w3.eth.accounts.copy()
+
+    provider1 = Provider(
+        name="Provider 1",
+        description=r"Provider.\ref{provider:a}",
+        contract=contract,
+        address=accounts.pop(),
+    )
+    provider2 = Provider(
+        name="Provider 2",
+        description=r"Provider.\ref{provider:b}",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    provider3 = Provider(
+        name="Provider 3",
+        description=r"Provider.\ref{provider:c}",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    provider4 = Provider(
+        name="Provider 4",
+        description=r"Provider.\ref{provider:d}",
+        contract=contract,
+        address=accounts.pop(),
+    )
+    provider5 = Provider(
+        name="Provider 5",
+        description=r"Provider.\ref{provider:e}",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester1 = Requester(
+        name="Requester 1",
+        description="1",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester2 = Requester(
+        name="Requester 2",
+        description="Requester2",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester3 = Requester(
+        name="Requester 3",
+        description="Requester3",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester4 = Requester(
+        name="Requester 4",
+        description="Requester4",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester5 = Requester(
+        name="Requester 5",
+        description="Requester5",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester6 = Requester(
+        name="Requester 6",
+        description="Requester6",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester7 = Requester(
+        name="Requester 7",
+        description="Requester7",
+        contract=contract,
+        address=accounts.pop(),
+    )
+
+    requester8 = Requester(
+        name="Requester 8",
+        description="Requester8",
+        contract=contract,
+        address=accounts.pop(),
+    )
+    requester9 = Requester(
+        name="Requester 9",
+        description="Requester9",
+        contract=contract,
+        address=accounts.pop(),
+    )
+    r = provider1.update_area_group_relation()
+    # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
+    # print("update_area_group_code ", r)
+
+    provider1.bool_items = BooleanItems(all_true=True)
+    provider1.country_names = ["*"]
+    provider1.disease_items = ["*"]
+
+    provider2.disease_items = ["A**", "B00"]
+    provider2.country_names = ["*"]
+    provider2.bool_items = BooleanItems(all_true=True)
+
+    provider3.group_names = ["EUROPEAN_UNION"]
+    provider3.country_names = ["USA"]
+    provider3.disease_items = ["*"]
+    provider3.bool_items = BooleanItems(all_true=True)
+
+    provider4.start_year = 2024
+    provider4.start_month = 6
+    provider4.start_day = 1
+    provider4.months = 6
+    provider4.disease_items = ["*"]
+    provider4.country_names = ["*"]
+    provider4.bool_items = BooleanItems(all_true=True)
+
+    bools = BooleanItems()
+    bools.ClinicalProfessionals = True
+    bools.AcademicProfessionals = True
+    provider5.disease_items = ["*"]
+    provider5.country_names = ["*"]
+    provider5.bool_items = bools
+
+    requester1.start_year = 2024
+    requester1.start_month = 6
+    requester1.start_day = 1
+    requester1.months = 6
+    requester1.country_names = ["*"]
+    requester1.disease_items = ["*"]
+    requester1.bool_items = BooleanItems(all_true=True)
+
+    requester2.disease_items = ["A01"]
+    requester2.country_names = ["*"]
+    requester2.bool_items = BooleanItems(all_true=True)
+
+    requester3.disease_items = ["B02"]
+    requester3.country_names = ["*"]
+    requester3.bool_items = BooleanItems(all_true=True)
+
+    requester4.country_names = ["USA"]
+    requester4.disease_items = ["*"]
+    requester4.bool_items = BooleanItems(all_true=True)
+
+    requester5.country_names = ["NLD"]
+    requester5.disease_items = ["*"]
+    requester5.bool_items = BooleanItems(all_true=True)
+
+    requester6.country_names = ["USA", "THA"]
+    requester6.disease_items = ["*"]
+    requester6.bool_items = BooleanItems(all_true=True)
+
+    requester7.group_names = ["EUROPEAN_UNION"]
+    requester7.disease_items = ["*"]
+    requester7.bool_items = BooleanItems(all_true=True)
+
+    requester8.start_year = 2024
+    requester8.start_month = 1
+    requester8.start_day = 1
+    requester8.months = 6
+    requester8.country_names = ["*"]
+    requester8.disease_items = ["*"]
+    requester8.bool_items = BooleanItems(all_true=True)
+
+    bools_9 = BooleanItems()
+    bools_9.ClinicalProfessionals = True
+    # bools_9.AcademicProfessionals = True
+    # provider5.bool_items = bools
+    requester9.bool_items = bools_9
+    requester9.country_names = ["*"]
+    requester9.disease_items = ["*"]
+
+    provider_list = [provider1, provider2, provider3, provider4, provider5]
+    requester_list = [
+        requester1,
+        requester2,
+        requester3,
+        requester4,
+        requester5,
+        requester6,
+        requester7,
+        requester8,
+        requester9,
+    ]
+
+    for i, requester in enumerate(requester_list):
+        requester.description = f"Requester.\\ref{{requester:{i+1}}}"
+        requester.upload()
+        # print(w3.eth.block_number)
+
+    for provider in provider_list:
+        provider.upload()
+
+    result_list = []
+    header_list = [""]
+    for provider in provider_list:
+        header_list.append(provider.description)
+
+    result_list.append("&".join(header_list) + r"\\")
+    for ir, requester in enumerate(requester_list):
+        row_list = []
+        row_list.append(requester.description)
+        for ip, provider in enumerate(provider_list):
+            access = requester.request_access(provider)
+            access_str = []
+            for k, v in result_map.items():
+                if access & k:
+                    access_str.append(v)
+            if len(access_str) == 0:
+                access_result = "\cmark"
+            else:
+                access_result = " ".join(access_str)
+            row_list.append(access_result)
+            # requester.access_area_simple(provider)
+            # requester.access_disease(provider)
+        result_list.append("&".join(row_list) + r"\\")
+    for r in result_list:
+        print(r)
+
+    # provider5.display_simple_items()
+    # requester8.display_simple_items()
+    # print(result_df.to_string(index=False, sep="&"))
+
+
+# simulation()
+
+# %% [markdown]
+# ## Time consumed
+#
+
+# %%
+def test_time_area():
+    provider1 = Provider(
+        name="Provider 1",
+        description=r"Provider.\ref{provider:a}",
+        contract=contract,
+        address=accounts[1],
+    )
+    provider1.print_time = True
+    provider1.update_area_group_relation()
+
+
+# test_time_area()
+
+test_scenarios()

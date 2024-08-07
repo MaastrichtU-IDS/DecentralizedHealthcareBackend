@@ -10,6 +10,7 @@ contract ConsentCode {
         dataProvider = msg.sender;
     }
 
+    // MARK: - BooleanItems
     struct BooleanItems {
         bool ClinicalProfessionals;
         bool AcademicProfessionals;
@@ -40,7 +41,7 @@ contract ConsentCode {
         uint16 Area_Simple_Version;
         // end binary
         // uint64 Area_Country_Group_Code_32;
-        bool allow_all_area;
+        bool Allow_all_area;
         uint32[] Area_Country_Group_Code;
         // uint256[] Area_Country_Group_Code_Data;
         // uint32[] Area_Country_Group_Code_Index;
@@ -59,11 +60,13 @@ contract ConsentCode {
 
     }
 
+    // MARK: - Requester
     struct Requester {
         address requester_address;
         Terms terms;
     }
 
+   // MARK: - Provider
     struct Provider {
         address provider_address;
         Terms terms;
@@ -96,6 +99,7 @@ contract ConsentCode {
         Area_Simple_Version += 1;
     }
 
+    // MARK: - DisplayCountryGroupRelation
     function DisplayCountryGroupRelation()
         public
         view
@@ -141,6 +145,7 @@ contract ConsentCode {
         }
     }
 
+    // MARK: - UploadSimpleItems
     function UploadSimpleItems(
         uint8 role,
         address _address,
@@ -150,6 +155,7 @@ contract ConsentCode {
         terms.Simple_Items = Simple_Items;
     }
 
+    // MARK: - DisplaySimpleItems
     function DisplaySimpleItems(
         uint8 role,
         address _address
@@ -158,6 +164,7 @@ contract ConsentCode {
         return terms.Simple_Items;
     }
 
+    // MARK: - UploadDate
     function UploadDate(
         uint8 role,
         address _address,
@@ -173,6 +180,7 @@ contract ConsentCode {
         terms.Months = Months;
     }
 
+    // MARK: - DisplayDate
     function DisplayDate(
         uint8 role,
         address _address
@@ -186,8 +194,22 @@ contract ConsentCode {
         );
     }
   
-    // MARK: - UploadAreaSimple
-    function UploadAreaSimple(
+    // MARK: - DisplayAreaSmarter
+    function DisplayAreaSmarter(
+        uint8 role,
+        address _address
+    ) public view returns (uint16, uint256, uint16, bool) {
+        Terms storage terms = TermsByRole(role, _address);
+        return (
+            terms.Area_Group_Simple,
+            terms.Area_Country_Simple,
+            terms.Area_Simple_Version,
+            terms.Allow_all_area
+        );
+    }
+
+    // MARK: - UploadAreaSmarter
+    function UploadAreaSmarter(
         uint8 role,
         address _address,
         bool allow_all,
@@ -195,8 +217,8 @@ contract ConsentCode {
         uint256 Country_Code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        if (allow_all) {
-            terms.allow_all_area = true;
+        if (allow_all && (role == role_provider)) {
+            terms.Allow_all_area = true;
         } else {
             terms.Area_Group_Simple = Group_Code;
             terms.Area_Country_Simple = Country_Code;
@@ -247,6 +269,7 @@ contract ConsentCode {
         }
     }
 
+    // MARK: - DisplayAreaCode
     function DisplayAreaCode(
         uint8 role,
         address _address
@@ -258,6 +281,7 @@ contract ConsentCode {
             terms.Area_Country_Group_Code
         );
     }
+
 
     // MARK: - UploadDiseaseBinary
     function UploadDiseaseBinary(
@@ -316,6 +340,7 @@ contract ConsentCode {
         }
     }
 
+    // MARK: - DisplayDiseaseCode
     function DisplayDiseaseCode(
         uint8 role,
         address _address
@@ -366,25 +391,25 @@ contract ConsentCode {
         return false;
     }
 
-    // MARK: - CheckAreaHierarchy(_provider_address, _requester_address);
-    function CheckAreaHierarchy(
+    // MARK: - CheckAreaSmarter(_provider_address, _requester_address);
+    function CheckAreaSmarter(
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
         if (Country_Group_Code_Data.length == 0) {
-            revert("checkAreaSimple: Country_Group_Code_Data is empty");
+            revert("CheckAreaSmarter: Country_Group_Code_Data is empty");
         }
         if (Country_Group_Code_Data.length != Country_Group_Code_Index.length) {
             revert(
-                "checkAreaSimple: Country_Group_Code_Data and Country_Group_Code_Index must have the same length"
+                "CheckAreaSmarter: Country_Group_Code_Data and Country_Group_Code_Index must have the same length"
             );
         }
         Terms storage requester_terms = requesterMapping[_requester_address];
         Terms storage provider_terms = providerMapping[_provider_address];
-        if (provider_terms.allow_all_area == true) {
+        if (provider_terms.Allow_all_area == true) {
             return true;
         }
-        if (requester_terms.allow_all_area == true) {
+        if (requester_terms.Allow_all_area == true) {
             return false;
         }
 
@@ -479,6 +504,7 @@ contract ConsentCode {
         return true;
     }
 
+    // MARK: - CheckDisease
     function CheckDisease(
         address _provider_address,
         address _requester_address
@@ -537,6 +563,7 @@ contract ConsentCode {
         return true;
     }
 
+    // MARK: - CheckDate
     function CheckDate(
         address _provider_address,
         address _requester_address
@@ -589,7 +616,7 @@ contract ConsentCode {
         address _requester_address
     ) public view returns (uint8) {
         uint8 result = 0;
-        if (CheckAreaHierarchy(_provider_address, _requester_address) == false) {
+        if (CheckAreaSmarter(_provider_address, _requester_address) == false) {
             result += 1;
         }
 
