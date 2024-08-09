@@ -33,7 +33,7 @@ os.chdir(CURRENT_DIR)
 # import logging
 
 # Create a custom logger
-logger = logging.getLogger()
+logger = logging.getLogger("smarter_consent")
 logger.setLevel(logging.ERROR)
 
 # Create handlers
@@ -511,21 +511,6 @@ class Person:
         # 'gasPrice': w3.eth.gas_price*0.1,
 
         self.person_dict = person_dict
-
-        # print("w3.eth.accounts", w3.eth.accounts)
-
-        # for k, v in self.country_name_code_dict.items():
-
-        #     v["groups"] = [g for g in v["groups"] if g in self.allowed_group_names]
-
-        # #  generate index of allowed_group_names
-
-        # self.group_index_dict = {
-
-        #     g: 2**i for i, g in enumerate(self.allowed_group_names)
-
-        # }
-
         self.debug = False
         self.disease_items = []
 
@@ -1028,7 +1013,7 @@ class Provider(Person):
         if profile_dict["disease_items"] == 1:
             self.disease_items = ["*"]
         else:
-            disease_list = disease_dict["A"]
+            disease_list = disease_dict[random.choice(string.ascii_uppercase)]
             self.disease_items = random.choices(
                 disease_list,
                 k=int(profile_dict["disease_items"] * len(disease_list)),
@@ -1099,10 +1084,10 @@ class Requester(Person):
         #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
         #     if len(disease_list) > 0:
         #         break
-        disease_list = disease_dict["A"]
+        disease_list = disease_dict[random.choice(string.ascii_uppercase)]
         self.disease_items = random.choices(
             disease_list,
-            k=int(random.uniform(0,0.05) * len(disease_list)),
+            k=int(random.uniform(0,0.03) * len(disease_list)),
         )
 
         self.country_names = random.sample(
@@ -1154,7 +1139,7 @@ class Requester(Person):
             result_set.add("date_error")
         if result & simple_error_code:
             result_set.add("simple_error")
-        return result_set
+        return result, result_set
 
     def access_disease(self, provider: Provider):
 
@@ -1231,11 +1216,7 @@ class Requester(Person):
         # func.call(block_identifier="latest")
         return result
 
-# %% [markdown]
-# ## test Disease
-#
 
-# %%
 def test_disease():
     provider1 = Provider(
         name="Provider_disease",
@@ -1297,10 +1278,6 @@ def test_disease():
         )
 
     disease_data_frame = pd.DataFrame(disease_data)
-    return disease_data_frame
-
-# %%
-def plot_disease():
     factor = 1e3
     import matplotlib.pyplot as plt
 
@@ -1375,6 +1352,7 @@ def plot_disease():
 
 # %%
 def test_area():
+    intevals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90]
     provider1 = Provider(
         name="Provider_area",
         description="Provider1",
@@ -1385,38 +1363,39 @@ def test_area():
         description="Requester1",
         person_dict=requester_1_dict,
     )
+    for interval in intevals:
+        countries = list(provider1.country_name_code_dict.keys())[:100]
+        provider1.country_names = countries
+        requester1.country_names = countries
+        provider1.group_names = ["EUROPEAN_UNION"]
+        requester1.group_names = ["EUROPEAN_UNION"]
+        provider1.estimate_gas = False
+        provider1.update_area_group_relation()
+        provider1.estimate_gas = True
+        requester1.estimate_gas = True
+        gas_update_area_group_code = provider1.update_area_group_relation()
+        gas_provider_simple = provider1.upload_area_smarter()
+        gas_requester_simple = requester1.upload_area_smarter()
+        gas_access_simple = requester1.access_area_simple(provider1)
+        data_base = []
+        
+        data_base.append(
+            {
+                "interval": interval,
+                "gas_provider": gas_provider_simple,
+                "gas_requester": gas_requester_simple,
+                "gas_access": gas_access_simple,
+                "gas_update_area_group_code": gas_update_area_group_code,
+            }
+        )
+        data_frame_base = pd.DataFrame(data_base)
+        print(data_frame_base.to_string(index=False))
 
-    countries = list(provider1.country_name_code_dict.keys())[:100]
-    provider1.country_names = countries
-    requester1.country_names = countries
-    provider1.group_names = ["EUROPEAN_UNION"]
-    requester1.group_names = ["EUROPEAN_UNION"]
-    provider1.estimate_gas = False
-    provider1.update_area_group_relation()
-    provider1.estimate_gas = True
-    requester1.estimate_gas = True
-    gas_update_area_group_code = provider1.update_area_group_relation()
-    gas_provider_simple = provider1.upload_area_smarter()
-    gas_requester_simple = requester1.upload_area_smarter()
-    gas_access_simple = requester1.access_area_simple(provider1)
-    data_base = []
-    data_base.append(
-        {
-            "interval": interval,
-            "gas_provider": gas_provider_simple,
-            "gas_requester": gas_requester_simple,
-            "gas_access": gas_access_simple,
-            "gas_update_area_group_code": gas_update_area_group_code,
-        }
-    )
-    data_frame_base = pd.DataFrame(data_base)
-    print(data_frame_base.to_string(index=False))
-
-    provider1.estimate_gas = False
-    # provider1.update_area_group_code_baseline()
-    provider1.estimate_gas = True
-    requester1.estimate_gas = True
-    gas_update_area_group_code = provider1.update_area_group_code_baseline()
+        provider1.estimate_gas = False
+        # provider1.update_area_group_code_baseline()
+        provider1.estimate_gas = True
+        requester1.estimate_gas = True
+        gas_update_area_group_code = provider1.update_area_group_code_baseline()
     # gas_provider_simple = provider1.upload_area_code_baseline()
     # gas_requester_simple = requester1.upload_area_code_baseline()
     # gas_access_simple = requester1.access_area_baseline(provider1)
@@ -1479,9 +1458,7 @@ def generate_country_index():
 
     json.dump(country_index, open(country_index_file, "w"), indent=4)
 
-generate_country_index()
-
-
+# generate_country_index()
 # generate_group_index()
 
 # %%
@@ -1522,23 +1499,6 @@ def test_group():
         )
 
     data_frame = pd.DataFrame(data)
-
-
-# data_frame_simple = pd.DataFrame(data_simple)
-# data_frame_only = pd.DataFrame(data_only)
-# print(data_frame.to_string(index=False))
-# print(data_frame_simple.to_string(index=False))
-# print(data_frame_only.to_string(index=False))
-
-# %%
-# area_data = pd.concat([data_frame, data_frame_simple])
-# line_style = {
-#     "base": "o-",
-#     "binary": "*-",
-# }
-# columns = ["gas_provider", "gas_requester"]
-# fig, axes = plt.subplots(nrows=1, ncols=len(columns), figsize=(15, 5))
-def plot_group():
     factor = 1e3
     import matplotlib.pyplot as plt
 
@@ -1808,8 +1768,8 @@ class Scenarios:
         return result_map
 
 def test_scenarios():
-    requester_number = 100
-    provider_number = 100
+    requester_number = 1000
+    provider_number = 1000
     requester_list = []
 
     for i in range(requester_number):
@@ -2062,7 +2022,7 @@ def case_study():
         row_list = []
         row_list.append(requester.description)
         for ip, provider in enumerate(provider_list):
-            access = requester.request_access(provider)
+            access,_ = requester.request_access(provider)
             access_str = []
             for k, v in result_map.items():
                 if access & k:
@@ -2075,21 +2035,9 @@ def case_study():
             # requester.access_area_simple(provider)
             # requester.access_disease(provider)
         result_list.append("&".join(row_list) + r"\\")
-    for r in result_list:
-        print(r)
+    
+    print("\n".join(r))
 
-    # provider5.display_simple_items()
-    # requester8.display_simple_items()
-    # print(result_df.to_string(index=False, sep="&"))
-
-
-# simulation()
-
-# %% [markdown]
-# ## Time consumed
-#
-
-# %%
 def test_time_area():
     provider1 = Provider(
         name="Provider 1",
