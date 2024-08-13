@@ -1,15 +1,3 @@
-# %% [markdown]
-# ### Deploy and Interact with Consent based Smart Contract
-#
-# The aim of this notebook is to compile, deploy and interact with consent based smart contract
-#
-
-# %% [markdown]
-# # Compile contract from file
-#
-
-# %%
-# Import libraries
 import json
 
 # import web3
@@ -24,6 +12,7 @@ import os
 import pandas as pd
 import logging
 from pathlib import Path 
+from tqdm import tqdm
 
 CURRENT_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path("data")
@@ -31,44 +20,52 @@ os.chdir(CURRENT_DIR)
 # print("CURRENT_DIR", CURRENT_DIR)
 # Configure the logger
 # import logging
-
-# Create a custom logger
 logger = logging.getLogger("smarter_consent")
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.DEBUG)  # Set to the lowest level to capture all logs
 
-# Create handlers
-file_handler = logging.FileHandler("smarter_consent.log", mode="w")
+# Create handlers for each log level
+error_handler = logging.FileHandler("smarter_consent_error.log", mode="w")
+warning_handler = logging.FileHandler("smarter_consent_warning.log", mode="w")
+info_handler = logging.FileHandler("smarter_consent_info.log", mode="w")
+critical_handler = logging.FileHandler("smarter_consent_critical.log", mode="w")
+all_handler = logging.FileHandler("smarter_consent_all.log", mode="w")
 console_handler = logging.StreamHandler()
 
-# Set level for handlers
-# file_handler.setLevel(logging.INFO)
-# console_handler.setLevel(logging.INFO)
+# Set level for each handler
+error_handler.setLevel(logging.ERROR)
+warning_handler.setLevel(logging.WARNING)
+info_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)  # Console can show all logs
+critical_handler.setLevel(logging.CRITICAL)
 
 # Create formatters and add them to handlers
 formatter = logging.Formatter(
     "[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)s - %(funcName)20s() ] - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-file_handler.setFormatter(formatter)
+error_handler.setFormatter(formatter)
+warning_handler.setFormatter(formatter)
+info_handler.setFormatter(formatter)
 console_handler.setFormatter(formatter)
+critical_handler.setFormatter(formatter)
+all_handler.setFormatter(formatter)
 
 # Add handlers to the logger
-logger.addHandler(file_handler)
+logger.addHandler(error_handler)
+logger.addHandler(warning_handler)
+logger.addHandler(info_handler)
 logger.addHandler(console_handler)
+logger.addHandler(critical_handler)
+logger.addHandler(all_handler)
 
-# Example log messages
-logger.info("This is an info message  1")
-# logger.warning("This is a warning message")
-# logger.error("This is an error message")
+# Example usage
+logger.error("This is an error message")
+logger.warning("This is a warning message")
+logger.info("This is an info message")
+logger.debug("This is a debug message")
+logger.critical("This is a critical message")
 
-# from brownie import  web3
 
-# import icd10
-
-# %%
-# Read in LUCE contract code
-# solcx.install_solc('0.8.0')
-print(os.getcwd())
 consent_fp = r"data\UnifiedConsentModel.sol"
 # consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
 with open(consent_fp) as file:
@@ -99,11 +96,11 @@ compiled_sol = solcx.compile_source(
 #                                     solc_version = solcx_version
 #                                     )
 
-print(compiled_sol.keys())
+# print(compiled_sol.keys())
 # Extract full interface as dict from compiled contract
 contract_interface = compiled_sol["<stdin>:ConsentCode"]
 # contract_interface = compiled_sol['data/ConsentContractDate.sol:ConsentCode']
-print(contract_interface.keys())
+# print(contract_interface.keys())
 # contract_interface
 # Extract abi and bytecode
 abi = contract_interface["abi"]
@@ -124,7 +121,7 @@ w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:8545"))
 # w3 = Web3(Web3.HTTPProvider("HTTP://192.168.72.1:7545"))
 # Set pre-funded ganache account #0 as sender
 w3.eth.defaultAccount = w3.eth.accounts[0]
-print("length ", len(w3.eth.accounts))
+logger.info(f"account numbers {len(w3.eth.accounts)}")
 # The default `eth.defaultAccount` address is used as the default "from" property for request_1_address dictionaries if no other explicit "from" property is specified.
 # Create contract blueprint
 contract = w3.eth.contract(abi=abi, bytecode=bytecode)
@@ -132,7 +129,7 @@ contract = w3.eth.contract(abi=abi, bytecode=bytecode)
 provider_address = w3.eth.accounts[0]
 provider_address_sum = Web3.to_checksum_address(provider_address)
 balance_provider = w3.eth.get_balance(provider_address)
-print("balance_provider", balance_provider)
+# print("balance_provider", balance_provider)
 
 request_1_address = w3.eth.accounts[1]
 request_1_address_sum = Web3.to_checksum_address(request_1_address)
@@ -154,18 +151,18 @@ tx_hash = contract.constructor().transact(
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120, poll_latency=0.1)
 assert tx_receipt["status"] == 1
 
-print("tx_receipt status", tx_receipt["status"])
+# logger.info("tx_receipt status", tx_receipt["status"])
 # We obtain the block number under which it is deployed
 # global contract_block
 contract_block = w3.eth.block_number
-print("The contract is deployed with block number", contract_block, ".")
+logger.info(f"The contract is deployed with block number {contract_block} .")
 # With obtain the final address of the contract
 
 # global contract_address
 contract_address = tx_receipt.contractAddress
 contract_code = w3.eth.get_code(contract_address)
 
-print("The contract has the address", contract_address)
+# print("The contract has the address", contract_address)
 # print("contract_code ", contract_code)
 
 gas_limit = int(2e7)
@@ -205,7 +202,7 @@ contract = w3.eth.contract(
 )
 # Extract default accounts created by ganache
 accounts = w3.eth.accounts.copy()
-print("account size", len(accounts))
+# print("account size", len(accounts))
 
 import time
 
@@ -286,17 +283,6 @@ def int2DiseaseCode(code: int) -> str:
     category_int = code & 0b1111
     category_str = str(category_int - 1)
     return f"{chapter_str}{group_str}.{category_str}"
-
-# %% [markdown]
-# ## BooleanItems
-#
-
-# %%
-# print(contract.address)
-# print(contract.functions)
-
-
-# print(contract.checkAccess(requester_1_dict))
 
 import random
 
@@ -452,16 +438,8 @@ def decode_group_code(group_code: int):
         if v & group_code:
             groups.append(k)
     return groups
-    
-    # disease_list.extend(expand_code_range(c[1]))
-# codes = expand_code_range("A00-A10")
-# print(codes)
 
-# %% [markdown]
-# ## Person
-#
 
-# %%
 from pickle import INT
 from venv import logger
 import json
@@ -513,6 +491,40 @@ class Person:
         self.person_dict = person_dict
         self.debug = False
         self.disease_items = []
+
+    def random_init(self, profile_dict):
+        # if risk_level is not None:
+
+        self.bool_items = BooleanItems(true_prob=profile_dict["simple_items"])
+
+        self.months = profile_dict["months"]
+
+        # while True:
+        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+        #     if len(disease_list) > 0:
+        #         break
+        if profile_dict["disease_items"] == 1:
+            self.disease_items = ["*"]
+        else:
+            while True:
+                disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+                if len(disease_list) > 0:
+                    break
+            self.disease_items = random.choices(
+                disease_list,
+                k=int(profile_dict["disease_items"] * len(disease_list)),
+            )
+
+        self.country_names = random.sample(
+            all_countries_name,
+            k=int(profile_dict["country_code"] * len(all_countries_name)),
+        )
+
+        self.group_names = random.sample(
+            all_group_names,
+            k=int(profile_dict["group_code"] * len(all_group_names)),
+        )
+  
 
     def upload_simple_items(self):
         simple_value = self.bool_items.to_int()
@@ -891,58 +903,35 @@ class Person:
         return categories, codes, allow_all
 
     def forward(self, func, call=False, label=""):
-
         if self.estimate_gas:
-
             gas = func.estimate_gas()
-
             return gas
-
         else:
-
             if call:
-
                 start_time = time.time_ns()
-
                 result = func.call()
-
                 end_time = time.time_ns()
-
                 if self.print_time:
-
                     time_diff = (end_time - start_time) / 10**6
-
                     print(
                         f"Time cost for call {label}  is {(end_time-start_time)/10**6}"
                     )
                     return time_diff
-
                 return result
-
             else:
-
                 start_time = time.time_ns()
-
                 recipt = func.transact(self.person_dict)
-
                 end_time = time.time_ns()
-
                 if self.print_time:
-
                     time_diff = (end_time - start_time) / 10**6
-
                     print(f"Time cost for transact {label} is {time_diff}")
                     return time_diff
                 return recipt
 
     def __str__(self):
-
         return f"Person: {self.name},  {self.description}, {self.role}"
 
-# %% [markdown]
-# ## Provider
 
-# %%
 import string
 
 profile_strict = "strict"
@@ -959,23 +948,23 @@ class Provider(Person):
     profiles = {
         "strict": {
             "simple_items": 0.2,
-            "group_code": 0.05,
+            "group_code": 0.2,
             "country_code": 0.2,
             "disease_items": 0.2,
             "months": 6,
         },
         "medium": {
-            "simple_items": 0.5,
-            "group_code": 0.2,
-            "country_code": 0.5,
-            "disease_items": 0.5,
+            "simple_items": 0.6,
+            "group_code": 0.6,
+            "country_code": 0.6,
+            "disease_items": 0.6,
             "months": 12,
         },
         "open": {
             "simple_items": 1,
-            "group_code": 1,
-            "country_code": 1,
-            "disease_items": 1,
+            "group_code": 0.5,
+            "country_code": 0.6,
+            "disease_items": 0.9,
             "months": 2**8 - 1,
         },
     }
@@ -991,10 +980,8 @@ class Provider(Person):
         self.profile = kwargs.get("profile", "medium")
 
         profile_dict = self.profiles[self.profile]
+        self.random_init(profile_dict)
 
-        # if risk_level is not None:
-
-        self.bool_items = BooleanItems(true_prob=profile_dict["simple_items"])
         if self.profile == profile_open:
             self.start_year = 2020
         else:
@@ -1004,32 +991,8 @@ class Provider(Person):
 
         self.start_day = random.randint(1, 28)
 
-        self.months = profile_dict["months"]
-
-        # while True:
-        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-        #     if len(disease_list) > 0:
-        #         break
-        if profile_dict["disease_items"] == 1:
-            self.disease_items = ["*"]
-        else:
-            disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-            self.disease_items = random.choices(
-                disease_list,
-                k=int(profile_dict["disease_items"] * len(disease_list)),
-            )
-
-        self.country_names = random.sample(
-            all_countries_name,
-            k=int(profile_dict["country_code"] * len(all_countries_name)),
-        )
-
-        self.group_names = random.sample(
-            all_group_names,
-            k=int(profile_dict["group_code"] * len(all_group_names)),
-        )
         logger.info(
-            f"{self.profile} country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
+            f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
         )
 
 
@@ -1063,45 +1026,28 @@ simple_error = "simple_error"
 class Requester(Person):
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
-
         self.role = role_requester
-
         self.bool_items = BooleanItems(true_prob=random.uniform(0,0.2))
         # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
-
+        profile_dict = {
+            "simple_items": random.uniform(0, 0.2),
+            "group_code": random.uniform(0, 0.05),
+            "country_code": random.uniform(0, 0.05),
+            "disease_items": random.uniform(0, 0.03),
+            "months": random.randint(1, 24),
+        }
+        self.random_init(profile_dict)
         self.start_year = random.randint(2024, 2025)
-
         self.start_month = random.randint(1, 12)
-
         self.start_day = random.randint(1, 28)
-
         self.months = random.randint(1, 24)
-
         # generate icd-10 codes
-        # while True:
-        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-        #     if len(disease_list) > 0:
-        #         break
-        disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-        self.disease_items = random.choices(
-            disease_list,
-            k=int(random.uniform(0,0.03) * len(disease_list)),
-        )
-
-        self.country_names = random.sample(
-            all_countries_name,
-            k=int(random.uniform(0, 0.05) * len(all_countries_name)),
-        )
-
-        self.group_names = random.sample(
-            all_group_names,
-            k=int(random.uniform(0,0.2) * len(all_group_names)),
-        )
         logger.info(
-            f"country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
+            f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
         )
+
+   
 
     def _check_role(self, provider: Provider):
 
@@ -1139,7 +1085,7 @@ class Requester(Person):
             result_set.add("date_error")
         if result & simple_error_code:
             result_set.add("simple_error")
-        return result, result_set
+        return result_set
 
     def access_disease(self, provider: Provider):
 
@@ -1664,40 +1610,6 @@ def test_simple():
     logger.info(f"access_disease {access_disease}")
 
 
-# provider_gas = provider.upload_simple_items()
-
-
-# requester_gas = provider.upload_simple_items()
-
-
-# access_gas = provider.request_access(provider)
-
-
-# print(
-
-
-#     f"upload_simple_items provider_gas {provider_gas}, requester_gas {requester_gas}, access_gas {access_gas}"
-
-
-# )
-
-# %% [markdown]
-# ## Simulation
-#
-
-# %%
-
-
-# %%
-
-area_error_code = 1
-disease_error_code = 2
-date_error_code = 4
-simple_error_code = 8
-
-
-from tqdm import tqdm
-
 profile_list = [
     profile_open,
     profile_medium,
@@ -1737,39 +1649,30 @@ class Scenarios:
     def start(self):
         result_map = {}
         for provider in tqdm(self.provider_list):
-
             for requester in self.requester_list:
-
-                result = requester.request_access(provider)
+                access_result = requester.request_access(provider)
                 if provider.profile not in result_map:
                     result_map[provider.profile] = {
                         "total": 0,
                         "success": 0,
                         "error": {
-                            "area_error": 0,
-                            "disease_error": 0,
-                            "date_error": 0,
-                            "simple_error": 0,
                         },
                     }
                 result_map[provider.profile]["total"] += 1
-                if not result:
+                if not access_result:
                     result_map[provider.profile]["success"] += 1
                 else:
-                    if area_error in result:
-                        result_map[provider.profile]["error"]["area_error"] += 1
-                    if disease_error in result:
-                        result_map[provider.profile]["error"]["disease_error"] += 1
-                    if date_error in result:
-                        result_map[provider.profile]["error"]["date_error"] += 1
-                    if simple_error in result:
-                        result_map[provider.profile]["error"]["simple_error"] += 1
+                    for error_str in access_result:
+                        if error_str in result_map[provider.profile]["error"]:
+                            result_map[provider.profile]["error"][error_str] += 1
+                        else:
+                            result_map[provider.profile]["error"][error_str] = 1
 
         return result_map
 
 def test_scenarios():
-    requester_number = 1000
-    provider_number = 1000
+    requester_number = 200
+    provider_number = 100
     requester_list = []
 
     for i in range(requester_number):
@@ -1782,19 +1685,27 @@ def test_scenarios():
         requester.upload()
         requester_list.append(requester)
 
-    print(random.random())
+    # print(random.random())
     requester_list[0].update_area_group_relation()
 
     scenarios_1 = Scenarios([1, 0, 0], provider_number, requester_list)
     scenarios_2 = Scenarios([0.5, 0.25, 0.25], provider_number, requester_list)
     scenarios_3 = Scenarios([0.2, 0.4, 0.4], provider_number, requester_list)
 
-    result_map_1 = scenarios_1.start()
-    logger.critical(json.dumps(result_map_1, indent=4))
+
     result_map_2 = scenarios_2.start()
-    logger.critical(json.dumps(result_map_2, indent=4))
+    logger.critical(json.dumps(result_map_2))
     result_map_3 = scenarios_3.start()
-    logger.critical(json.dumps(result_map_3, indent=4))
+    logger.critical(json.dumps(result_map_3))
+    result_map_1 = scenarios_1.start()
+    logger.critical(json.dumps(result_map_1))
+
+    result_dict = {
+        "scenario_1": result_map_1,
+        "scenario_2": result_map_2,
+        "scenario_3": result_map_3,
+    }
+    logger.critical(json.dumps(result_dict))
 
 
 # %% [markdown]
@@ -1806,15 +1717,15 @@ import numpy as np
 from io import StringIO
 
 result_map = {
-    1: r"\faFlag[regular]",
-    2: r"\faCapsules",
-    4: r"\faCalendar*[regular]",
-    8: r"\circletfillhl",
+    area_error: r"\faFlag[regular]",
+    disease_error: r"\faCapsules",
+    date_error: r"\faCalendar*[regular]",
+    simple_error: r"\circletfillhl",
 }
 # accounts.pop()
 
 
-def case_study():
+def test_case_study():
     accounts = w3.eth.accounts.copy()
 
     provider1 = Provider(
@@ -1911,22 +1822,23 @@ def case_study():
         contract=contract,
         address=accounts.pop(),
     )
+    
     r = provider1.update_area_group_relation()
     # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
     # print("update_area_group_code ", r)
 
-    provider1.bool_items = BooleanItems(all_true=True)
+    provider1.bool_items = BooleanItems(true_prob=1)
     provider1.country_names = ["*"]
     provider1.disease_items = ["*"]
 
     provider2.disease_items = ["A**", "B00"]
     provider2.country_names = ["*"]
-    provider2.bool_items = BooleanItems(all_true=True)
+    provider2.bool_items = BooleanItems(true_prob=1)
 
     provider3.group_names = ["EUROPEAN_UNION"]
     provider3.country_names = ["USA"]
     provider3.disease_items = ["*"]
-    provider3.bool_items = BooleanItems(all_true=True)
+    provider3.bool_items = BooleanItems(true_prob=1)
 
     provider4.start_year = 2024
     provider4.start_month = 6
@@ -1934,7 +1846,7 @@ def case_study():
     provider4.months = 6
     provider4.disease_items = ["*"]
     provider4.country_names = ["*"]
-    provider4.bool_items = BooleanItems(all_true=True)
+    provider4.bool_items = BooleanItems(true_prob=1)
 
     bools = BooleanItems()
     bools.ClinicalProfessionals = True
@@ -1949,31 +1861,31 @@ def case_study():
     requester1.months = 6
     requester1.country_names = ["*"]
     requester1.disease_items = ["*"]
-    requester1.bool_items = BooleanItems(all_true=True)
+    requester1.bool_items = BooleanItems(true_prob=1)
 
     requester2.disease_items = ["A01"]
     requester2.country_names = ["*"]
-    requester2.bool_items = BooleanItems(all_true=True)
+    requester2.bool_items = BooleanItems(true_prob=1)
 
     requester3.disease_items = ["B02"]
     requester3.country_names = ["*"]
-    requester3.bool_items = BooleanItems(all_true=True)
+    requester3.bool_items = BooleanItems(true_prob=1)
 
     requester4.country_names = ["USA"]
     requester4.disease_items = ["*"]
-    requester4.bool_items = BooleanItems(all_true=True)
+    requester4.bool_items = BooleanItems(true_prob=1)
 
     requester5.country_names = ["NLD"]
     requester5.disease_items = ["*"]
-    requester5.bool_items = BooleanItems(all_true=True)
+    requester5.bool_items = BooleanItems(true_prob=1)
 
     requester6.country_names = ["USA", "THA"]
     requester6.disease_items = ["*"]
-    requester6.bool_items = BooleanItems(all_true=True)
+    requester6.bool_items = BooleanItems(true_prob=1)
 
     requester7.group_names = ["EUROPEAN_UNION"]
     requester7.disease_items = ["*"]
-    requester7.bool_items = BooleanItems(all_true=True)
+    requester7.bool_items = BooleanItems(true_prob=1)
 
     requester8.start_year = 2024
     requester8.start_month = 1
@@ -1981,7 +1893,7 @@ def case_study():
     requester8.months = 6
     requester8.country_names = ["*"]
     requester8.disease_items = ["*"]
-    requester8.bool_items = BooleanItems(all_true=True)
+    requester8.bool_items = BooleanItems(true_prob=1)
 
     bools_9 = BooleanItems()
     bools_9.ClinicalProfessionals = True
@@ -2022,11 +1934,11 @@ def case_study():
         row_list = []
         row_list.append(requester.description)
         for ip, provider in enumerate(provider_list):
-            access,_ = requester.request_access(provider)
+            access_result = requester.request_access(provider)
             access_str = []
-            for k, v in result_map.items():
-                if access & k:
-                    access_str.append(v)
+            for error in access_result:
+                access_str.append(result_map[error])
+                
             if len(access_str) == 0:
                 access_result = "\cmark"
             else:
@@ -2051,4 +1963,73 @@ def test_time_area():
 
 # test_time_area()
 
+def plot_simulation():
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Define the data
+    data = {
+        "medium": {
+            "total": 8000,
+            "success": 980,
+            "error": {
+                "disease_error": 5408,
+                "simple_error": 3162,
+                "area_error": 548,
+                "date_error": 2641
+            }
+        },
+        "strict": {
+            "total": 8000,
+            "success": 585,
+            "error": {
+                "date_error": 2820,
+                "disease_error": 5458,
+                "simple_error": 5171,
+                "area_error": 780
+            }
+        },
+        "open": {
+            "total": 4000,
+            "success": 4000,
+            "error": {}
+        }
+    }
+
+    # Extract data points
+    categories = list(data.keys())
+    success_rates = [data[cat]["success"] / data[cat]["total"] for cat in categories]
+
+    # Create a bar chart
+    x = np.arange(len(categories))  # the label locations
+    width = 0.4  # the width of the bars
+
+    fig, ax = plt.subplots()
+    bars = ax.bar(x, success_rates, width, label="Success Rate")
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_xlabel('Categories')
+    ax.set_ylabel('Success Rate')
+    ax.set_title('Success Rate by Category')
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories)
+    ax.legend()
+
+    # Add labels to the bars
+    def add_labels(bars):
+        for bar in bars:
+            height = bar.get_height()
+            ax.annotate(f'{height:.2%}',
+                        xy=(bar.get_x() + bar.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+    add_labels(bars)
+
+    # Display the chart
+    plt.savefig("figs/simulation.pdf")
+
 test_scenarios()
+# plot_simulation()
+
