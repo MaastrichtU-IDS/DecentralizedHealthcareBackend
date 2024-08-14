@@ -67,6 +67,8 @@ logger.critical("This is a critical message")
 
 
 consent_fp = r"data\UnifiedConsentModel.sol"
+
+result_simulation_fp = "data/result_simulation.json"
 # consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
 with open(consent_fp) as file:
     contract_source_code = file.read()
@@ -1707,25 +1709,19 @@ def test_scenarios():
     }
     logger.critical(json.dumps(result_dict))
 
+    json.dump(result_dict, open(result_simulation_fp, "w"), indent=4)
 
-# %% [markdown]
-# ## Case studay
-#
 
-# %%
-import numpy as np
-from io import StringIO
-
-result_map = {
-    area_error: r"\faFlag[regular]",
-    disease_error: r"\faCapsules",
-    date_error: r"\faCalendar*[regular]",
-    simple_error: r"\circletfillhl",
-}
 # accounts.pop()
 
 
 def test_case_study():
+    result_map = {
+        area_error: r"\faFlag[regular]",
+        disease_error: r"\faCapsules",
+        date_error: r"\faCalendar*[regular]",
+        simple_error: r"\circletfillhl",
+    }
     accounts = w3.eth.accounts.copy()
 
     provider1 = Provider(
@@ -1963,58 +1959,51 @@ def test_time_area():
 
 # test_time_area()
 
-def plot_simulation():
+def plot_simulation_category():
     import matplotlib.pyplot as plt
     import numpy as np
 
     # Define the data
-    data = {
-        "medium": {
-            "total": 8000,
-            "success": 980,
-            "error": {
-                "disease_error": 5408,
-                "simple_error": 3162,
-                "area_error": 548,
-                "date_error": 2641
-            }
-        },
-        "strict": {
-            "total": 8000,
-            "success": 585,
-            "error": {
-                "date_error": 2820,
-                "disease_error": 5458,
-                "simple_error": 5171,
-                "area_error": 780
-            }
-        },
-        "open": {
-            "total": 4000,
-            "success": 4000,
-            "error": {}
-        }
-    }
+    data = json.load(open(result_simulation_fp, "r"))
+    category_dict = dict()
+    for k, v in data.items():
+        for category, value in v.items():
+            total = value["total"]
+            success = value["success"]
+            error = value["error"]
+            if category not in category_dict:
+                category_dict[category] = {
+                    "total": 0,
+                    "success": 0,
+                    "error": {},
+                }
+
+            category_dict[category]["total"] += total
+            category_dict[category]["success"] += success
+            for k, v in error.items():
+                if k not in category_dict[category]["error"]:
+                    category_dict[category]["error"][k] = 0
+                category_dict[category]["error"][k] += v
 
     # Extract data points
-    categories = list(data.keys())
-    success_rates = [data[cat]["success"] / data[cat]["total"] for cat in categories]
+    categories = list(category_dict.keys())
+    success_rates = [category_dict[cat]["success"] / category_dict[cat]["total"] for cat in categories]
 
     # Create a bar chart
     x = np.arange(len(categories))  # the label locations
     width = 0.4  # the width of the bars
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5, 4))
     bars = ax.bar(x, success_rates, width, label="Success Rate")
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_xlabel('Categories')
     ax.set_ylabel('Success Rate')
-    ax.set_title('Success Rate by Category')
+    # ax.set_title('Success Rate by Category')
     ax.set_xticks(x)
+    ax.set_ylim(0, 0.4)
     ax.set_xticklabels(categories)
     ax.legend()
-
     # Add labels to the bars
     def add_labels(bars):
         for bar in bars:
@@ -2028,8 +2017,70 @@ def plot_simulation():
     add_labels(bars)
 
     # Display the chart
-    plt.savefig("figs/simulation.pdf")
+    plt.savefig("figs/simulation_category.pdf")
 
-test_scenarios()
-# plot_simulation()
 
+def plot_simulation_scenario():
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Define the data
+    data = json.load(open(result_simulation_fp, "r"))
+    scenario_dict = dict()
+    for k, v in data.items():
+        total = sum([value["total"] for value in v.values()])
+        success = sum([value["success"] for value in v.values()])
+        error = {k:v for value in v.values() for k, v in value["error"].items()}
+        scenario_dict[k] = {
+            "total": total,
+            "success": success,
+            "error": error,
+        }
+            
+        
+
+    # Extract data points
+    scenarios = list(scenario_dict.keys())
+    success_rates = [
+        scenario_dict[cat]["success"] / scenario_dict[cat]["total"]
+        for cat in scenarios
+    ]
+
+    # Create a bar chart
+    x = np.arange(len(scenarios))  # the label locations
+    width = 0.4  # the width of the bars
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+    bars = ax.bar(x, success_rates, width, label="Success Rate")
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_xlabel("Scenarios")
+    ax.set_ylabel("Success Rate")
+    # ax.set_title("Success Rate by Scenarios")
+    ax.set_xticks(x)
+    ax.set_ylim(0,0.4)
+    ax.set_xticklabels(scenarios)
+    ax.legend()
+
+    # Add labels to the bars
+    def add_labels(bars):
+        for bar in bars:
+            height = bar.get_height()
+            ax.annotate(
+                f"{height:.2%}",
+                xy=(bar.get_x() + bar.get_width() / 2, height),
+                xytext=(0, 3),  # 3 points vertical offset
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+            )
+
+    add_labels(bars)
+
+    # Display the chart
+    plt.savefig("figs/simulation_scenario.pdf")
+
+
+# test_scenarios()
+plot_simulation_category()
+plot_simulation_scenario()

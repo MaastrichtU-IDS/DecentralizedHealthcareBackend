@@ -322,8 +322,8 @@ contract ConsentCode {
         }
     }
 
-    // MARK: UploadDisease
-    function UploadDisease(
+    // MARK: UploadDiseaseBaseline
+    function UploadDiseaseBaseline(
         uint8 role,
         address _address,
         uint16[] memory Disease_Code_Array

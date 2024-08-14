@@ -1,0 +1,72 @@
+{
+    "scenario_1": {
+        "open": {
+            "total": 20000,
+            "success": 7490,
+            "error": {
+                "disease_error": 12170,
+                "area_error": 984
+            }
+        }
+    },
+    "scenario_2": {
+        "medium": {
+            "total": 5000,
+            "success": 824,
+            "error": {
+                "disease_error": 3062,
+                "simple_error": 1924,
+                "area_error": 251,
+                "date_error": 1425
+            }
+        },
+        "open": {
+            "total": 10000,
+            "success": 3733,
+            "error": {
+                "disease_error": 6097,
+                "area_error": 516
+            }
+        },
+        "strict": {
+            "total": 5000,
+            "success": 485,
+            "error": {
+                "simple_error": 2716,
+                "disease_error": 3089,
+                "area_error": 424,
+                "date_error": 1936
+            }
+        }
+    },
+    "scenario_3": {
+        "medium": {
+            "total": 8000,
+            "success": 1189,
+            "error": {
+                "disease_error": 4891,
+                "date_error": 2888,
+                "simple_error": 2951,
+                "area_error": 429
+            }
+        },
+        "open": {
+            "total": 4000,
+            "success": 1497,
+            "error": {
+                "disease_error": 2436,
+                "area_error": 209
+            }
+        },
+        "strict": {
+            "total": 8000,
+            "success": 822,
+            "error": {
+                "simple_error": 4512,
+                "disease_error": 4940,
+                "date_error": 2483,
+                "area_error": 689
+            }
+        }
+    }
+}
