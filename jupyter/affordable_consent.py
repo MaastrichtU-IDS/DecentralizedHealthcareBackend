@@ -716,51 +716,6 @@ class Person:
 
         return groups, countries
 
-    def upload_area_code_only(self):
-
-        country_codes = [
-            self.country_name_code_dict[c]["index"] for c in self.country_names
-        ]
-
-        # print("UploadCountryItems", country_codes)
-
-        group_codes = [self.group_index_dict[g] for g in self.group_names]
-
-        country_group_code = 0
-
-        for c in self.country_names:
-
-            if c not in self.country_name_code_dict:
-
-                logging.error(f"{c} not in country_dict")
-
-                return
-
-            groups = self.country_name_code_dict[c]["groups"]
-
-            if len(groups) == 0:
-
-                continue
-
-            for g in groups:
-
-                country_group_code += self.group_index_dict[g]
-
-        group_code = sum(group_codes)
-
-        country_code = sum(country_codes)
-
-        func = self.contract.functions.UploadAreaOnly(
-            self.role,
-            self.address,
-            group_code,
-            country_code,
-            country_group_code,
-        )
-
-        # print("UploadAreaCode role", self.role)
-
-        return self.forward(func)
 
     def display_area_codes(self):
         (
@@ -2080,7 +2035,13 @@ def plot_simulation_scenario():
     # Display the chart
     plt.savefig("figs/simulation_scenario.pdf")
 
+def print_boolean_items():
+    bools = BooleanItems()
+    keys = bools.name_index_dict.keys(    )
+    print(keys)
 
 # test_scenarios()
-plot_simulation_category()
-plot_simulation_scenario()
+# plot_simulation_category()
+# plot_simulation_scenario()
+
+print_boolean_items()

@@ -29,33 +29,29 @@ contract ConsentCode {
 
     // MARK: - Terms
     struct Terms {
-        uint32 Simple_Items;
+        uint32 Purpose;
         uint16 Start_Year;
         uint8 Start_Month;
         uint16 Start_Day;
         uint8 Months;
-        // start area
-        // start binary
-        uint16 Area_Group_Simple;
-        uint256 Area_Country_Simple;
-        uint16 Area_Simple_Version;
-        // end binary
-        // uint64 Area_Country_Group_Code_32;
+  
+        // affordable
+        uint16 Area_Group_Affordable;
+        uint256 Area_Country_Affordable;
         bool Allow_all_area;
-        uint32[] Area_Country_Group_Code;
-        // uint256[] Area_Country_Group_Code_Data;
-        // uint32[] Area_Country_Group_Code_Index;
-        // start baseline
+
+        uint8[] Disease_Group;
+        uint128[] Disease_Category;
+        mapping(uint8 => uint128) Disease_Map_Affordable;
+  
+        // baseline
         uint8[] Area_Country_List_Baseline;
         uint8[] Area_Group_List_Baseline;
         mapping(uint8 => bool) Area_Country_Map_Baseline;
         mapping(uint8 => bool) Area_Group_Map_Baseline;
-        // start desease
-        mapping(uint8 => uint128) Disease_Map_Hierarchy;
+        
         mapping(uint16 => bool) Disease_Map;
         bool allow_all_disease;
-        uint8[] Disease_Group_Code_Array;
-        uint128[] Disease_Category_Code_Array;
         uint16[] Disease_Code_Array;
 
     }
@@ -149,10 +145,10 @@ contract ConsentCode {
     function UploadSimpleItems(
         uint8 role,
         address _address,
-        uint32 Simple_Items
+        uint32 Purpose
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        terms.Simple_Items = Simple_Items;
+        terms.Purpose = Purpose;
     }
 
     // MARK: - DisplaySimpleItems
@@ -161,7 +157,7 @@ contract ConsentCode {
         address _address
     ) public view returns (uint32) {
         Terms storage terms = TermsByRole(role, _address);
-        return terms.Simple_Items;
+        return terms.Purpose;
     }
 
     // MARK: - UploadDate
@@ -201,15 +197,15 @@ contract ConsentCode {
     ) public view returns (uint16, uint256, uint16, bool) {
         Terms storage terms = TermsByRole(role, _address);
         return (
-            terms.Area_Group_Simple,
-            terms.Area_Country_Simple,
+            terms.Area_Group_Affordable,
+            terms.Area_Country_Affordable,
             terms.Area_Simple_Version,
             terms.Allow_all_area
         );
     }
 
-    // MARK: - UploadAreaSmarter
-    function UploadAreaSmarter(
+    // MARK: - UploadAreaAffordable
+    function UploadAreaAffordable(
         uint8 role,
         address _address,
         bool allow_all,
@@ -220,27 +216,12 @@ contract ConsentCode {
         if (allow_all && (role == role_provider)) {
             terms.Allow_all_area = true;
         } else {
-            terms.Area_Group_Simple = Group_Code;
-            terms.Area_Country_Simple = Country_Code;
+            terms.Area_Group_Affordable = Group_Code;
+            terms.Area_Country_Affordable = Country_Code;
             terms.Area_Simple_Version = Area_Simple_Version;
         }
     }
 
-    // MARK: - UploadAreaOnly
-    function UploadAreaOnly(
-        uint8 role,
-        address _address,
-        uint16 Group_Code,
-        uint256 Country_Code,
-        uint16 country_group_code
-    ) public {
-        Terms storage terms = TermsByRole(role, _address);
-        terms.Area_Group_Simple = Group_Code;
-        terms.Area_Country_Simple = Country_Code;
-        if (role == role_requester) {
-            terms.Area_Country_Simple = country_group_code;
-        }
-    }
 
     // MARK: - UploadAreaBaseline
     function UploadAreaBaseline(
@@ -260,7 +241,7 @@ contract ConsentCode {
                 terms.Area_Group_Map_Baseline[Group_Code[i]] = true;
             }
             // provider_areaMapping[_address].Area_Country_List_Baseline = Country_Code;
-            // provider_area_baseline_mapping[_address].Area_Group_Simple = Group_Code;
+            // provider_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
         }
 
         if (role == role_requester) {
@@ -276,49 +257,46 @@ contract ConsentCode {
     ) public view returns (uint64, uint8[] memory, uint32[] memory) {
         Terms storage terms = TermsByRole(role, _address);
         return (
-            terms.Area_Group_Simple,
+            terms.Area_Group_Affordable,
             terms.Area_Country_List_Baseline,
-            terms.Area_Country_Group_Code
         );
     }
 
 
-    // MARK: - UploadDiseaseBinary
-    function UploadDiseaseBinary(
+    // MARK: - UploadDiseaseAffordable
+    function UploadDiseaseAffordable(
         uint8 role,
         address _address,
         bool allow_all,
-        uint8[] memory Disease_Group_Code_Array,
-        uint128[] memory Disease_Category_Code_Array
+        uint8[] memory Disease_Group,
+        uint128[] memory Disease_Category
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         if (
-            Disease_Group_Code_Array.length !=
-            Disease_Category_Code_Array.length
+            Disease_Group.length !=
+            Disease_Category.length
         ) {
             revert(
-                "UploadDiseaseCode: Disease_Group_Code_Array and Disease_Category_Code_Array must have the same length"
+                "UploadDiseaseCode: Disease_Group and Disease_Category must have the same length"
             );
         }
         if (allow_all) {
             terms.allow_all_disease = true;
             return;
         }
-        terms.allow_all_disease = false;
+        // terms.allow_all_disease = false;
         if (role == role_provider) {
-                // terms.Disease_Group_Code_Array = Disease_Group_Code_Array;
-                // terms.Disease_Category_Code_Array = Disease_Category_Code_Array;
 
-            for (uint8 i = 0; i < Disease_Group_Code_Array.length; i++) {
-                uint8 Disease_Group_Code = Disease_Group_Code_Array[i];
-                terms.Disease_Map_Hierarchy[
+            for (uint8 i = 0; i < Disease_Group.length; i++) {
+                uint8 Disease_Group_Code = Disease_Group[i];
+                terms.Disease_Map_Affordable[
                     Disease_Group_Code
-                ] = Disease_Category_Code_Array[i];
+                ] = Disease_Category[i];
             }
         }
         if (role == role_requester) {
-            terms.Disease_Group_Code_Array = Disease_Group_Code_Array;
-            terms.Disease_Category_Code_Array = Disease_Category_Code_Array;
+            terms.Disease_Group = Disease_Group;
+            terms.Disease_Category = Disease_Category;
         }
     }
 
@@ -349,59 +327,59 @@ contract ConsentCode {
         return terms.Disease_Code_Array;
     }
 
-    function DisplayDiseaseCodeHierarchy(
+    function DisplayDiseaseCodeAffordable(
         uint8 role,
         address _address
     ) public view returns (uint8[] memory, uint128[] memory, bool) {
         Terms storage terms = TermsByRole(role, _address);
         if(role == role_provider) {
-            uint8[] memory Disease_Group_Code_Array=new uint8[](26);
-            uint128[] memory Disease_Category_Code_Array=new uint128[](26);
+            uint8[] memory Disease_Group=new uint8[](26);
+            uint128[] memory Disease_Category=new uint128[](26);
             for(uint8 i = 1; i < 26; i++) {
-                Disease_Group_Code_Array[i] = i;
-                Disease_Category_Code_Array[i] = terms.Disease_Map_Hierarchy[i];
+                Disease_Group[i] = i;
+                Disease_Category[i] = terms.Disease_Map_Affordable[i];
             }
             return (
-                Disease_Group_Code_Array,
-                Disease_Category_Code_Array,
+                Disease_Group,
+                Disease_Category,
                 terms.allow_all_disease
             );
         }
         else{
-        return (
-            terms.Disease_Group_Code_Array,
-            terms.Disease_Category_Code_Array,
-            terms.allow_all_disease
-        );
+            return (
+                terms.Disease_Group,
+                terms.Disease_Category,
+                terms.allow_all_disease
+            );
         }
     }
 
 
-    // MARK: - CheckBooleanItems
-    function CheckBooleanItems(
+    // MARK: - CheckPurpose
+    function CheckPurpose(
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
-        uint32 providerData = providerMapping[_provider_address].Simple_Items;
+        uint32 providerData = providerMapping[_provider_address].Purpose;
         uint32 requesterData = requesterMapping[_requester_address]
-            .Simple_Items;
+            .Purpose;
         if ((requesterData & providerData) == requesterData) {
             return true;
         }
         return false;
     }
 
-    // MARK: - CheckAreaSmarter(_provider_address, _requester_address);
-    function CheckAreaSmarter(
+    // MARK: - CheckAreaAffordable(_provider_address, _requester_address);
+    function CheckAreaAffordable(
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
         if (Country_Group_Code_Data.length == 0) {
-            revert("CheckAreaSmarter: Country_Group_Code_Data is empty");
+            revert("CheckAreaAffordable: Country_Group_Code_Data is empty");
         }
         if (Country_Group_Code_Data.length != Country_Group_Code_Index.length) {
             revert(
-                "CheckAreaSmarter: Country_Group_Code_Data and Country_Group_Code_Index must have the same length"
+                "CheckAreaAffordable: Country_Group_Code_Data and Country_Group_Code_Index must have the same length"
             );
         }
         Terms storage requester_terms = requesterMapping[_requester_address];
@@ -413,11 +391,11 @@ contract ConsentCode {
             return false;
         }
 
-        uint64 provider_group = provider_terms.Area_Group_Simple;
-        uint64 requester_group = requester_terms.Area_Group_Simple;
+        uint64 provider_group = provider_terms.Area_Group_Affordable;
+        uint64 requester_group = requester_terms.Area_Group_Affordable;
 
-        uint256 provider_Country = provider_terms.Area_Country_Simple;
-        uint256 requester_Country = requester_terms.Area_Country_Simple;
+        uint256 provider_Country = provider_terms.Area_Country_Affordable;
+        uint256 requester_Country = requester_terms.Area_Country_Affordable;
 
         if (provider_Country & requester_Country != requester_Country) {
             uint256 rest_countries = ~provider_Country & requester_Country;
@@ -505,7 +483,7 @@ contract ConsentCode {
     }
 
     // MARK: - CheckDisease
-    function CheckDisease(
+    function CheckDiseaseBaseline(
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
@@ -528,8 +506,8 @@ contract ConsentCode {
         return true;
     }
 
-    // CheckDiseaseHierarchy
-    function CheckDiseaseHierarchy(
+    // CheckDiseaseAffordable
+    function CheckDiseaseAffordable(
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
@@ -543,15 +521,15 @@ contract ConsentCode {
         for (
             uint index_requester = 0;
             index_requester <
-            requesterMapping[_requester_address].Disease_Group_Code_Array.length;
+            requesterMapping[_requester_address].Disease_Group.length;
             index_requester++
         ) {
             uint8 requester_group_code = requesterMapping[_requester_address]
-                .Disease_Group_Code_Array[index_requester];
+                .Disease_Group[index_requester];
             uint128 requester_category_code = requesterMapping[
-                _requester_address].Disease_Category_Code_Array[index_requester];
+                _requester_address].Disease_Category[index_requester];
             uint128 provider_category_code = providerMapping[_provider_address]
-                .Disease_Map_Hierarchy[requester_group_code];
+                .Disease_Map_Affordable[requester_group_code];
                 
             if (
                 !(provider_category_code & requester_category_code ==
@@ -616,12 +594,12 @@ contract ConsentCode {
         address _requester_address
     ) public view returns (uint8) {
         uint8 result = 0;
-        if (CheckAreaSmarter(_provider_address, _requester_address) == false) {
+        if (CheckAreaAffordable(_provider_address, _requester_address) == false) {
             result += 1;
         }
 
         if (
-            CheckDiseaseHierarchy(_provider_address, _requester_address) ==
+            CheckDiseaseAffordable(_provider_address, _requester_address) ==
             false
         ) {
             result += 2;
@@ -631,7 +609,7 @@ contract ConsentCode {
             result += 4;
         }
 
-        if (CheckBooleanItems(_provider_address, _requester_address) == false) {
+        if (CheckPurpose(_provider_address, _requester_address) == false) {
             result += 8;
         }
         return result;
