@@ -20,15 +20,15 @@ os.chdir(CURRENT_DIR)
 # print("CURRENT_DIR", CURRENT_DIR)
 # Configure the logger
 # import logging
-logger = logging.getLogger("smarter_consent")
+logger = logging.getLogger("affordable_consent")
 logger.setLevel(logging.DEBUG)  # Set to the lowest level to capture all logs
 
 # Create handlers for each log level
-error_handler = logging.FileHandler("smarter_consent_error.log", mode="w")
-warning_handler = logging.FileHandler("smarter_consent_warning.log", mode="w")
-info_handler = logging.FileHandler("smarter_consent_info.log", mode="w")
-critical_handler = logging.FileHandler("smarter_consent_critical.log", mode="w")
-all_handler = logging.FileHandler("smarter_consent_all.log", mode="w")
+error_handler = logging.FileHandler("affordable_consent_error.log", mode="w")
+warning_handler = logging.FileHandler("affordable_consent_warning.log", mode="w")
+info_handler = logging.FileHandler("affordable_consent_info.log", mode="w")
+critical_handler = logging.FileHandler("affordable_consent_critical.log", mode="w")
+all_handler = logging.FileHandler("affordable_consent_all.log", mode="w")
 console_handler = logging.StreamHandler()
 
 # Set level for each handler
@@ -670,11 +670,11 @@ class Person:
             gas += func_gas
         return gas
 
-    def upload_area_smarter(self):
+    def upload_area_affordable(self):
 
         if "*" in self.country_names:
 
-            func = self.contract.functions.UploadAreaSmarter(
+            func = self.contract.functions.UploadAreaAffordable(
                 self.role, self.address, True, 0, 0
             )
             logger.debug("allow all countries")
@@ -699,7 +699,7 @@ class Person:
             f"upload_area_code_simple role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}"
         )
 
-        func = self.contract.functions.UploadAreaSmarter(
+        func = self.contract.functions.UploadAreaAffordable(
             self.role, self.address, False, group_code, country_code
         )
 
@@ -707,9 +707,9 @@ class Person:
 
         return self.forward(func)
 
-    def display_area_smarter(self):
+    def display_area_affordable(self):
         group_code, country_code, version, Allow_all_area = (
-            self.contract.functions.DisplayAreaSmarter(self.role, self.address).call()
+            self.contract.functions.DisplayAreaAffordable(self.role, self.address).call()
         )
         countries = decode_country_code(country_code)
         groups = decode_group_code(group_code)
@@ -747,9 +747,9 @@ class Person:
     def upload(self):
         self.upload_simple_items()
 
-        self.upload_area_smarter()
+        self.upload_area_affordable()
 
-        self.upload_disease_items_hierarchy()
+        self.upload_disease_affordable()
         self.upload_date()
 
     def upload_disease_items(self):
@@ -762,7 +762,7 @@ class Person:
 
         return self.forward(func)
 
-    def upload_disease_items_hierarchy(self):
+    def upload_disease_affordable(self):
 
         if "*" in self.disease_items:
 
@@ -791,7 +791,7 @@ class Person:
         )
         # print(f"name {self.name} disease_dict {disease_dict}")
 
-        func = self.contract.functions.UploadDiseaseBinary(
+        func = self.contract.functions.UploadDiseaseAffordable(
             self.role, self.address, False, disease_group_codes, disease_chapter_codes
         )
 
@@ -1163,8 +1163,8 @@ def test_disease():
         gas_requester = requester1.upload_disease_items()
         gas_access = requester1.request_access(provider1)
 
-        gas_provider_binary = provider1.upload_disease_items_hierarchy()
-        gas_requester_binary = requester1.upload_disease_items_hierarchy()
+        gas_provider_binary = provider1.upload_disease_affordable()
+        gas_requester_binary = requester1.upload_disease_affordable()
         # gas_access_disease = requester1.access_disease(provider1)
         gas_access_binary = requester1.access_disease_hierarchy(provider1)
 
@@ -1277,8 +1277,8 @@ def test_area():
         provider1.estimate_gas = True
         requester1.estimate_gas = True
         gas_update_area_group_code = provider1.update_area_group_relation()
-        gas_provider_simple = provider1.upload_area_smarter()
-        gas_requester_simple = requester1.upload_area_smarter()
+        gas_provider_simple = provider1.upload_area_affordable()
+        gas_requester_simple = requester1.upload_area_affordable()
         gas_access_simple = requester1.access_area_simple(provider1)
         data_base = []
         
@@ -1545,9 +1545,9 @@ def test_simple():
     #         f" key {k}, requester value {v} provider value {provider_v} result {v & provider_v == v }"
     #     )
 
-    provider_groups, provider_countries = provider.display_area_smarter()
+    provider_groups, provider_countries = provider.display_area_affordable()
 
-    requester_groups, requester_countries = requester.display_area_smarter()
+    requester_groups, requester_countries = requester.display_area_affordable()
 
     logger.info(f"provider_groups {provider_groups}, provider_countries {provider_countries}")
     logger.info(
@@ -1627,9 +1627,10 @@ class Scenarios:
 
         return result_map
 
-def test_scenarios():
-    requester_number = 200
-    provider_number = 100
+def test_scenarios(    requester_number = 200,
+    provider_number = 100):
+    # requester_number = 200
+    # provider_number = 100
     requester_list = []
 
     for i in range(requester_number):
@@ -2040,8 +2041,8 @@ def print_boolean_items():
     keys = bools.name_index_dict.keys(    )
     print(keys)
 
-# test_scenarios()
+test_scenarios(provider_number=10, requester_number=10)
 # plot_simulation_category()
 # plot_simulation_scenario()
 
-print_boolean_items()
+# print_boolean_items()

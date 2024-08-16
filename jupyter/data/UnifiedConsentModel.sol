@@ -56,25 +56,15 @@ contract ConsentCode {
 
     }
 
-    // MARK: - Requester
-    struct Requester {
-        address requester_address;
-        Terms terms;
-    }
 
-   // MARK: - Provider
-    struct Provider {
-        address provider_address;
-        Terms terms;
-    }
 
     mapping(address => Terms) providerMapping; // data subject
     mapping(address => Terms) requesterMapping; // data subject
 
-    uint8 role_provider = 1;
-    uint8 role_requester = 2;
-    uint256[] Country_Group_Code_Data;
-    uint32[] Country_Group_Code_Index;
+    uint8 constant role_provider = 1;
+    uint8 constant role_requester = 2;
+    uint256[] Group_Countries;
+    uint16[] Group_Index;
     // uint8[][] Country_Group_baseline;
 
     uint16 Area_Simple_Version = 0;
@@ -87,11 +77,11 @@ contract ConsentCode {
 
     //MARK - UpdateAreaSimple
     function UpdateCountryGroupRelation(
-        uint256[] memory _Country_Group_Code_Data,
-        uint32[] memory _Country_Group_Code_Index
+        uint256[] memory _Group_Countries,
+        uint16[] memory _Country_Group_Code_Index
     ) public {
-        Country_Group_Code_Data = _Country_Group_Code_Data;
-        Country_Group_Code_Index = _Country_Group_Code_Index;
+        Group_Countries = _Group_Countries;
+        Group_Index = _Country_Group_Code_Index;
         Area_Simple_Version += 1;
     }
 
@@ -99,11 +89,10 @@ contract ConsentCode {
     function DisplayCountryGroupRelation()
         public
         view
-        returns (uint256[] memory, uint32[] memory, uint16)
+        returns (uint256[] memory, uint16[] memory, uint16)
     {
-        return (
-            Country_Group_Code_Data,
-            Country_Group_Code_Index,
+        return (Group_Countries,
+            Group_Index,
             Area_Simple_Version
         );
     }
@@ -191,15 +180,15 @@ contract ConsentCode {
     }
   
     // MARK: - DisplayAreaSmarter
-    function DisplayAreaSmarter(
+    function DisplayAreaAffordable(
         uint8 role,
         address _address
-    ) public view returns (uint16, uint256, uint16, bool) {
+    ) public view returns (uint16, uint256, bool) {
         Terms storage terms = TermsByRole(role, _address);
         return (
             terms.Area_Group_Affordable,
             terms.Area_Country_Affordable,
-            terms.Area_Simple_Version,
+            // terms.Area_Simple_Version,
             terms.Allow_all_area
         );
     }
@@ -218,7 +207,7 @@ contract ConsentCode {
         } else {
             terms.Area_Group_Affordable = Group_Code;
             terms.Area_Country_Affordable = Country_Code;
-            terms.Area_Simple_Version = Area_Simple_Version;
+            // terms.Area_Simple_Version = Area_Simple_Version;
         }
     }
 
@@ -251,16 +240,15 @@ contract ConsentCode {
     }
 
     // MARK: - DisplayAreaCode
-    function DisplayAreaCode(
-        uint8 role,
-        address _address
-    ) public view returns (uint64, uint8[] memory, uint32[] memory) {
-        Terms storage terms = TermsByRole(role, _address);
-        return (
-            terms.Area_Group_Affordable,
-            terms.Area_Country_List_Baseline,
-        );
-    }
+    // function DisplayAreaCodeAffordable(
+    //     uint8 role,
+    //     address _address
+    // ) public view returns (uint16, uint256) {
+    //     Terms storage terms = TermsByRole(role, _address);
+    //     return (terms.Area_Group_Affordable,
+    //         terms.Area_Country_Affordable,
+    //     );
+    // }
 
 
     // MARK: - UploadDiseaseAffordable
@@ -285,19 +273,19 @@ contract ConsentCode {
             return;
         }
         // terms.allow_all_disease = false;
-        if (role == role_provider) {
+        // if (role == role_provider) {
 
-            for (uint8 i = 0; i < Disease_Group.length; i++) {
-                uint8 Disease_Group_Code = Disease_Group[i];
-                terms.Disease_Map_Affordable[
-                    Disease_Group_Code
-                ] = Disease_Category[i];
-            }
-        }
-        if (role == role_requester) {
-            terms.Disease_Group = Disease_Group;
-            terms.Disease_Category = Disease_Category;
-        }
+        //     for (uint8 i = 0; i < Disease_Group.length; i++) {
+        //         uint8 Disease_Group_Code = Disease_Group[i];
+        //         terms.Disease_Map_Affordable[
+        //             Disease_Group_Code
+        //         ] = Disease_Category[i];
+        //     }
+        // }
+        // if (role == role_requester) {
+        terms.Disease_Group = Disease_Group;
+        terms.Disease_Category = Disease_Category;
+        // }
     }
 
     // MARK: UploadDiseaseBaseline
@@ -374,12 +362,12 @@ contract ConsentCode {
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
-        if (Country_Group_Code_Data.length == 0) {
-            revert("CheckAreaAffordable: Country_Group_Code_Data is empty");
+        if (Group_Countries.length == 0) {
+            revert("CheckAreaAffordable: Group_Countries is empty");
         }
-        if (Country_Group_Code_Data.length != Country_Group_Code_Index.length) {
+        if (Group_Countries.length != Group_Index.length) {
             revert(
-                "CheckAreaAffordable: Country_Group_Code_Data and Country_Group_Code_Index must have the same length"
+                "CheckAreaAffordable: Group_Countries and Group_Index must have the same length"
             );
         }
         Terms storage requester_terms = requesterMapping[_requester_address];
@@ -394,29 +382,23 @@ contract ConsentCode {
         uint64 provider_group = provider_terms.Area_Group_Affordable;
         uint64 requester_group = requester_terms.Area_Group_Affordable;
 
-        uint256 provider_Country = provider_terms.Area_Country_Affordable;
-        uint256 requester_Country = requester_terms.Area_Country_Affordable;
+        uint256 provider_country = provider_terms.Area_Country_Affordable;
+        uint256 requester_country = requester_terms.Area_Country_Affordable;
 
-        if (provider_Country & requester_Country != requester_Country) {
-            uint256 rest_countries = ~provider_Country & requester_Country;
-            uint256 provider_countries_from_group = 0;
-            // to obtain the countries from group of provider
-            for (uint8 i = 0; i < Country_Group_Code_Data.length; i++) {
-                uint256 group = Country_Group_Code_Data[i];
-                uint32 index = Country_Group_Code_Index[i];
-                // the index belongs to the group of provider
-                if (index & provider_group != 0) {
-                    provider_countries_from_group |= group;
-                }
-            }
-            uint256 rest_countries_from_group = rest_countries &
-                provider_countries_from_group;
-            if (rest_countries_from_group != 0) {
-                return false;
+        if ((requester_group & provider_group) != requester_group) {
+            // if the group of requester is not a subset of group of provider, return false
+            return false;
+        }
+        for (uint8 i = 0; i < Group_Countries.length; i++) {
+            uint256 countries = Group_Countries[i];
+            uint16 index = Group_Index[i];
+            // the index belongs to the group of provider
+            if (index & provider_group != 0) {
+                provider_country |= countries;
             }
         }
-
-        if ((requester_group & provider_group) == requester_group) {
+        // if the group of requester is a subset of group of provider, check the countries
+       if ((requester_country & provider_country) == requester_country) {
             return true;
         }
         return false;
@@ -518,6 +500,7 @@ contract ConsentCode {
         if (requesterMapping[_requester_address].allow_all_disease == true) {
             return false;
         }
+        bool allowed = false;
         for (
             uint index_requester = 0;
             index_requester <
@@ -528,16 +511,37 @@ contract ConsentCode {
                 .Disease_Group[index_requester];
             uint128 requester_category_code = requesterMapping[
                 _requester_address].Disease_Category[index_requester];
-            uint128 provider_category_code = providerMapping[_provider_address]
-                .Disease_Map_Affordable[requester_group_code];
-                
-            if (
-                !(provider_category_code & requester_category_code ==
-                    requester_category_code)
+            allowed = false;
+            for (
+                uint index_provider = 0;
+                index_provider <
+                providerMapping[_provider_address].Disease_Group.length;
+                index_provider++
             ) {
+                uint8 provider_group_code = providerMapping[_provider_address].Disease_Group[index_requester];
+                uint128 provider_category_code = providerMapping[_provider_address].Disease_Category[index_requester];
+                if (provider_group_code == requester_group_code) {
+                    if (provider_category_code & requester_category_code == requester_category_code) {
+                        allowed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (allowed == false) {
                 return false;
             }
         }
+        //     uint128 provider_category_code = providerMapping[_provider_address]
+        //         .Disease_Map_Affordable[requester_group_code];
+                
+        //     if (
+        //         !(provider_category_code & requester_category_code ==
+        //             requester_category_code)
+        //     ) {
+        //         return false;
+        //     }
+        // }
         return true;
     }
 
@@ -558,6 +562,7 @@ contract ConsentCode {
         ) {
             return false;
         }
+
         // year now equal
         if (
             requesterMapping[_requester_address].Start_Month >
@@ -571,6 +576,7 @@ contract ConsentCode {
         ) {
             return false;
         }
+
         // month now equal
         if (
             requesterMapping[_requester_address].Start_Day >=
@@ -585,6 +591,7 @@ contract ConsentCode {
             return false;
         }
 
+        //  year, month, day now equal
         return true;
     }
 
