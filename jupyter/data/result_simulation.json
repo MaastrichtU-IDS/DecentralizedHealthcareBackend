@@ -1,63 +1,74 @@
 {
     "scenario_1": {
         "open": {
-            "total": 100,
-            "success": 11,
+            "total": 10000,
+            "success": 1366,
             "error": {
-                "area_error": 89
+                "simple_error": 2225,
+                "disease_error": 6107,
+                "area_error": 6405
             }
         }
     },
     "scenario_2": {
         "open": {
-            "total": 50,
-            "success": 5,
+            "total": 5000,
+            "success": 687,
             "error": {
-                "area_error": 45
+                "disease_error": 3065,
+                "area_error": 3188,
+                "simple_error": 1051
             }
         },
         "strict": {
-            "total": 20,
-            "success": 0,
+            "total": 2500,
+            "success": 25,
             "error": {
-                "area_error": 18,
-                "simple_error": 10
+                "simple_error": 1464,
+                "disease_error": 1544,
+                "area_error": 2278,
+                "date_error": 1217
             }
         },
         "medium": {
-            "total": 20,
-            "success": 0,
+            "total": 2500,
+            "success": 81,
             "error": {
-                "area_error": 18,
-                "simple_error": 5,
-                "date_error": 8
+                "simple_error": 1142,
+                "disease_error": 1532,
+                "area_error": 2128,
+                "date_error": 909
             }
         }
     },
     "scenario_3": {
         "medium": {
-            "total": 40,
-            "success": 4,
+            "total": 4000,
+            "success": 125,
             "error": {
-                "area_error": 32,
-                "simple_error": 11,
-                "date_error": 8
+                "date_error": 1120,
+                "simple_error": 1817,
+                "disease_error": 2452,
+                "area_error": 3422
             }
         },
         "strict": {
-            "total": 40,
-            "success": 0,
+            "total": 4000,
+            "success": 52,
             "error": {
-                "area_error": 36,
-                "date_error": 11,
-                "simple_error": 21
+                "simple_error": 2331,
+                "disease_error": 2475,
+                "area_error": 3674,
+                "date_error": 1569
             }
         },
         "open": {
-            "total": 20,
-            "success": 2,
+            "total": 2000,
+            "success": 262,
             "error": {
-                "area_error": 18
+                "simple_error": 507,
+                "disease_error": 1215,
+                "area_error": 1258
             }
         }
     }

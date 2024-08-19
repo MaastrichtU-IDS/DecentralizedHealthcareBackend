@@ -911,17 +911,17 @@ class Provider(Person):
             "months": 6,
         },
         "medium": {
-            "simple_items": 0.6,
-            "group_code": 0.6,
-            "country_code": 0.6,
-            "disease_items": 0.6,
+            "simple_items": 0.5,
+            "group_code": 0.5,
+            "country_code": 0.5,
+            "disease_items": 0.5,
             "months": 12,
         },
         "open": {
-            "simple_items": 1,
-            "group_code": 0.5,
-            "country_code": 0.6,
-            "disease_items": 0.9,
+            "simple_items": 0.8,
+            "group_code": 0.8,
+            "country_code": 0.8,
+            "disease_items": 0.8,
             "months": 2**8 - 1,
         },
     }
@@ -998,7 +998,7 @@ class Requester(Person):
         self.start_year = random.randint(2024, 2025)
         self.start_month = random.randint(1, 12)
         self.start_day = random.randint(1, 28)
-        self.months = random.randint(1, 24)
+        # self.months = random.randint(1, 24)
         # generate icd-10 codes
         logger.info(
             f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
@@ -1467,11 +1467,8 @@ def test_group():
     plt.savefig("figs/area_gas_requester.pdf")
     plt.show()
 
-# %% [markdown]
-# ## Date
-#
 
-# %%
+
 def test_date():
     provider1.Start_Year = 2021
     provider1.Start_Month = 1
@@ -1486,7 +1483,6 @@ def test_date():
     date_gas = requester1.upload_date()
 
 
-# %%
 def test_simple():
     provider = Provider(
         name=f"provider",
@@ -1922,6 +1918,7 @@ def plot_simulation_category():
     # Define the data
     data = json.load(open(result_simulation_fp, "r"))
     category_dict = dict()
+    
     for k, v in data.items():
         for category, value in v.items():
             total = value["total"]
@@ -1942,7 +1939,8 @@ def plot_simulation_category():
                 category_dict[category]["error"][k] += v
 
     # Extract data points
-    categories = list(category_dict.keys())
+    # categories = list(category_dict.keys())
+    categories = ["open", "medium", "strict"]
     success_rates = [category_dict[cat]["success"] / category_dict[cat]["total"] for cat in categories]
 
     # Create a bar chart
@@ -1957,7 +1955,7 @@ def plot_simulation_category():
     ax.set_ylabel('Success Rate')
     # ax.set_title('Success Rate by Category')
     ax.set_xticks(x)
-    ax.set_ylim(0, 0.4)
+    ax.set_ylim(0, 0.175)
     ax.set_xticklabels(categories)
     ax.legend()
     # Add labels to the bars
@@ -2014,7 +2012,7 @@ def plot_simulation_scenario():
     ax.set_ylabel("Success Rate")
     # ax.set_title("Success Rate by Scenarios")
     ax.set_xticks(x)
-    ax.set_ylim(0,0.4)
+    ax.set_ylim(0,0.175)
     ax.set_xticklabels(scenarios)
     ax.legend()
 
@@ -2041,8 +2039,8 @@ def print_boolean_items():
     keys = bools.name_index_dict.keys(    )
     print(keys)
 
-test_scenarios(provider_number=10, requester_number=10)
-# plot_simulation_category()
-# plot_simulation_scenario()
+# test_scenarios(provider_number=100, requester_number=100)
+plot_simulation_category()
+plot_simulation_scenario()
 
 # print_boolean_items()
