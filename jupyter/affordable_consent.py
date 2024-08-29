@@ -1,3 +1,4 @@
+from cgi import test
 import json
 
 # import web3
@@ -13,6 +14,7 @@ import pandas as pd
 import logging
 from pathlib import Path 
 from tqdm import tqdm
+from zmq import Enum
 
 CURRENT_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path("data")
@@ -24,11 +26,11 @@ logger = logging.getLogger("affordable_consent")
 logger.setLevel(logging.DEBUG)  # Set to the lowest level to capture all logs
 
 # Create handlers for each log level
-error_handler = logging.FileHandler("affordable_consent_error.log", mode="w")
-warning_handler = logging.FileHandler("affordable_consent_warning.log", mode="w")
-info_handler = logging.FileHandler("affordable_consent_info.log", mode="w")
-critical_handler = logging.FileHandler("affordable_consent_critical.log", mode="w")
-all_handler = logging.FileHandler("affordable_consent_all.log", mode="w")
+error_handler = logging.FileHandler("logs/affordable_consent_error.log", mode="w")
+warning_handler = logging.FileHandler("logs/affordable_consent_warning.log", mode="w")
+info_handler = logging.FileHandler("logs/affordable_consent_info.log", mode="w")
+critical_handler = logging.FileHandler("logs/affordable_consent_critical.log", mode="w")
+all_handler = logging.FileHandler("logs/affordable_consent_all.log", mode="w")
 console_handler = logging.StreamHandler()
 
 # Set level for each handler
@@ -66,9 +68,10 @@ logger.debug("This is a debug message")
 logger.critical("This is a critical message")
 
 
-consent_fp = r"data\UnifiedConsentModel.sol"
+consent_fp = Path("solidity","AffordableConsentModel.sol")
 
 result_simulation_fp = "data/result_simulation.json"
+
 # consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
 with open(consent_fp) as file:
     contract_source_code = file.read()
@@ -80,8 +83,8 @@ solcx_version = "0.8.0"
 solcx.install_solc(solcx_version)
 # compiled_sol = solcx.compile_source(source=contract_source_code,
 #   solc_binary="/snap/bin/solc")
-compiled_sol = solcx.compile_source(
-    source=contract_source_code,
+compiled_sol = solcx.compile_files(
+    source_files=consent_fp,
     # solc_binary='/usr/bin/solc',
     # optimize_runs=200,
     output_values=["abi", "bin", "bin-runtime"],
@@ -100,7 +103,8 @@ compiled_sol = solcx.compile_source(
 
 # print(compiled_sol.keys())
 # Extract full interface as dict from compiled contract
-contract_interface = compiled_sol["<stdin>:ConsentCode"]
+print(compiled_sol.keys())
+contract_interface = compiled_sol["solidity/AffordableConsentModel.sol:ConsentCode"]
 # contract_interface = compiled_sol['data/ConsentContractDate.sol:ConsentCode']
 # print(contract_interface.keys())
 # contract_interface
@@ -234,13 +238,13 @@ def diseaseCode2IntHierarchy(code: str):
     chapter_str = code[0]
     # if chapter_str == "*":
     #     return 2**8-1,2**128-1
-    chapter_int = int(ord(code[0]) - ord("A")) + 1
-    group_str = code[1:3]
-    if group_str == "**":
-        return chapter_int, 2**128 - 1
-    group_int = 1 << int(group_str)
+    group_int = int(ord(code[0]) - ord("A")) + 1
+    category_str = code[1:3]
+    if category_str == "**":
+        return group_int, 2**128 - 1
+    chapter_int = 1 << int(category_str)
     # represent group_int as 128 bits
-    return chapter_int, group_int, code
+    return group_int, chapter_int
 
 
 def diseaseCode2Int(code: str) -> int:
@@ -323,9 +327,9 @@ class BooleanItems:
         "ProfitMakingProfessionals": 2048,
         "FormalApprovalRequired": 4096,
     }
-    index_full_dict = {v: k for k, v in name_index_dict.items()}
+    index_name_dict = {v: k for k, v in name_index_dict.items()}
 
-    def __init__(self, true_prob=None):
+    def __init__(self, true_prob=None, true_set=None):
         self.true_set = set()
         if true_prob is not None:
             for k, _ in self.name_index_dict.items():
@@ -335,6 +339,13 @@ class BooleanItems:
             #         print(f"rand_num {rand_num} true_prob {true_prob} add {k}")
 
             # print("true_prob", true_prob, "true_set", self.true_set)
+        if true_set is not None:
+            self.set_purpose(true_set)
+    def set_purpose(self, purpose_list):
+        extra_purpose = set(purpose_list) - set(self.name_index_dict.keys())
+        if extra_purpose:
+            raise Exception(f"extra_purpose {extra_purpose}")
+        self.true_set = set(purpose_list)
 
     def to_int(self):
         result = 0
@@ -453,8 +464,6 @@ class Person:
         self,
         name="",
         description="",
-        # contract=contract,
-        person_dict=None,
         address=None,
         bool_items=None,
         **kwargs,
@@ -493,6 +502,7 @@ class Person:
         self.person_dict = person_dict
         self.debug = False
         self.disease_items = []
+        self.disease_groups=[]
 
     def random_init(self, profile_dict):
         # if risk_level is not None:
@@ -512,9 +522,13 @@ class Person:
                 disease_list = disease_dict[random.choice(string.ascii_uppercase)]
                 if len(disease_list) > 0:
                     break
+
             self.disease_items = random.choices(
                 disease_list,
                 k=int(profile_dict["disease_items"] * len(disease_list)),
+            )
+            self.disease_groups = random.choices(
+                string.ascii_uppercase, k=int(profile_dict["disease_items"] * 26)
             )
 
         self.country_names = random.sample(
@@ -526,9 +540,8 @@ class Person:
             all_group_names,
             k=int(profile_dict["group_code"] * len(all_group_names)),
         )
-  
 
-    def upload_simple_items(self):
+    def upload_purpose_items(self):
         simple_value = self.bool_items.to_int()
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
@@ -559,16 +572,19 @@ class Person:
 
         print(f"{self.name} displaySimpleItems is {boolItems.show_true_items()}")
 
-    def upload_area_code_baseline(self):
+    def upload_area_baseline(self):
 
         country_codes = [
-            self.country_name_code_dict[c]["index"] for c in self.country_names
+            country_name_code_dict[c]["index"] for c in self.country_names
         ]
 
         # print("UploadCountryItems", country_codes)
-
-        group_codes = [self.group_order_index_dict[g] for g in self.group_names]
-
+        if hasattr(self, "group_names"):
+            group_codes = [group_index_dict[g] for g in self.group_names]
+        else:
+            group_codes = []
+        # group_codes = [group_order_index_dict[g] for g in self.group_names]
+        logger.info(f"country_codes {country_codes} group_codes {group_codes}")
         func = self.contract.functions.UploadAreaBaseline(
             self.role,
             self.address,
@@ -684,20 +700,25 @@ class Person:
         country_codes = [
             country_index_dict[c] for c in self.country_names
         ]
-        group_codes = [group_index_dict[g] for g in self.group_names]
+        if hasattr(self, "group_names"):
 
-        group_code = sum(group_codes)
+            group_codes = [group_index_dict[g] for g in self.group_names]
+            group_code = sum(group_codes)
+        else:
+            logger.debug(f"do not have group_names")
+            group_code = 0
         country_code = sum(country_codes)
 
-        decoded_countries = decode_country_code(country_code)
-        missed_countries = set(self.country_names) - set(decoded_countries)
-        if len(missed_countries) > 0:
-            logger.error(f"missed_countries {missed_countries}")
+        # decoded_countries = decode_country_code(country_code)
+        # missed_countries = set(self.country_names) - set(decoded_countries)
+        # if len(missed_countries) > 0:
+        #     logger.error(f"missed_countries {missed_countries}")
         # print("country_group_data length", len(country_group_data))
 
-        logging.info(
-            f"upload_area_code_simple role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}"
+        logger.info(
+            f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}"
         )
+        # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
 
         func = self.contract.functions.UploadAreaAffordable(
             self.role, self.address, False, group_code, country_code
@@ -715,7 +736,6 @@ class Person:
         groups = decode_group_code(group_code)
 
         return groups, countries
-
 
     def display_area_codes(self):
         (
@@ -745,18 +765,18 @@ class Person:
         logging.info(f"displayAreaCodes is {result}")
 
     def upload(self):
-        self.upload_simple_items()
+        self.upload_purpose_items()
 
         self.upload_area_affordable()
 
         self.upload_disease_affordable()
         self.upload_date()
 
-    def upload_disease_items(self):
+    def upload_disease_baseline(self):
 
         disease_codes = [diseaseCode2Int(d) for d in self.disease_items]
 
-        func = self.contract.functions.UploadDisease(
+        func = self.contract.functions.UploadDiseaseBaseline(
             self.role, self.address, disease_codes
         )
 
@@ -766,8 +786,8 @@ class Person:
 
         if "*" in self.disease_items:
 
-            func = self.contract.functions.UploadDiseaseBinary(
-                self.role, self.address, True, [], []
+            func = self.contract.functions.UploadDiseaseAffordable(
+                self.role, self.address, True, 0, []
             )
             logger.debug("allow all disease")
 
@@ -775,24 +795,37 @@ class Person:
 
         disease_codes = [diseaseCode2IntHierarchy(d) for d in self.disease_items]
         # print(f"name {self.name}  disease_codes {disease_codes} ")
-        self.disease_dict = {}
+        disease_dict = {}
 
         for d in disease_codes:
 
-            if d[0] not in self.disease_dict:
+            if d[0] not in disease_dict:
 
-                self.disease_dict[d[0]] = 0
+                disease_dict[d[0]] = 0
 
-            self.disease_dict[d[0]] |= d[1]
+            disease_dict[d[0]] |= d[1]
 
-        disease_group_codes, disease_chapter_codes = (
-            list(self.disease_dict.keys()),
-            list(self.disease_dict.values()),
-        )
+        # disease_group_codes, disease_chapter_codes = (
+        #     list(self.disease_dict.keys()),
+        #     list(self.disease_dict.values()),
+        # )
+        disease_group_codes = [1 << (ord(d) - ord("A") + 1) for d in self.disease_groups]
+        disease_group_code = sum(disease_group_codes)
+
+        disease_combined_codes = [(1<< (k+99)) + v for k,v in disease_dict.items()]
         # print(f"name {self.name} disease_dict {disease_dict}")
-
+        # print(f"name {self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
+        for code in disease_combined_codes:
+            if code > 1<<128:
+                print(f"code {code} larger than 2**128 disease_dict {disease_dict}")
+            # print(f"code {code} disease_code {int2DiseaseCode(code)}")
+        # logger.info(f"disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
         func = self.contract.functions.UploadDiseaseAffordable(
-            self.role, self.address, False, disease_group_codes, disease_chapter_codes
+            self.role,
+            self.address,
+            False,
+            disease_group_code,
+            disease_combined_codes
         )
 
         return self.forward(func)
@@ -908,6 +941,7 @@ class Provider(Person):
             "group_code": 0.2,
             "country_code": 0.2,
             "disease_items": 0.2,
+            "disease_groups": random.uniform(0, 0.2),
             "months": 6,
         },
         "medium": {
@@ -915,6 +949,7 @@ class Provider(Person):
             "group_code": 0.5,
             "country_code": 0.5,
             "disease_items": 0.5,
+            "disease_groups": random.uniform(0, 0.5),
             "months": 12,
         },
         "open": {
@@ -922,6 +957,7 @@ class Provider(Person):
             "group_code": 0.8,
             "country_code": 0.8,
             "disease_items": 0.8,
+            "disease_groups": random.uniform(0, 0.8),
             "months": 2**8 - 1,
         },
     }
@@ -933,24 +969,25 @@ class Provider(Person):
         self.role = role_provider
 
         # risk_level = kwargs.get("risk_level", None)
+        random_init = kwargs.get("random_init", False)
+        if random_init:
+            self.profile = kwargs.get("profile", "medium")
 
-        self.profile = kwargs.get("profile", "medium")
+            profile_dict = self.profiles[self.profile]
+            self.random_init(profile_dict)
 
-        profile_dict = self.profiles[self.profile]
-        self.random_init(profile_dict)
+            if self.profile == profile_open:
+                self.start_year = 2020
+            else:
+                self.start_year = random.randint(2023, 2025)
 
-        if self.profile == profile_open:
-            self.start_year = 2020
-        else:
-            self.start_year = random.randint(2023, 2025)
+            self.start_month = random.randint(1, 12)
 
-        self.start_month = random.randint(1, 12)
+            self.start_day = random.randint(1, 28)
 
-        self.start_day = random.randint(1, 28)
-
-        logger.info(
-            f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
-        )
+            logger.info(
+                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
+            )
 
 
 # p = Person("test", "test", contract, address=w3.eth.accounts[1])
@@ -966,18 +1003,36 @@ class Provider(Person):
 #
 
 # %%
-import dis
+# import dis
 
 
-area_error_code = 1
-disease_error_code = 2
-date_error_code = 4
-simple_error_code = 8
+# area_error_code = 1
+# disease_error_code = 2
+# date_error_code = 4
+# simple_error_code = 8
 
-area_error = "area_error"
-disease_error = "disease_error"
-date_error = "date_error"
-simple_error = "simple_error"
+# area_error = "area_error"
+# disease_error = "disease_error"
+# date_error = "date_error"
+# purpose_error = "_error"
+
+
+class AccessError(Enum):
+    AREA_ERROR = (1, "area_error")
+    DISEASE_ERROR = (2, "disease_error")
+    DATE_ERROR = (4, "date_error")
+    PURPOSE_ERROR = (8, "purpose_error")
+
+    @property
+    def code(self):
+        return self.value[0]
+
+    @property
+    def message(self):
+        return self.value[1]
+
+    def __str__(self):
+        return self.message
 
 
 class Requester(Person):
@@ -985,24 +1040,27 @@ class Requester(Person):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role = role_requester
-        self.bool_items = BooleanItems(true_prob=random.uniform(0,0.2))
-        # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
-        profile_dict = {
-            "simple_items": random.uniform(0, 0.2),
-            "group_code": random.uniform(0, 0.05),
-            "country_code": random.uniform(0, 0.05),
-            "disease_items": random.uniform(0, 0.03),
-            "months": random.randint(1, 24),
-        }
-        self.random_init(profile_dict)
-        self.start_year = random.randint(2024, 2025)
-        self.start_month = random.randint(1, 12)
-        self.start_day = random.randint(1, 28)
-        # self.months = random.randint(1, 24)
-        # generate icd-10 codes
-        logger.info(
-            f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
-        )
+        random_init = kwargs.get("random_init", False)
+        if random_init:
+            self.bool_items = BooleanItems(true_prob=random.uniform(0,0.2))
+            # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
+            profile_dict = {
+                "simple_items": random.uniform(0, 0.2),
+                "group_code": random.uniform(0, 0.05),
+                "country_code": random.uniform(0, 0.05),
+                "disease_items": random.uniform(0, 0.03),
+                "disease_groups": random.uniform(0, 0.05),
+                "months": random.randint(1, 24),
+            }
+            self.random_init(profile_dict)
+            self.start_year = random.randint(2024, 2025)
+            self.start_month = random.randint(1, 12)
+            self.start_day = random.randint(1, 28)
+            # self.months = random.randint(1, 24)
+            # generate icd-10 codes
+            logger.info(
+                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
+            )
 
    
 
@@ -1030,18 +1088,11 @@ class Requester(Person):
 
         func = self.contract.functions.AccessData(provider.address, self.address)
 
-        # print(f"sef.address {self.address}, provider.address {provider.address}")
-
         result = self.forward(func, True)
         result_set = set()
-        if result & area_error_code:
-            result_set.add("area_error")
-        if result & disease_error_code:
-            result_set.add("disease_error")
-        if result & date_error_code:
-            result_set.add("date_error")
-        if result & simple_error_code:
-            result_set.add("simple_error")
+        for error in AccessError:
+            if result & error.code:
+                result_set.add(error.message)
         return result_set
 
     def access_disease(self, provider: Provider):
@@ -1124,14 +1175,16 @@ def test_disease():
     provider1 = Provider(
         name="Provider_disease",
         description="Provider1",
-        contract=contract,
-        person_dict=provider_dict,
+        address=accounts.pop(),
+        # contract=contract,
+        # person_dict=provider_dict,
     )
     requester1 = Requester(
         name="Requester_disease",
         description="Requester1",
-        contract=contract,
-        person_dict=requester_1_dict,
+        address=accounts.pop(),
+        # contract=contract,
+        # person_dict=requester_1_dict,
     )
 
     def generate_disease_items(chapters=["A"], numbers=[10]):
@@ -1159,162 +1212,177 @@ def test_disease():
         provider1.disease_items = disease_items
         requester1.disease_items = disease_items
 
-        gas_provider = provider1.upload_disease_items()
-        gas_requester = requester1.upload_disease_items()
-        gas_access = requester1.request_access(provider1)
+        gas_provider = provider1.upload_disease_baseline()
+        gas_requester = requester1.upload_disease_baseline()
+        # gas_access = requester1.request_access(provider1)
 
-        gas_provider_binary = provider1.upload_disease_affordable()
-        gas_requester_binary = requester1.upload_disease_affordable()
+        gas_provider_affordable = provider1.upload_disease_affordable()
+        gas_requester_affordable = requester1.upload_disease_affordable()
         # gas_access_disease = requester1.access_disease(provider1)
-        gas_access_binary = requester1.access_disease_hierarchy(provider1)
+        # gas_access_binary = requester1.access_disease_hierarchy(provider1)
 
         disease_data.append(
             {
                 "interval": interval,
-                "gas_provider_binary": gas_provider_binary,
-                "gas_requester_binary": gas_requester_binary,
-                "gas_access_binary": gas_access_binary,
-                "gas_provider": gas_provider,
-                "gas_requester": gas_requester,
-                "gas_access": gas_access,
+                "gas_provider_affordable": gas_provider_affordable,
+                "gas_requester_affordable": gas_requester_affordable,
+                # "gas_access_binary": gas_access_binary,
+                "gas_provider_baseline": gas_provider,
+                "gas_requester_baseline": gas_requester,
+                # "gas_access": gas_access,
             }
         )
+    json.dump(disease_data, open("result/disease.json", "w"), indent=4)
 
-    disease_data_frame = pd.DataFrame(disease_data)
-    factor = 1e3
-    import matplotlib.pyplot as plt
 
-    disease_data_frame = test_disease()
-    intervals = disease_data_frame["interval"]
-    data_plot = pd.DataFrame()
-    data_plot["interval"] = intervals
-    role = "provider"
-    line_role_baseline = f"gas_{role}"
-    line_role_binary = f"gas_{role}_binary"
+def plot_disease():
+    disease_data = json.load(open("result/disease.json", "r"))
+    provider_data = {
+        "baseline": [d["gas_provider_baseline"] for d in disease_data],
+        "affordable": [d["gas_provider_affordable"] for d in disease_data],
+        "interval": [d["interval"] for d in disease_data],
+    }
+    requester_data = {
+        "baseline": [d["gas_requester_baseline"] for d in disease_data],
+        "affordable": [d["gas_requester_affordable"] for d in disease_data],
+        "interval": [d["interval"] for d in disease_data],
+    }
+    plot(provider_data, "disease", "provider")
+    plot(requester_data, "disease", "requester")
 
-    data_plot[line_role_baseline] = disease_data_frame[line_role_baseline] / factor
-    data_plot[line_role_binary] = disease_data_frame[line_role_binary] / factor
-    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
-    ax = data_plot.plot.line(
-        x="interval",
-        y=[line_role_baseline, line_role_binary],
-        style=["o-", "*-"],
-        xlabel="Number of diseases",
-        ylabel="Gas cost (1e3)",
-        label=["base", "binary"],
-        # title="Gas cost for uploading area code of providers",
-        # annotate=True,
-    )
 
-    plt.annotate(
-        data_plot[line_role_baseline].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot[line_role_baseline].iloc[-1]),
-        xytext=(intervals.iloc[-1] - 15, data_plot[line_role_baseline].iloc[-1]),
-    )
-    plt.annotate(
-        data_plot[line_role_binary].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot[line_role_binary].iloc[-1]),
-        xytext=(intervals.iloc[-1] - 8, data_plot[line_role_binary].iloc[-1] + 50),
-    )
-    plt.savefig(f"figs/disease_gas_{role}.pdf")
-    plt.show()
-
-    role = "requester"
-    line_role_baseline = f"gas_{role}"
-    line_role_binary = f"gas_{role}_binary"
-    data_plot[line_role_baseline] = disease_data_frame[line_role_baseline] / factor
-    data_plot[line_role_binary] = disease_data_frame[line_role_binary] / factor
-    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
-    ax = data_plot.plot.line(
-        x="interval",
-        y=[line_role_baseline, line_role_binary],
-        style=["o-", "*-"],
-        xlabel="Number of diseases",
-        ylabel="Gas cost (1e3)",
-        label=["base", "binary"],
-        # title="Gas cost for uploading area code of requesters",
-        # annotate=True,
-    )
-
-    plt.annotate(
-        data_plot[line_role_baseline].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot[line_role_baseline].iloc[-1]),
-        xytext=(intervals.iloc[-1] - 13, data_plot[line_role_baseline].iloc[-1]),
-    )
-    plt.annotate(
-        data_plot[line_role_binary].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot[line_role_binary].iloc[-1]),
-        xytext=(intervals.iloc[-1] - 8, data_plot[line_role_binary].iloc[-1] + 5),
-    )
-    plt.savefig(f"figs/disease_gas_{role}.pdf")
-    plt.show()
-
-# %% [markdown]
-# ## Area
-#
-
-# %%
 def test_area():
-    intevals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    intevals = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90,100,110,120,130,140,150,160,170,180]
     provider1 = Provider(
         name="Provider_area",
         description="Provider1",
-        person_dict=provider_dict,
+        # person_dict=provider_dict,
+        address = accounts.pop(),
     )
     requester1 = Requester(
         name="Requester_area",
         description="Requester1",
-        person_dict=requester_1_dict,
+        # person_dict=requester_1_dict,
+         address = accounts.pop(),
     )
+    data_baseline = []
+    data_affordable = []
+
+    # provider1.update_area_group_relation()
+    provider1.estimate_gas = True
+    requester1.estimate_gas = True
     for interval in intevals:
-        countries = list(provider1.country_name_code_dict.keys())[:100]
+        countries = list(country_name_code_dict.keys())[:interval]
         provider1.country_names = countries
         requester1.country_names = countries
-        provider1.group_names = ["EUROPEAN_UNION"]
-        requester1.group_names = ["EUROPEAN_UNION"]
-        provider1.estimate_gas = False
-        provider1.update_area_group_relation()
-        provider1.estimate_gas = True
-        requester1.estimate_gas = True
-        gas_update_area_group_code = provider1.update_area_group_relation()
-        gas_provider_simple = provider1.upload_area_affordable()
+        # gas_update_area_group_code = provider1.update_area_group_relation()
+        gas_provider_affordable = provider1.upload_area_affordable()
         gas_requester_simple = requester1.upload_area_affordable()
-        gas_access_simple = requester1.access_area_simple(provider1)
-        data_base = []
-        
-        data_base.append(
+        # gas_access_simple = requester1.access_area_simple(provider1)
+
+        data_affordable.append(
             {
                 "interval": interval,
-                "gas_provider": gas_provider_simple,
+                "gas_provider": gas_provider_affordable,
                 "gas_requester": gas_requester_simple,
-                "gas_access": gas_access_simple,
-                "gas_update_area_group_code": gas_update_area_group_code,
+                # "gas_access": gas_access_simple,
+                # "gas_update_area_group_code": gas_update_area_group_code,
             }
         )
-        data_frame_base = pd.DataFrame(data_base)
-        print(data_frame_base.to_string(index=False))
+        # gas_update_area_group_code = provider1.update_area_group_code_baseline()
+        gas_provider_baseline = provider1.upload_area_baseline()
+        gas_requester_baseline = requester1.upload_area_baseline()
+        data_baseline.append(
+            {
+                "interval": interval,
+                "gas_provider": gas_provider_baseline,
+                "gas_requester": gas_requester_baseline,
+                # "gas_access": gas_access_simple,
+                # "gas_update_area_group_code": gas_update_area_group_code,
+            }
+        )
+    result = {"baseline": data_baseline, "affordable": data_affordable}
+    json.dump(result, open("result/performance_area.json", "w"), indent=4)
 
-        provider1.estimate_gas = False
-        # provider1.update_area_group_code_baseline()
-        provider1.estimate_gas = True
-        requester1.estimate_gas = True
-        gas_update_area_group_code = provider1.update_area_group_code_baseline()
-    # gas_provider_simple = provider1.upload_area_code_baseline()
-    # gas_requester_simple = requester1.upload_area_code_baseline()
-    # gas_access_simple = requester1.access_area_baseline(provider1)
-    data_base = []
-    data_base.append(
-        {
-            "interval": interval,
-            "gas_provider": gas_provider_simple,
-            "gas_requester": gas_requester_simple,
-            "gas_access": gas_access_simple,
-            "gas_update_area_group_code": gas_update_area_group_code,
-        }
+
+def plot(data, task, role):
+    data_frame = pd.DataFrame(data)
+    factor = 1e3
+    import matplotlib.pyplot as plt
+
+    intervals = data_frame["interval"]
+    data_plot = pd.DataFrame()
+    data_plot["interval"] = intervals
+    data_plot["baseline"] = (data_frame["baseline"] / factor).round(1)
+    data_plot["affordable"] = (data_frame["affordable"] / factor).round(1)
+    # data_plot["gas_update_area_group_code"] = data_frame["gas_update_area_group_code"] / factor
+    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
+    ax = data_plot.plot.line(
+        x="interval",
+        y=["baseline", "affordable"],
+        style=["o-", "*-"],
+        xlabel="Number of countries",
+        ylabel=f"Gas cost",
+        label=["baseline", "affordable"],
+        # title="Gas cost for uploading area code of providers",
+        # annotate=True,
     )
-    data_frame_base = pd.DataFrame(data_base)
-    print(data_frame_base.to_string(index=False))
-    data_frame_base.plot.bar(x="interval", y="gas_update_area_group_code")
+    # ax.set_ylabel(
+    #     f"Gas Usage ({factor})", rotation=0, labelpad=50, ha="left", va="top"
+    # )
+    # ax.yaxis.set_label_coords(-0.1, 1.05)
+    y_max = data_plot["baseline"].max()
+    x_max = data_plot["interval"].max()
+    plt.ylim(0, y_max*1.08)
+    plt.xlim(0, x_max+15)
+    x_shift= -5
+    y_shift = y_max* 0.02
+    plt.annotate(
+            data_plot["baseline"].iloc[-1],
+            xy=(intervals.iloc[-1], data_plot["baseline"].iloc[-1]),
+            xytext=(
+                intervals.iloc[-1] + x_shift,
+                data_plot["baseline"].iloc[-1] + y_shift,
+            ),
+        )
+    plt.annotate(
+            data_plot["affordable"].iloc[-1],
+            xy=(intervals.iloc[-1], data_plot["affordable"].iloc[-1]),
+            xytext=(intervals.iloc[-1] + x_shift, data_plot["affordable"].iloc[-1] + y_shift),
+        )
+    plt.text(
+            -0.01,
+            1.02,
+            r"$1 \times 10^{3}$",
+            ha="left",
+            va="center",
+            transform=ax.transAxes,
+            # fontsize=12,
+        )
+    plt.savefig(f"figs/{task}_gas_{role}.pdf")
+
+
+def plot_area():
+
+    # plt.show()
+    result = json.load(open("result/performance_area.json", "r"))
+    data_baseline = result["baseline"]
+    data_affordable = result["affordable"]
+
+    gas_provider  = {
+        "baseline":[d["gas_provider"] for d in data_baseline],
+        "affordable":[d["gas_provider"] for d in data_affordable],
+        "interval":[d["interval"] for d in data_baseline],
+    }
+    gas_requester  = {
+        "baseline":[d["gas_requester"] for d in data_baseline],
+        "affordable":[d["gas_requester"] for d in data_affordable],
+        "interval":[d["interval"] for d in data_baseline],
+    }
+    task = "area"
+    plot(gas_provider, task, "provider")
+    plot(gas_requester, task, "requester")
+
 
 # %%
 import json
@@ -1468,7 +1536,6 @@ def test_group():
     plt.show()
 
 
-
 def test_date():
     provider1.Start_Year = 2021
     provider1.Start_Month = 1
@@ -1591,9 +1658,10 @@ class Scenarios:
             provider = Provider(
                 name=f"provider_{i}",
                 description=f"provider_{i}",
-                person_dict=provider_dict,
+                # person_dict=provider_dict,
                 address=accounts.pop(),
                 profile=i,
+                random_init=True,
             )
             provider.upload()
             provider_list.append(provider)
@@ -1633,8 +1701,9 @@ def test_scenarios(    requester_number = 200,
         requester = Requester(
             name=f"requester_{i}",
             description=f"requester_{i}",
-            person_dict=requester_1_dict,
+            # person_dict=requester_1_dict,
             address=accounts.pop(),
+            random_init=True,
         )
         requester.upload()
         requester_list.append(requester)
@@ -1669,10 +1738,10 @@ def test_scenarios(    requester_number = 200,
 
 def test_case_study():
     result_map = {
-        area_error: r"\faFlag[regular]",
-        disease_error: r"\faCapsules",
-        date_error: r"\faCalendar*[regular]",
-        simple_error: r"\circletfillhl",
+        AccessError.AREA_ERROR.message: r"\faFlag[regular]",
+        AccessError.DISEASE_ERROR.message: r"\faCapsules",
+        AccessError.DATE_ERROR.message: r"\faCalendar*[regular]",
+        AccessError.PURPOSE_ERROR.message: r"\circletfillhl",
     }
     accounts = w3.eth.accounts.copy()
 
@@ -1796,12 +1865,9 @@ def test_case_study():
     provider4.country_names = ["*"]
     provider4.bool_items = BooleanItems(true_prob=1)
 
-    bools = BooleanItems()
-    bools.ClinicalProfessionals = True
-    bools.AcademicProfessionals = True
     provider5.disease_items = ["*"]
     provider5.country_names = ["*"]
-    provider5.bool_items = bools
+    provider5.bool_items = BooleanItems(true_set={"ClinicalProfessionals", "AcademicProfessionals"})
 
     requester1.start_year = 2024
     requester1.start_month = 6
@@ -1843,11 +1909,8 @@ def test_case_study():
     requester8.disease_items = ["*"]
     requester8.bool_items = BooleanItems(true_prob=1)
 
-    bools_9 = BooleanItems()
-    bools_9.ClinicalProfessionals = True
-    # bools_9.AcademicProfessionals = True
-    # provider5.bool_items = bools
-    requester9.bool_items = bools_9
+
+    requester9.bool_items =  BooleanItems(true_set={"ClinicalProfessionals"})
     requester9.country_names = ["*"]
     requester9.disease_items = ["*"]
 
@@ -1907,6 +1970,81 @@ def test_time_area():
     )
     provider1.print_time = True
     provider1.update_area_group_relation()
+
+def test_polygon():
+    from web3 import Web3
+
+    from eth_account import Account
+
+    # Generate a new private key
+    account = Account.create()
+    private_key = account._private_key.hex()
+    address = account.address
+
+    print(f"Private Key: {private_key}")
+    print(f"Address: {address}")
+
+    # Connect to a Polygon node
+    polygon_rpc_url = "https://polygon-rpc.com"  # You can use other RPC URLs as well
+    web3 = Web3(Web3.HTTPProvider(polygon_rpc_url))
+
+    # Check if the connection is successful
+    if web3.is_connected():
+        print("Connected to Polygon")
+    else:
+        print("Failed to connect to Polygon")
+
+    from web3.middleware import geth_poa_middleware
+
+    # Add the PoA middleware for Polygon
+    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
+    # Set up the account (replace with your private key)
+    # private_key = "YOUR_PRIVATE_KEY"
+    # account = web3.eth.account.privateKeyToAccount(private_key)
+    web3.eth.defaultAccount = account.address
+
+    # Get the contract bytecode and ABI
+    # bytecode = contract_interface['bin']
+    # abi = contract_interface['abi']
+
+    # Create the contract in Python
+    Person = web3.eth.contract(abi=abi, bytecode=bytecode)
+
+    # Build the transaction
+    construct_txn = Person.constructor().build_transaction({
+        'from': account.address,
+        'nonce': web3.eth.get_transaction_count(account.address),
+        'gas': 2000000,
+        'gasPrice': web3.to_wei('50', 'gwei')
+    })
+
+    # Sign the transaction
+    signed_txn = web3.eth.account.sign_transaction(
+        construct_txn, private_key=private_key
+    )
+
+    # Send the transaction
+    tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+
+    # Wait for the transaction receipt
+    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+
+    print(f"Contract deployed at address: {tx_receipt.contractAddress}")
+
+    # Function to get transaction details
+    def get_transaction_details(tx_hash):
+        tx = web3.eth.get_transaction(tx_hash)
+        return tx
+
+    # Example transaction hash (replace with your actual transaction hash)
+    # tx_hash = "YOUR_TRANSACTION_HASH"
+
+    # Fetch the transaction details
+    transaction_details = get_transaction_details(tx_hash)
+
+    # Print the transaction details
+    print(transaction_details)
 
 
 # test_time_area()
@@ -2040,7 +2178,16 @@ def print_boolean_items():
     print(keys)
 
 # test_scenarios(provider_number=100, requester_number=100)
-plot_simulation_category()
-plot_simulation_scenario()
+# plot_simulation_category()
+# plot_simulation_scenario()
 
 # print_boolean_items()
+# test_area()
+# plot_area()
+
+# test_disease( )
+# plot_disease()
+
+# test_polygon()
+
+test_case_study( )

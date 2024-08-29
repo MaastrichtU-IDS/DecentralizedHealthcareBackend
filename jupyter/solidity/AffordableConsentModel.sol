@@ -40,7 +40,7 @@ contract ConsentCode {
         uint256 Area_Country_Affordable;
         bool Allow_all_area;
 
-        uint8[] Disease_Group;
+        uint32 Disease_Group;
         uint128[] Disease_Category;
         mapping(uint8 => uint128) Disease_Map_Affordable;
   
@@ -256,18 +256,18 @@ contract ConsentCode {
         uint8 role,
         address _address,
         bool allow_all,
-        uint8[] memory Disease_Group,
+        uint32 Disease_Group,
         uint128[] memory Disease_Category
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        if (
-            Disease_Group.length !=
-            Disease_Category.length
-        ) {
-            revert(
-                "UploadDiseaseCode: Disease_Group and Disease_Category must have the same length"
-            );
-        }
+        // if (
+        //     Disease_Group.length !=
+        //     Disease_Category.length
+        // ) {
+        //     revert(
+        //         "UploadDiseaseCode: Disease_Group and Disease_Category must have the same length"
+        //     );
+        // }
         if (allow_all) {
             terms.allow_all_disease = true;
             return;
@@ -318,28 +318,11 @@ contract ConsentCode {
     function DisplayDiseaseCodeAffordable(
         uint8 role,
         address _address
-    ) public view returns (uint8[] memory, uint128[] memory, bool) {
+    ) public view returns (uint32, uint128[] memory, bool) {
         Terms storage terms = TermsByRole(role, _address);
-        if(role == role_provider) {
-            uint8[] memory Disease_Group=new uint8[](26);
-            uint128[] memory Disease_Category=new uint128[](26);
-            for(uint8 i = 1; i < 26; i++) {
-                Disease_Group[i] = i;
-                Disease_Category[i] = terms.Disease_Map_Affordable[i];
-            }
-            return (
-                Disease_Group,
-                Disease_Category,
-                terms.allow_all_disease
-            );
-        }
-        else{
-            return (
-                terms.Disease_Group,
-                terms.Disease_Category,
-                terms.allow_all_disease
-            );
-        }
+
+            return (terms.Disease_Group,terms.Disease_Category,terms.allow_all_disease );
+        
     }
 
 
@@ -500,31 +483,36 @@ contract ConsentCode {
         if (requesterMapping[_requester_address].allow_all_disease == true) {
             return false;
         }
+
+        uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group;
+        uint32 provider_group_code = providerMapping[_provider_address].Disease_Group;
+        if ((requester_group_code & provider_group_code) != requester_group_code) {
+            return false;
+        }
+
         bool allowed = false;
         for (
             uint index_requester = 0;
             index_requester <
-            requesterMapping[_requester_address].Disease_Group.length;
+            requesterMapping[_requester_address].Disease_Category.length;
             index_requester++
         ) {
-            uint8 requester_group_code = requesterMapping[_requester_address]
-                .Disease_Group[index_requester];
+            // uint8 requester_group_code = requesterMapping[_requester_address]
+            //     .Disease_Group[index_requester];
             uint128 requester_category_code = requesterMapping[
                 _requester_address].Disease_Category[index_requester];
             allowed = false;
             for (
                 uint index_provider = 0;
                 index_provider <
-                providerMapping[_provider_address].Disease_Group.length;
+                providerMapping[_provider_address].Disease_Category.length;
                 index_provider++
             ) {
-                uint8 provider_group_code = providerMapping[_provider_address].Disease_Group[index_requester];
-                uint128 provider_category_code = providerMapping[_provider_address].Disease_Category[index_requester];
-                if (provider_group_code == requester_group_code) {
-                    if (provider_category_code & requester_category_code == requester_category_code) {
-                        allowed = true;
-                        break;
-                    }
+                // uint8 provider_group_code = providerMapping[_provider_address].Disease_Group[index_requester];
+                uint128 provider_category_code = providerMapping[_provider_address].Disease_Category[index_provider];
+                if (provider_category_code & requester_category_code == requester_category_code) {
+                    allowed = true;
+                    break;
                 }
             }
 

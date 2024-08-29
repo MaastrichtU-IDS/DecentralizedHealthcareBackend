@@ -1,0 +1,72 @@
+[
+    {
+        "interval": 1,
+        "gas_provider_affordable": 72999,
+        "gas_requester_affordable": 73031,
+        "gas_provider_baseline": 45758,
+        "gas_requester_baseline": 75538
+    },
+    {
+        "interval": 10,
+        "gas_provider_affordable": 73011,
+        "gas_requester_affordable": 73043,
+        "gas_provider_baseline": 250418,
+        "gas_requester_baseline": 78634
+    },
+    {
+        "interval": 20,
+        "gas_provider_affordable": 73023,
+        "gas_requester_affordable": 73055,
+        "gas_provider_baseline": 477807,
+        "gas_requester_baseline": 109817
+    },
+    {
+        "interval": 30,
+        "gas_provider_affordable": 73035,
+        "gas_requester_affordable": 73067,
+        "gas_provider_baseline": 705208,
+        "gas_requester_baseline": 113258
+    },
+    {
+        "interval": 40,
+        "gas_provider_affordable": 73047,
+        "gas_requester_affordable": 73079,
+        "gas_provider_baseline": 932597,
+        "gas_requester_baseline": 144441
+    },
+    {
+        "interval": 50,
+        "gas_provider_affordable": 73071,
+        "gas_requester_affordable": 73103,
+        "gas_provider_baseline": 1159987,
+        "gas_requester_baseline": 175625
+    },
+    {
+        "interval": 60,
+        "gas_provider_affordable": 73083,
+        "gas_requester_affordable": 73115,
+        "gas_provider_baseline": 1387390,
+        "gas_requester_baseline": 179068
+    },
+    {
+        "interval": 70,
+        "gas_provider_affordable": 73095,
+        "gas_requester_affordable": 73127,
+        "gas_provider_baseline": 1614780,
+        "gas_requester_baseline": 210252
+    },
+    {
+        "interval": 80,
+        "gas_provider_affordable": 73107,
+        "gas_requester_affordable": 73139,
+        "gas_provider_baseline": 1842172,
+        "gas_requester_baseline": 213644
+    },
+    {
+        "interval": 90,
+        "gas_provider_affordable": 73131,
+        "gas_requester_affordable": 73163,
+        "gas_provider_baseline": 2069575,
+        "gas_requester_baseline": 244881
+    }
+]
