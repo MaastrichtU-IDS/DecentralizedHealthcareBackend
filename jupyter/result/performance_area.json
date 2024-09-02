@@ -2,195 +2,125 @@
     "baseline": [
         {
             "interval": 1,
-            "gas_provider": 46522,
-            "gas_requester": 84586
+            "gas_provider": 69250,
+            "gas_requester": 84918
+        },
+        {
+            "interval": 5,
+            "gas_provider": 296530,
+            "gas_requester": 88238
         },
         {
             "interval": 10,
-            "gas_provider": 251074,
-            "gas_requester": 87574
+            "gas_provider": 591995,
+            "gas_requester": 92555
         },
         {
             "interval": 20,
-            "gas_provider": 478355,
-            "gas_requester": 90895
-        },
-        {
-            "interval": 30,
-            "gas_provider": 705636,
-            "gas_requester": 94216
-        },
-        {
-            "interval": 40,
-            "gas_provider": 932918,
-            "gas_requester": 131196
-        },
-        {
-            "interval": 50,
             "gas_provider": 1160200,
             "gas_requester": 134518
         },
         {
-            "interval": 60,
-            "gas_provider": 1387482,
-            "gas_requester": 137840
+            "interval": 30,
+            "gas_provider": 1728406,
+            "gas_requester": 176482
         },
         {
-            "interval": 70,
-            "gas_provider": 1614765,
-            "gas_requester": 174821
-        },
-        {
-            "interval": 80,
-            "gas_provider": 1842048,
-            "gas_requester": 178144
-        },
-        {
-            "interval": 90,
-            "gas_provider": 2069332,
-            "gas_requester": 181468
-        },
-        {
-            "interval": 100,
+            "interval": 40,
             "gas_provider": 2296615,
             "gas_requester": 218449
         },
         {
-            "interval": 110,
-            "gas_provider": 2523900,
-            "gas_requester": 221774
+            "interval": 50,
+            "gas_provider": 2864827,
+            "gas_requester": 226761
         },
         {
-            "interval": 120,
-            "gas_provider": 2751185,
-            "gas_requester": 225099
-        },
-        {
-            "interval": 130,
-            "gas_provider": 2978470,
-            "gas_requester": 262082
-        },
-        {
-            "interval": 140,
-            "gas_provider": 3205755,
-            "gas_requester": 265407
-        },
-        {
-            "interval": 150,
+            "interval": 60,
             "gas_provider": 3433041,
             "gas_requester": 268733
         },
         {
-            "interval": 160,
-            "gas_provider": 3660327,
-            "gas_requester": 272059
+            "interval": 70,
+            "gas_provider": 4001257,
+            "gas_requester": 310707
         },
         {
-            "interval": 170,
-            "gas_provider": 3887614,
-            "gas_requester": 309044
+            "interval": 80,
+            "gas_provider": 4569476,
+            "gas_requester": 352684
         },
         {
-            "interval": 180,
-            "gas_provider": 4114901,
-            "gas_requester": 312371
+            "interval": 90,
+            "gas_provider": 5137698,
+            "gas_requester": 394664
+        },
+        {
+            "interval": 100,
+            "gas_provider": 5705922,
+            "gas_requester": 402988
         }
     ],
     "affordable": [
         {
             "interval": 1,
-            "gas_provider": 47265,
-            "gas_requester": 47297
+            "gas_provider": 47243,
+            "gas_requester": 47275
+        },
+        {
+            "interval": 5,
+            "gas_provider": 47255,
+            "gas_requester": 47287
         },
         {
             "interval": 10,
-            "gas_provider": 47277,
-            "gas_requester": 47309
+            "gas_provider": 47279,
+            "gas_requester": 47311
         },
         {
             "interval": 20,
-            "gas_provider": 47289,
-            "gas_requester": 47321
+            "gas_provider": 47315,
+            "gas_requester": 47347
         },
         {
             "interval": 30,
-            "gas_provider": 47301,
-            "gas_requester": 47333
+            "gas_provider": 47351,
+            "gas_requester": 47383
         },
         {
             "interval": 40,
-            "gas_provider": 47325,
-            "gas_requester": 47357
+            "gas_provider": 47387,
+            "gas_requester": 47419
         },
         {
             "interval": 50,
-            "gas_provider": 47337,
-            "gas_requester": 47369
+            "gas_provider": 47423,
+            "gas_requester": 47455
         },
         {
             "interval": 60,
-            "gas_provider": 47349,
-            "gas_requester": 47381
+            "gas_provider": 47459,
+            "gas_requester": 47491
         },
         {
             "interval": 70,
-            "gas_provider": 47361,
-            "gas_requester": 47393
+            "gas_provider": 47495,
+            "gas_requester": 47527
         },
         {
             "interval": 80,
-            "gas_provider": 47385,
-            "gas_requester": 47417
+            "gas_provider": 47543,
+            "gas_requester": 47575
         },
         {
             "interval": 90,
-            "gas_provider": 47397,
-            "gas_requester": 47429
+            "gas_provider": 47579,
+            "gas_requester": 47611
         },
         {
             "interval": 100,
-            "gas_provider": 47409,
-            "gas_requester": 47441
-        },
-        {
-            "interval": 110,
-            "gas_provider": 47421,
-            "gas_requester": 47453
-        },
-        {
-            "interval": 120,
-            "gas_provider": 47445,
-            "gas_requester": 47477
-        },
-        {
-            "interval": 130,
-            "gas_provider": 47457,
-            "gas_requester": 47489
-        },
-        {
-            "interval": 140,
-            "gas_provider": 47469,
-            "gas_requester": 47501
-        },
-        {
-            "interval": 150,
-            "gas_provider": 47481,
-            "gas_requester": 47513
-        },
-        {
-            "interval": 160,
-            "gas_provider": 47505,
-            "gas_requester": 47537
-        },
-        {
-            "interval": 170,
-            "gas_provider": 47517,
-            "gas_requester": 47549
-        },
-        {
-            "interval": 180,
-            "gas_provider": 47529,
-            "gas_requester": 47561
+            "gas_provider": 47615,
+            "gas_requester": 47647
         }
     ]
 }

@@ -41,8 +41,8 @@ contract ConsentCode {
         bool Allow_all_area;
 
         uint32 Disease_Group;
-        uint128[] Disease_Category;
-        mapping(uint8 => uint128) Disease_Map_Affordable;
+        uint128[26] Disease_Category;
+        // mapping(uint8 => uint128) Disease_Map_Affordable;
   
         // baseline
         uint8[] Area_Country_List_Baseline;
@@ -52,7 +52,7 @@ contract ConsentCode {
         
         mapping(uint16 => bool) Disease_Map;
         bool allow_all_disease;
-        uint16[] Disease_Code_Array;
+        uint16[] Disease_Array_Baseline;
 
     }
 
@@ -260,49 +260,35 @@ contract ConsentCode {
         uint128[] memory Disease_Category
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        // if (
-        //     Disease_Group.length !=
-        //     Disease_Category.length
-        // ) {
-        //     revert(
-        //         "UploadDiseaseCode: Disease_Group and Disease_Category must have the same length"
-        //     );
-        // }
         if (allow_all) {
             terms.allow_all_disease = true;
             return;
         }
-        // terms.allow_all_disease = false;
-        // if (role == role_provider) {
-
-        //     for (uint8 i = 0; i < Disease_Group.length; i++) {
-        //         uint8 Disease_Group_Code = Disease_Group[i];
-        //         terms.Disease_Map_Affordable[
-        //             Disease_Group_Code
-        //         ] = Disease_Category[i];
-        //     }
-        // }
-        // if (role == role_requester) {
         terms.Disease_Group = Disease_Group;
-        terms.Disease_Category = Disease_Category;
-        // }
+        //  terms.Disease_Category = Disease_Category;
+        for (uint8 i = 0; i < Disease_Category.length; i++) {
+            terms.Disease_Category[i] = Disease_Category[i];
+        }
     }
 
     // MARK: UploadDiseaseBaseline
     function UploadDiseaseBaseline(
         uint8 role,
         address _address,
-        uint16[] memory Disease_Code_Array
+        uint16[] memory Disease_Array_Baseline
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         if (role == role_provider) {
-            for (uint8 i = 0; i < Disease_Code_Array.length; i++) {
-                terms.Disease_Map[Disease_Code_Array[i]] = true;
+            for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
+                terms.Disease_Map[Disease_Array_Baseline[i]] = true;
             }
         }
 
         if (role == role_requester) {
-            terms.Disease_Code_Array = Disease_Code_Array;
+            // for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
+            //     terms.Disease_Array_Baseline.push(Disease_Array_Baseline[i]);
+            // }
+            terms.Disease_Array_Baseline = Disease_Array_Baseline;
         }
     }
 
@@ -312,18 +298,18 @@ contract ConsentCode {
         address _address
     ) public view returns (uint16[] memory) {
         Terms storage terms = TermsByRole(role, _address);
-        return terms.Disease_Code_Array;
+        return terms.Disease_Array_Baseline;
     }
 
-    function DisplayDiseaseCodeAffordable(
-        uint8 role,
-        address _address
-    ) public view returns (uint32, uint128[] memory, bool) {
-        Terms storage terms = TermsByRole(role, _address);
+    // function DisplayDiseaseCodeAffordable(
+    //     uint8 role,
+    //     address _address
+    // ) public view returns (uint32, uint128[26] memory, bool) {
+    //     Terms storage terms = TermsByRole(role, _address);
 
-            return (terms.Disease_Group,terms.Disease_Category,terms.allow_all_disease );
+    //         return (terms.Disease_Group,terms.Disease_Category,terms.allow_all_disease );
         
-    }
+    // }
 
 
     // MARK: - CheckPurpose
@@ -455,11 +441,11 @@ contract ConsentCode {
         for (
             uint index_requester = 0;
             index_requester <
-            requesterMapping[_requester_address].Disease_Code_Array.length;
+            requesterMapping[_requester_address].Disease_Array_Baseline.length;
             index_requester++
         ) {
             uint16 requester_code = requesterMapping[_requester_address]
-                .Disease_Code_Array[index_requester];
+                .Disease_Array_Baseline[index_requester];
             if (
                 providerMapping[_provider_address].Disease_Map[
                     requester_code
