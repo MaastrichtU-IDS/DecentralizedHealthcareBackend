@@ -1,5 +1,6 @@
 from cgi import test
 import dis
+from distutils.command import build
 import json
 
 # import web3
@@ -17,6 +18,8 @@ from pathlib import Path
 from tqdm import tqdm
 from zmq import Enum
 import re
+
+from web3.middleware import geth_poa_middleware
 
 
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -162,23 +165,28 @@ def deploy_contract_local():
     )
     # Extract default accounts created by ganache
     accounts = w3.eth.accounts.copy()
-    return w3, deployed_contract, contract_address,accounts
+    return w3, deployed_contract, accounts
+
+private_key = "cef3155c18c010de238f98470f9a092159405cb6cd5ab25261e3fcdff23cd810"
 
 def deploy_contract_polygon(force_deploy=False):
-  
-    
+
     # Connect to Polygon (Mumbai Testnet)
-    w3 = Web3(Web3.HTTPProvider("https://rpc-amoy.polygon.technology/"))
-# https://rpc-amoy.polygon.technology
+    w3 = Web3(provider = Web3.HTTPProvider("https://rpc-amoy.polygon.technology/"),
+              middlewares=[geth_poa_middleware],
+              )
+    # https://rpc-amoy.polygon.technology
+    # w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    # web3.eth.setProvider(Web3.givenProvider)
     # Check if connected to Polygon
     if not w3.is_connected():
         raise Exception("Failed to connect to Polygon network")
 
+    account = w3.eth.account.from_key(private_key)
+    w3.eth.default_account = account.address
+
     if force_deploy:
         # Set the account to deploy the contract from
-        private_key = "cef3155c18c010de238f98470f9a092159405cb6cd5ab25261e3fcdff23cd810"
-        account = w3.eth.account.from_key(private_key)
-        w3.eth.defaultAccount = account.address
 
         logger.info(f"Deploying contract from account: {account.address}")
 
@@ -212,13 +220,13 @@ def deploy_contract_polygon(force_deploy=False):
         assert tx_receipt['status'] == 1
         contract_address = tx_receipt.contractAddress 
     else:
-        polygon_config = json.load(open("data/polygon_config.json", "r"))
+        polygon_config = json.load(open("data/polygon.json", "r"))
         contract_address = polygon_config.get("contract_address", None)
-      
+
     deployed_contract = w3.eth.contract(address=contract_address, abi=abi)
     logger.critical(f"Contract deployed at address: {contract_address}")
-    print(f"Contract deployed at address: {contract_address}")
-    return w3,deployed_contract,contract_address, [account.address]
+    # print(f"Contract deployed at address: {contract_address}")
+    return w3,deployed_contract, [account.address]
 
 
 pattern = r"^[A-Z][0-9\*]{2}$"
@@ -505,21 +513,21 @@ class Person:
 
             self.bool_items = bool_items
 
-        person_dict = {
-            "from": self.address,
-            "to": contract_address,
-            "value": 0,
-            # "gas": gas_limit,
-            "gasPrice": int(1e9),
-        }
-
         self.description = description
 
         self.contract = contract
 
         # 'gasPrice': w3.eth.gas_price*0.1,
 
-        self.person_dict = person_dict
+        self.person_dict = {
+            "from": self.address,
+            "nonce": w3.eth.get_transaction_count(self.address),
+            # "to": contract_address,
+            "value":  w3.toWei(0.1, 'ether') ,
+            # "gas": gas_limit,
+            "gasPrice": w3.eth.gas_price,
+        }
+        # print(f"person_dict {self.person_dict}")
         self.debug = False
         self.disease_items = []
         self.disease_groups=[]
@@ -923,7 +931,21 @@ class Person:
                 end_time = time.time_ns()
             else:
                 start_time = time.time_ns()
-                recipt = func.transact(self.person_dict,)
+                build_transaction = func.build_transaction(self.person_dict)
+                # signed = w3.eth.account.sign_transaction(
+                #     build_transaction, private_key=private_key
+                # )
+                # send_tx = w3.eth.send_raw_transaction(signed.raw_transaction)
+                # tx_receipt = w3.eth.wait_for_transaction_receipt(send_tx)
+                signed_txn = w3.eth.account.sign_transaction(build_transaction, private_key=private_key)
+
+                # Send transaction
+                tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+
+                # Wait for transaction receipt
+                recipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=1200, poll_latency=0.1)
+
+                # recipt = func.transact(self.person_dict)
                 end_time = time.time_ns()
             time_diff = (end_time - start_time) / 10**6
             return TransactionResult(result=recipt, time_used=time_diff)
@@ -1271,21 +1293,21 @@ def test_area(label='local'):
     provider1 = Provider(
         name="Provider_area",
         description="Provider1",
-        address = random.choice(accounts),
+        # address = random.choice(accounts),
     )
     requester1 = Requester(
         name="Requester_area",
         description="Requester1",
-         address =  random.choice(accounts),
+        #  address =  random.choice(accounts),
     )
     data_baseline = []
-    data_affordable = []
+    data_result = []
     if label == TestEnum.local:
         intevals = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         provider1.estimate_gas = True
         requester1.estimate_gas = True
     else:
-        intevals = [100]
+        intevals = [1]
         provider1.estimate_gas = False
         requester1.estimate_gas = False
     # provider1.update_area_group_relation()
@@ -1298,33 +1320,22 @@ def test_area(label='local'):
         provider1.country_names = countries
         requester1.country_names = countries
         # gas_update_area_group_code = provider1.update_area_group_relation()
-        gas_provider_affordable = provider1.upload_area_affordable()
-        gas_requester_simple = requester1.upload_area_affordable()
+        provider_affordable_result = provider1.upload_area_affordable()
+        requester_affordable_result = requester1.upload_area_affordable()
         # gas_access_simple = requester1.access_area_simple(provider1)
-
-        data_affordable.append(
-            {
-                "interval": interval,
-                "gas_provider": gas_provider_affordable.gas_used,
-                "gas_requester": gas_requester_simple.gas_used,
-                # "gas_access": gas_access_simple,
-                # "gas_update_area_group_code": gas_update_area_group_code,
+        provider_baseline_result = provider1.upload_area_baseline()
+        requester_baseline_result = requester1.upload_area_baseline()
+        
+        data_result.append({"interval": interval,
+                "affordable":{
+                    "provider":provider_affordable_result,
+                    "requester":requester_affordable_result},
+                "baseline": {
+                    "provider":provider_baseline_result,
+                    "requester":requester_baseline_result},
             }
         )
-        # gas_update_area_group_code = provider1.update_area_group_code_baseline()
-        gas_provider_baseline = provider1.upload_area_baseline()
-        gas_requester_baseline = requester1.upload_area_baseline()
-        data_baseline.append(
-            {
-                "interval": interval,
-                "gas_provider": gas_provider_baseline,
-                "gas_requester": gas_requester_baseline,
-                # "gas_access": gas_access_simple,
-                # "gas_update_area_group_code": gas_update_area_group_code,
-            }
-        )
-    result = {"baseline": data_baseline, "affordable": data_affordable}
-    json.dump(result, open(f"result/{label}_performance_area.json", "w"), indent=4)
+    json.dump(data_result, open(f"result/{label}_result_area.json", "w"), indent=4)
 
 
 def plot(data, task, role,x_label):
@@ -1393,23 +1404,35 @@ def plot(data, task, role,x_label):
 def plot_area(label='local'):
 
     # plt.show()
-    result = json.load(open(f"result/{label}_performance_area.json", "r"))
-    data_baseline = result["baseline"]
-    data_affordable = result["affordable"]
-
-    gas_provider  = {
-        "baseline":[d["gas_provider"] for d in data_baseline],
-        "affordable":[d["gas_provider"] for d in data_affordable],
-        "interval":[d["interval"] for d in data_baseline],
+    result = json.load(open(f"result/{label}_result_area.json", "r"))
+    gas_provider = {
+        "baseline": [d["baseline"]["provider"]["gas_used"] for d in result],
+        "affordable": [d["affordable"]["provider"]["gas_used"] for d in result],
+        "interval": [d["interval"] for d in result],
     }
-    gas_requester  = {
-        "baseline":[d["gas_requester"] for d in data_baseline],
-        "affordable":[d["gas_requester"] for d in data_affordable],
-        "interval":[d["interval"] for d in data_baseline],
+    gas_requester = {
+        "baseline": [d["baseline"]["requester"]["gas_used"] for d in result],
+        "affordable": [d["affordable"]["requester"]["gas_used"] for d in result],
+        "interval": [d["interval"] for d in result],
     }
     task = f"{label}_area"
     plot(gas_provider, task, f"provider","Precentage of countries (%)")
     plot(gas_requester, task, "requester","Precentage of countries (%)")
+
+
+    task_time = f"{label}_time"
+    time_provider = {
+        "baseline": [d["baseline"]["provider"]["time_used"] for d in result],
+        "affordable": [d["affordable"]["provider"]["time_used"] for d in result],
+        "interval": [d["interval"] for d in result],
+    }
+    time_requester = {
+        "baseline": [d["baseline"]["requester"]["time_used"] for d in result],
+        "affordable": [d["affordable"]["requester"]["time_used"] for d in result],
+        "interval": [d["interval"] for d in result],
+    }
+    plot(time_provider, task_time, f"provider", "Precentage of countries (%)")
+    plot(time_requester, task_time, "requester", "Precentage of countries (%)")
 
 
 # %%
@@ -1739,101 +1762,101 @@ def test_case_study():
         AccessError.DATE_ERROR.message: r"\faCalendar*[regular]",
         AccessError.PURPOSE_ERROR.message: r"\circletfillhl",
     }
-    accounts = w3.eth.accounts.copy()
+    # accounts = w3.eth.accounts.copy()
 
     provider1 = Provider(
         name="Provider 1",
         description=r"Provider.\ref{provider:a}",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
     provider2 = Provider(
         name="Provider 2",
         description=r"Provider.\ref{provider:b}",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     provider3 = Provider(
         name="Provider 3",
         description=r"Provider.\ref{provider:c}",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     provider4 = Provider(
         name="Provider 4",
         description=r"Provider.\ref{provider:d}",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
     provider5 = Provider(
         name="Provider 5",
         description=r"Provider.\ref{provider:e}",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester1 = Requester(
         name="Requester 1",
         description="1",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester2 = Requester(
         name="Requester 2",
         description="Requester2",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester3 = Requester(
         name="Requester 3",
         description="Requester3",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester4 = Requester(
         name="Requester 4",
         description="Requester4",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester5 = Requester(
         name="Requester 5",
         description="Requester5",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester6 = Requester(
         name="Requester 6",
         description="Requester6",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester7 = Requester(
         name="Requester 7",
         description="Requester7",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts.pop(),
     )
 
     requester8 = Requester(
         name="Requester 8",
         description="Requester8",
-        contract=deployed_contract,
-        address=accounts.pop(),
+        # contract=deployed_contract,
+        # address=accounts.pop(),
     )
     requester9 = Requester(
         name="Requester 9",
         description="Requester9",
-        contract=deployed_contract,
-        address=accounts.pop(),
+        # contract=deployed_contract,
+        # address=accounts.pop(),
     )
     
     r = provider1.update_area_group_relation()
@@ -1961,7 +1984,7 @@ def test_time_area():
     provider1 = Provider(
         name="Provider 1",
         description=r"Provider.\ref{provider:a}",
-        contract=deployed_contract,
+        # contract=deployed_contract,
         address=accounts[1],
     )
     provider1.print_time = True
@@ -2178,10 +2201,10 @@ if __name__ == "__main__":
 
     test_mode = TestEnum.polygon.name
     if test_mode == TestEnum.local.name:
-        w3, contract, contract_address, accounts = deploy_contract_local()
+        w3, contract,  accounts = deploy_contract_local()
     elif test_mode == TestEnum.polygon.name:
-        w3, contract, contract_address, accounts = deploy_contract_polygon()
-
+        w3, contract,  accounts = deploy_contract_polygon()
+    print(f"accounts {accounts[0]}")
     # test_scenarios(provider_number=100, requester_number=100)
     # plot_simulation_category()
     # plot_simulation_scenario()
