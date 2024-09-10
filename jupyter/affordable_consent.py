@@ -6,6 +6,7 @@ import json
 # import web3
 from datetime import datetime
 from tkinter import CURRENT
+from requests import get
 from web3 import Web3
 
 # import py_solc_x as px
@@ -164,7 +165,11 @@ def deploy_contract_local():
         # bytecode=bytecode,
     )
     # Extract default accounts created by ganache
-    accounts = w3.eth.accounts.copy()
+    used_accounts = get_used_address()
+    accounts = set(map(lambda x:str(x), w3.eth.accounts))
+    # accounts = list(accounts - used_accounts)
+    logger.info(f"actural accounts {len(accounts)}, used accounts {len(used_accounts)}")
+    # print(f" actural {accounts.pop()}, used {used_accounts.pop()}")
     return w3, deployed_contract, accounts
 
 private_key = "cef3155c18c010de238f98470f9a092159405cb6cd5ab25261e3fcdff23cd810"
@@ -172,18 +177,24 @@ private_key = "cef3155c18c010de238f98470f9a092159405cb6cd5ab25261e3fcdff23cd810"
 def deploy_contract_polygon(force_deploy=False):
 
     # Connect to Polygon (Mumbai Testnet)
-    w3 = Web3(provider = Web3.HTTPProvider("https://rpc-amoy.polygon.technology/"),
-              middlewares=[geth_poa_middleware],
-              )
+    pad = "https://polygon-amoy.drpc.org"
+    rapt = "https://rpc-amoy.polygon.technology"
+    w3 = Web3(
+        provider=Web3.HTTPProvider(rapt),
+        # middlewares=[geth_poa_middleware],
+    )
     # https://rpc-amoy.polygon.technology
-    # w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    # web3.eth.setProvider(Web3.givenProvider)
+    w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    # w3.eth.set_provider(Web3.givenProvider)
     # Check if connected to Polygon
     if not w3.is_connected():
         raise Exception("Failed to connect to Polygon network")
 
     account = w3.eth.account.from_key(private_key)
     w3.eth.default_account = account.address
+    # w3.middleware_onion.add(SignAndSendRawMiddlewareBuilder.build(account))
+    # w3.setProvider(window.ethereum);
+    # w3.eth. (private_key)
 
     if force_deploy:
         # Set the account to deploy the contract from
@@ -223,10 +234,11 @@ def deploy_contract_polygon(force_deploy=False):
         polygon_config = json.load(open("data/polygon.json", "r"))
         contract_address = polygon_config.get("contract_address", None)
 
-    deployed_contract = w3.eth.contract(address=contract_address, abi=abi)
+    # contract_address = w3.to_checksum_address(contract_address)
+    deployed_contract = w3.eth.contract(address=contract_address, abi=abi, bytecode=bytecode)
     logger.critical(f"Contract deployed at address: {contract_address}")
     # print(f"Contract deployed at address: {contract_address}")
-    return w3,deployed_contract, [account.address]
+    return w3,deployed_contract, [w3.to_checksum_address(account.address)]
 
 
 pattern = r"^[A-Z][0-9\*]{2}$"
@@ -469,14 +481,15 @@ def decode_group_code(group_code: int):
     return groups
 
 class TransactionResult:
-    def __init__(self, status=0, gas_used = 0, transaction_hash="", time_used=0,result=None):
+    def __init__(self, status=0, gas_used = 0, transaction_hash="", time_used=0,result=None, gas_price=0):
         self.status = status
         self.gas_used = gas_used
         self.transaction_hash = transaction_hash
         self.time_used = time_used
         self.result = result
+        self.gas_price = gas_price
 
-    def __dict__(self):
+    def to_dict(self):
         return {
             "status": self.status,
             "gas_used": self.gas_used,
@@ -484,6 +497,13 @@ class TransactionResult:
             "time_used": self.time_used,
             "result": self.result
         }
+
+    # @property
+    def __json__(self):
+        return json.dumps(self.__dict__())
+
+    def __str__(self):
+        return f"status {self.status}, gas_used {self.gas_used}, transaction_hash {self.transaction_hash}, time_used {self.time_used}, result {self.result}"
 
 class Person:
     def __init__(
@@ -505,7 +525,7 @@ class Person:
 
             # balance = w3.eth.get_balance(address)
         else:
-            self.address = random.choice(accounts)
+            self.address = accounts.pop()
 
             # print(f"balance of {address} is {balance}")
 
@@ -519,14 +539,6 @@ class Person:
 
         # 'gasPrice': w3.eth.gas_price*0.1,
 
-        self.person_dict = {
-            "from": self.address,
-            "nonce": w3.eth.get_transaction_count(self.address),
-            # "to": contract_address,
-            "value":  w3.toWei(0.1, 'ether') ,
-            # "gas": gas_limit,
-            "gasPrice": w3.eth.gas_price,
-        }
         # print(f"person_dict {self.person_dict}")
         self.debug = False
         self.disease_items = []
@@ -579,7 +591,7 @@ class Person:
             self.role, self.address, simple_value
         )
 
-        return self.forward(upload_func)
+        return self.send_transaction(upload_func)
 
     # display_simple_items
     def display_simple_items(self):
@@ -622,7 +634,7 @@ class Person:
 
         # print("UploadAreaCode role", self.role)
 
-        return self.forward(func)
+        return self.send_transaction(func)
 
     def update_area_group_relation(self):
 
@@ -661,7 +673,7 @@ class Person:
 
         # func.transact(self.person_dict)
 
-        return self.forward(func, label="update_area_group_relation")
+        return self.send_transaction(func, label="update_area_group_relation")
 
     def update_area_group_code_baseline(self, part_number=20):
 
@@ -723,7 +735,7 @@ class Person:
             )
             logger.debug("allow all countries")
 
-            return self.forward(func)
+            return self.send_transaction(func)
 
         country_codes = [
             country_index_dict[c] for c in self.country_names
@@ -733,7 +745,7 @@ class Person:
             group_codes = [group_index_dict[g] for g in self.group_names]
             group_code = sum(group_codes)
         else:
-            logger.debug(f"do not have group_names")
+            # logger.debug(f"do not have group_names")
             group_code = 0
         country_code = sum(country_codes)
 
@@ -743,9 +755,9 @@ class Person:
         #     logger.error(f"missed_countries {missed_countries}")
         # print("country_group_data length", len(country_group_data))
 
-        logger.info(
-            f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}"
-        )
+        # logger.info(
+        #     f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}"
+        # )
         # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
 
         func = self.contract.functions.UploadAreaAffordable(
@@ -754,7 +766,7 @@ class Person:
 
         # print("UploadAreaCode role", self.role)
 
-        return self.forward(func)
+        return self.send_transaction(func)
 
     def display_area_affordable(self):
         group_code, country_code, version, Allow_all_area = (
@@ -808,7 +820,7 @@ class Person:
             self.role, self.address, disease_codes
         )
 
-        return self.forward(func)
+        return self.send_transaction(func)
 
     def upload_disease_affordable(self):
 
@@ -819,7 +831,7 @@ class Person:
             )
             logger.debug("allow all disease")
 
-            return self.forward(func)
+            return self.send_transaction(func)
 
         disease_codes = [diseaseCode2IntHierarchy(d) for d in self.disease_items]
         # print(f"name {self.name}  disease_codes {disease_codes} ")
@@ -856,7 +868,11 @@ class Person:
             disease_combined_codes
         )
 
-        return self.forward(func)
+        return self.send_transaction(func)
+
+    def refresh_state(self):
+        func = self.contract.functions.RefreshState(self.address)
+        return self.send_transaction(func)
 
     def display_disease_items(self):
 
@@ -893,7 +909,7 @@ class Person:
                 f"error in upload_date, role {self.role}, address {self.address}, start_year {self.start_year}, start_month {self.start_month}, start_day {self.start_day}, months {self.months}"
             )
 
-        return self.forward(func)
+        return self.send_transaction(func)
 
         # return self.forward(func)
 
@@ -920,35 +936,60 @@ class Person:
         )
         return categories, codes, allow_all
 
-    def forward(self, func, call=False, label=""):
-        if self.estimate_gas:
-            gas = func.estimate_gas()
-            return TransactionResult(gas_used=gas)
-        else:
-            if call:
-                start_time = time.time_ns()
-                recipt = func.call()
-                end_time = time.time_ns()
-            else:
-                start_time = time.time_ns()
-                build_transaction = func.build_transaction(self.person_dict)
-                # signed = w3.eth.account.sign_transaction(
-                #     build_transaction, private_key=private_key
-                # )
-                # send_tx = w3.eth.send_raw_transaction(signed.raw_transaction)
-                # tx_receipt = w3.eth.wait_for_transaction_receipt(send_tx)
-                signed_txn = w3.eth.account.sign_transaction(build_transaction, private_key=private_key)
+    def send_transaction(self, func, call=False, label=""):
+        # if self.estimate_gas:
+        #     gas = func.estimate_gas()
+        #     return TransactionResult(gas_used=gas)
+        # else:
+        person_dict = {
+            "from": self.address,
+            # "nonce": w3.eth.get_transaction_count(self.address) + 1,
+            "to": self.contract.address,
+            # "value": w3.to_wei(0.1, "ether"),
+            # "gas": w3.eth.gas_price,
+            # "gas": w3.to_wei(10, "gwei"),
+            # "gas": 1000000,
+            # "chainId": 80002,
+            "gasPrice": w3.to_wei(10, "gwei"),
+        }
+        dynamic_fee_transaction = {
+            "from": self.address,
+            "type": 2,  # Explicitly specify EIP-1559 transaction type
+            "gas": 20_000_000,  # Ensure gas limit is reasonable
+            "maxFeePerGas": w3.to_wei(40, "gwei"),  # Reasonable max fee per gas
+            "maxPriorityFeePerGas": w3.to_wei(
+                30, "gwei"
+            ),  # Reasonable max priority fee per gas
+            "nonce": w3.eth.get_transaction_count(
+                self.address
+            ),  # Correct nonce calculation
+            "chainId": 80002,
+        }
+        receipt = None
+        if call:
+            start_time = time.time_ns()
+            receipt = func.call()
+            end_time = time.time_ns()
+        elif test_mode == TestEnum.polygon:
+            start_time = time.time_ns()
+            build_transaction = func.build_transaction(dynamic_fee_transaction)
+            signed_txn = w3.eth.account.sign_transaction(build_transaction, private_key=private_key)
+            start_time = time.time_ns()
+            logger.info(f"signed_txn {signed_txn}")
+            tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+            end_time = time.time_ns()
 
-                # Send transaction
-                tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+        elif test_mode == TestEnum.local:
+            start_time = time.time_ns()
+            tx_hash = func.transact(person_dict)
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+            end_time = time.time_ns()
 
-                # Wait for transaction receipt
-                recipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=1200, poll_latency=0.1)
-
-                # recipt = func.transact(self.person_dict)
-                end_time = time.time_ns()
-            time_diff = (end_time - start_time) / 10**6
-            return TransactionResult(result=recipt, time_used=time_diff)
+        gas_used = receipt["gasUsed"]
+        gas_price = receipt["effectiveGasPrice"]
+        time_diff = (end_time - start_time) / 10**6
+        return TransactionResult(gas_used=gas_used, time_used=time_diff, gas_price=gas_price, transaction_hash=receipt["transactionHash"].hex(), status=receipt["status"])
 
     def __str__(self):
         return f"Person: {self.name},  {self.description}, {self.role}"
@@ -1120,7 +1161,7 @@ class Requester(Person):
 
         func = self.contract.functions.AccessData(provider.address, self.address)
 
-        result = self.forward(func, True)
+        result = self.send_transaction(func, True)
         result_set = set()
         for error in AccessError:
             if result & error.code:
@@ -1141,7 +1182,7 @@ class Requester(Person):
 
         func = self.contract.functions.CheckDisease(provider.address, self.address)
 
-        return self.forward(func, True)
+        return self.send_transaction(func, True)
 
     def access_disease_hierarchy(self, provider: Provider):
 
@@ -1159,7 +1200,7 @@ class Requester(Person):
             provider.address, self.address
         )
 
-        return self.forward(func, True)
+        return self.send_transaction(func, True)
 
     def access_area_baseline(self, provider: Provider):
 
@@ -1175,7 +1216,7 @@ class Requester(Person):
 
         func = self.contract.functions.CheckAreaBaseline(provider.address, self.address)
 
-        return self.forward(func, True)
+        return self.send_transaction(func, True)
 
     def access_area_simple(self, provider: Provider):
 
@@ -1183,7 +1224,7 @@ class Requester(Person):
 
         func = self.contract.functions.CheckAreaSimple(provider.address, self.address)
 
-        return self.forward(func, True)
+        return self.send_transaction(func, True)
 
     def access_boolean_items(self, provider: Provider):
 
@@ -1202,8 +1243,20 @@ class Requester(Person):
         # func.call(block_identifier="latest")
         return result
 
+def record_used_address(address):
+    with open("data/used_address.txt", "a") as f:
+        f.write(f"{address}\n")
 
-def test_disease(one_group=False):
+def get_used_address():
+    if not os.path.exists("data/used_address.txt"):
+        logger.info("used_address.txt does not exist")
+        return set()
+    with open("data/used_address.txt", "r") as f:
+        used_address = f.readlines()
+        
+    return set(map(lambda x: x.strip(), used_address))
+
+def test_disease(one_group=False, test_mode=TestEnum.local):
     provider1 = Provider(
         name="Provider_disease",
         description="Provider1",
@@ -1229,14 +1282,18 @@ def test_disease(one_group=False):
         disease_list_all = disease_dict["A"]
     else:
         disease_list_all = disease_list
-        
-    for interval in intevals:
+
+    for interval in tqdm(intevals):
         # disease_items = generate_disease_items(groups=groups, number=interval)
         choiced_number = int(interval / 100 * len(disease_list_all))    
         disease_items = random.choices(disease_list_all, k=max(1, choiced_number))
         # disease_items = disease_list_all[0] if len(disease_items) == 0 else disease_items
         provider1.disease_items = disease_items
         requester1.disease_items = disease_items
+        provider1.address = accounts.pop()
+        requester1.address = accounts.pop()
+        record_used_address(provider1.address)
+        record_used_address(requester1.address)
 
         gas_provider = provider1.upload_disease_baseline()
         gas_requester = requester1.upload_disease_baseline()
@@ -1250,44 +1307,39 @@ def test_disease(one_group=False):
         disease_data.append(
             {
                 "interval": interval,
-                "gas_provider_affordable": gas_provider_affordable,
-                "gas_requester_affordable": gas_requester_affordable,
+                "gas_provider_affordable": gas_provider_affordable.to_dict(),
+                "gas_requester_affordable": gas_requester_affordable.to_dict(),
                 # "gas_access_binary": gas_access_binary,
-                "gas_provider_baseline": gas_provider,
-                "gas_requester_baseline": gas_requester,
+                "gas_provider_baseline": gas_provider.to_dict(),
+                "gas_requester_baseline": gas_requester.to_dict(),
                 # "gas_access": gas_access,
             }
         )
-    if one_group:
-        result_fp = f"result/disease_one_group.json"
-    else:
-        result_fp = f"result/disease.json"
+
+    result_fp = f"result/disease_{'one' if one_group else 'whole'}_{test_mode.name}.json"
+
     json.dump(disease_data, open(result_fp, "w"), indent=4)
 
 
-def plot_disease(one_group=False):
-    if one_group:
-        result_fp = f"result/disease_one_group.json"
-        task= "disease_one_group"
-    else:
-        result_fp = f"result/disease.json"
-        task= "disease"
+def plot_disease(one_group=False, test_mode=TestEnum.local):
+    task = f'{test_mode.name}_disease_{"one" if one_group else "whole"}'
+    result_fp = f"result/{task}.json"
     disease_data = json.load(open(result_fp, "r"))
     provider_data = {
-        "baseline": [d["gas_provider_baseline"] for d in disease_data],
-        "affordable": [d["gas_provider_affordable"] for d in disease_data],
+        "baseline": [d["gas_provider_baseline"]["gas_used"] for d in disease_data],
+        "affordable": [d["gas_provider_affordable"]["gas_used"] for d in disease_data],
         "interval": [d["interval"] for d in disease_data],
     }
     requester_data = {
-        "baseline": [d["gas_requester_baseline"] for d in disease_data],
-        "affordable": [d["gas_requester_affordable"] for d in disease_data],
+        "baseline": [d["gas_requester_baseline"]["gas_used"] for d in disease_data],
+        "affordable": [d["gas_requester_affordable"]["gas_used"] for d in disease_data],
         "interval": [d["interval"] for d in disease_data],
     }
-    plot(provider_data, task, "provider", "Precentage of diseases (%)")
-    plot(requester_data, task, "requester", "Precentage of diseases (%)")
+    plot(data = provider_data, task= task, role = "provider", x_label="Precentage of diseases (%)", y_label="Gas Usage (10^3)")
+    plot(data = requester_data, task= task, role="requester", x_label="Precentage of diseases (%)", y_label="Gas Usage (10^3)")
 
 
-def test_area(label='local'):
+def test_area(env_name=TestEnum.local,label = ""):
 
     # intevals = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90,100]
     provider1 = Provider(
@@ -1302,43 +1354,97 @@ def test_area(label='local'):
     )
     data_baseline = []
     data_result = []
-    if label == TestEnum.local:
-        intevals = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-        provider1.estimate_gas = True
-        requester1.estimate_gas = True
-    else:
-        intevals = [1]
-        provider1.estimate_gas = False
-        requester1.estimate_gas = False
+    intevals = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    # if label == TestEnum.local:
+
+    #     provider1.estimate_gas = True
+    #     requester1.estimate_gas = True
+    # else:
+    #     # intevals = [1]
+    #     provider1.estimate_gas = False
+    #     requester1.estimate_gas = False
     # provider1.update_area_group_relation()
     # provider1.estimate_gas = True
     # requester1.estimate_gas = True
-    for interval in intevals:
+    for interval in tqdm(intevals):
         precentage = interval / 100
         length = int(len(country_name_code_dict)*precentage)
         countries = list(country_name_code_dict.keys())[:length]
         provider1.country_names = countries
         requester1.country_names = countries
+        provider1.address = accounts.pop()
+        requester1.address = accounts.pop()
+        record_used_address(provider1.address)
+        record_used_address(requester1.address)
+        
         # gas_update_area_group_code = provider1.update_area_group_relation()
         provider_affordable_result = provider1.upload_area_affordable()
         requester_affordable_result = requester1.upload_area_affordable()
-        # gas_access_simple = requester1.access_area_simple(provider1)
+        # # gas_access_simple = requester1.access_area_simple(provider1)
         provider_baseline_result = provider1.upload_area_baseline()
         requester_baseline_result = requester1.upload_area_baseline()
-        
-        data_result.append({"interval": interval,
-                "affordable":{
-                    "provider":provider_affordable_result,
-                    "requester":requester_affordable_result},
+
+        data_result.append(
+            {
+                "interval": interval,
+                "affordable": {
+                    "provider": provider_affordable_result.to_dict(),
+                    "requester": requester_affordable_result.to_dict(),
+                },
                 "baseline": {
-                    "provider":provider_baseline_result,
-                    "requester":requester_baseline_result},
+                    "provider": provider_baseline_result.to_dict(),
+                    "requester": requester_baseline_result.to_dict(),
+                },
             }
         )
-    json.dump(data_result, open(f"result/{label}_result_area.json", "w"), indent=4)
+    json.dump(data_result, open(f"result/{env_name.name}_area{label}.json", "w"), indent=4)
 
 
-def plot(data, task, role,x_label):
+def plot_area(env_name=TestEnum.local,label = ""):
+
+    # plt.show()
+    result = json.load(open(f"result/{env_name.name}_area{label}.json", "r"))
+    gas_provider = {
+        "baseline": [d["baseline"]["provider"]["gas_used"] for d in result],
+        "affordable": [d["affordable"]["provider"]["gas_used"] for d in result],
+        "interval": [d["interval"] for d in result],
+    }
+    gas_requester = {
+        "baseline": [d["baseline"]["requester"]["gas_used"] for d in result],
+        "affordable": [d["affordable"]["requester"]["gas_used"] for d in result],
+        "interval": [d["interval"] for d in result],
+    }
+    task = f"{env_name.name}_area_gas{label}"
+    plot(
+        gas_provider,
+        task,
+        f"provider",
+        "Precentage of countries (%)",
+        "Gas cost ($ 1 \\times 10^{3}$ units)",
+    )
+    plot(gas_requester, task, "requester","Precentage of countries (%)", "Gas cost ($ 1 \\times 10^{3}$ units)")
+
+    task_time = f"{env_name.name}_area_time{label}"
+    time_provider = {
+        "baseline": [d["baseline"]["provider"]["time_used"] for d in result],
+        "affordable": [d["affordable"]["provider"]["time_used"] for d in result],
+        "interval": [d["interval"] for d in result],
+    }
+    time_requester = {
+        "baseline": [d["baseline"]["requester"]["time_used"] for d in result],
+        "affordable": [d["affordable"]["requester"]["time_used"] for d in result],
+        "interval": [d["interval"] for d in result],
+    }
+    plot(time_provider, task_time, f"provider", "Precentage of countries (%)", "Time cost ($ 1 \\times 10^{3}$ ms)")
+    plot(
+        time_requester,
+        task_time,
+        "requester",
+        "Precentage of countries (%)",
+        "Time cost ( $ 1 \\times 10^{3}$ ms)",
+    )
+
+def plot(data, task, role,x_label,y_label):
     data_frame = pd.DataFrame(data)
     factor = 1e3
     import matplotlib.pyplot as plt
@@ -1355,7 +1461,7 @@ def plot(data, task, role,x_label):
         y=["baseline", "affordable"],
         style=["o-", "*-"],
         xlabel=x_label,
-        ylabel=f"Gas cost",
+        # ylabel=y_label,
         label=["baseline", "affordable"],
         # title="Gas cost for uploading area code of providers",
         # annotate=True,
@@ -1364,7 +1470,7 @@ def plot(data, task, role,x_label):
     #     f"Gas Usage ({factor})", rotation=0, labelpad=50, ha="left", va="top"
     # )
     # ax.yaxis.set_label_coords(-0.1, 1.05)
-    y_max = data_plot["baseline"].max()
+    y_max = max(data_plot["baseline"].max(),data_plot["affordable"].max())
     x_max = data_plot["interval"].max()
     plt.ylim(0, y_max*1.08)
     plt.xlim(0, x_max+15)
@@ -1390,53 +1496,15 @@ def plot(data, task, role,x_label):
         ),
     )
     plt.text(
-            -0.01,
+            -0.05,
             1.02,
-            r"$1 \times 10^{3}$",
+            y_label,
             ha="left",
             va="center",
             transform=ax.transAxes,
             # fontsize=12,
         )
-    plt.savefig(f"figs/gas_{task}_{role}.pdf")
-
-
-def plot_area(label='local'):
-
-    # plt.show()
-    result = json.load(open(f"result/{label}_result_area.json", "r"))
-    gas_provider = {
-        "baseline": [d["baseline"]["provider"]["gas_used"] for d in result],
-        "affordable": [d["affordable"]["provider"]["gas_used"] for d in result],
-        "interval": [d["interval"] for d in result],
-    }
-    gas_requester = {
-        "baseline": [d["baseline"]["requester"]["gas_used"] for d in result],
-        "affordable": [d["affordable"]["requester"]["gas_used"] for d in result],
-        "interval": [d["interval"] for d in result],
-    }
-    task = f"{label}_area"
-    plot(gas_provider, task, f"provider","Precentage of countries (%)")
-    plot(gas_requester, task, "requester","Precentage of countries (%)")
-
-
-    task_time = f"{label}_time"
-    time_provider = {
-        "baseline": [d["baseline"]["provider"]["time_used"] for d in result],
-        "affordable": [d["affordable"]["provider"]["time_used"] for d in result],
-        "interval": [d["interval"] for d in result],
-    }
-    time_requester = {
-        "baseline": [d["baseline"]["requester"]["time_used"] for d in result],
-        "affordable": [d["affordable"]["requester"]["time_used"] for d in result],
-        "interval": [d["interval"] for d in result],
-    }
-    plot(time_provider, task_time, f"provider", "Precentage of countries (%)")
-    plot(time_requester, task_time, "requester", "Precentage of countries (%)")
-
-
-# %%
-import json
+    plt.savefig(f"figs/performance_{task}_{role}.pdf")
 
 
 def analysis_countries_group():
@@ -2199,26 +2267,26 @@ def print_boolean_items():
 
 if __name__ == "__main__":
 
-    test_mode = TestEnum.polygon.name
-    if test_mode == TestEnum.local.name:
+    test_mode = TestEnum.local
+    if test_mode == TestEnum.local:
         w3, contract,  accounts = deploy_contract_local()
-    elif test_mode == TestEnum.polygon.name:
+    elif test_mode == TestEnum.polygon:
         w3, contract,  accounts = deploy_contract_polygon()
-    print(f"accounts {accounts[0]}")
+    # print(f"accounts {accounts[0]}")
     # test_scenarios(provider_number=100, requester_number=100)
     # plot_simulation_category()
     # plot_simulation_scenario()
 
     # print_boolean_items()
     # area_label = "local"
-    test_area(label=test_mode)
-    plot_area(label=test_mode)
+    test_area(env_name=test_mode,label="_refresh")
+    plot_area(env_name=test_mode,label="_refresh")
 
-    # test_disease( )
-    # plot_disease()
+    # test_disease(one_group=False, test_mode=test_mode)
+    # plot_disease(one_group=False, test_mode=test_mode)
 
-    # test_disease(True)
-    # plot_disease(True)
+    # test_disease(one_group=True, test_mode=test_mode)
+    # plot_disease(one_group=True, test_mode=test_mode)
 
     # test_polygon()
 

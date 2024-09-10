@@ -2,30 +2,27 @@
 pragma solidity ^0.8;
 
 contract ConsentCode {
-    event LogMessage(string message);
-
-    address public dataProvider;
-
-    constructor() {
-        dataProvider = msg.sender;
-    }
+ 
+    //  constructor() {
+    //     dataProvider = msg.sender;
+    // }
 
     // MARK: - BooleanItems
-    struct BooleanItems {
-        bool ClinicalProfessionals;
-        bool AcademicProfessionals;
-        bool ReferenceOrControlMaterial;
-        bool MethodsDevelopment;
-        bool PopulationsResearch;
-        bool AncestryResearch;
-        bool FundamentalBioResearch;
-        bool DrugDevelopmentResearch;
-        bool AgeCategoriesResearch;
-        bool GenderCategoriesResearch;
-        bool ProfitPurpose;
-        bool ProfitMakingProfessionals;
-        bool FormalApprovalRequired;
-    }
+    // struct BooleanItems {
+    //     bool ClinicalProfessionals;
+    //     bool AcademicProfessionals;
+    //     bool ReferenceOrControlMaterial;
+    //     bool MethodsDevelopment;
+    //     bool PopulationsResearch;
+    //     bool AncestryResearch;
+    //     bool FundamentalBioResearch;
+    //     bool DrugDevelopmentResearch;
+    //     bool AgeCategoriesResearch;
+    //     bool GenderCategoriesResearch;
+    //     bool ProfitPurpose;
+    //     bool ProfitMakingProfessionals;
+    //     bool FormalApprovalRequired;
+    // }
 
     // MARK: - Terms
     struct Terms {
@@ -39,10 +36,8 @@ contract ConsentCode {
         uint16 Area_Group_Affordable;
         uint256 Area_Country_Affordable;
         bool Allow_all_area;
-
-        uint32 Disease_Group;
-        uint128[26] Disease_Category;
-        // mapping(uint8 => uint128) Disease_Map_Affordable;
+        uint32 Disease_Group_Affordable;
+        uint128[26] Disease_Category_Affordable;
   
         // baseline
         uint8[] Area_Country_List_Baseline;
@@ -50,7 +45,7 @@ contract ConsentCode {
         mapping(uint8 => bool) Area_Country_Map_Baseline;
         mapping(uint8 => bool) Area_Group_Map_Baseline;
         
-        mapping(uint16 => bool) Disease_Map;
+        mapping(uint16 => bool) Disease_Map_Baseline;
         bool allow_all_disease;
         uint16[] Disease_Array_Baseline;
 
@@ -256,21 +251,58 @@ contract ConsentCode {
         uint8 role,
         address _address,
         bool allow_all,
-        uint32 Disease_Group,
-        uint128[] memory Disease_Category
+        uint32 Disease_Group_Affordable,
+        uint128[] memory Disease_Category_Affordable
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         if (allow_all) {
             terms.allow_all_disease = true;
             return;
         }
-        terms.Disease_Group = Disease_Group;
-        //  terms.Disease_Category = Disease_Category;
-        for (uint8 i = 0; i < Disease_Category.length; i++) {
-            terms.Disease_Category[i] = Disease_Category[i];
+        terms.Disease_Group_Affordable = Disease_Group_Affordable;
+        //  terms.Disease_Category_Affordable; = Disease_Category_Affordable;;
+        for (uint8 i = 0; i < Disease_Category_Affordable.length; i++) {
+            terms.Disease_Category_Affordable[i] = Disease_Category_Affordable[i];
         }
     }
 
+    function RefreshState(address _address){
+        Terms storage terms = requesterMapping[_address];
+        terms.Disease_Array_Baseline = uint16[];
+        mapping(address => uint256) storage aMapping;
+        terms.Disease_Map_Baseline = aMapping;
+        mapping(address => uint256) storage aMapping;
+        terms.Area_Country_Map_Baseline =aMapping;
+        mapping(address => uint256) storage aMapping;
+        terms.Area_Group_Map_Baseline = aMapping;
+
+        terms.Area_Country_List_Baseline = uint8[];
+        terms.Area_Group_List_Baseline = uint8[];
+
+        terms.Area_Country_Affordable = 0;
+        terms.Area_Group_Affordable = 0;
+        terms.Disease_Category_Affordable = uint128[26];
+        terms.Disease_Group_Affordable = 0;
+    
+        Terms storage terms = providerMapping[_address];
+        terms.Disease_Array_Baseline = uint16[] ;
+        mapping(address => uint256) storage aMapping;
+        terms.Disease_Map_Baseline = aMapping;
+        mapping(address => uint256) storage aMapping;
+        terms.Area_Country_Map_Baseline = aMapping;
+        mapping(address => uint256) storage aMapping;
+        terms.Area_Group_Map_Baseline = aMapping;
+
+        terms.Area_Country_List_Baseline = uint8[];
+        terms.Area_Group_List_Baseline = uint8[];
+
+        terms.Area_Country_Affordable = 0;
+        terms.Area_Group_Affordable = 0;
+        terms.Disease_Category_Affordable = uint128[26];
+        terms.Disease_Group_Affordable = 0;
+
+
+    }
     // MARK: UploadDiseaseBaseline
     function UploadDiseaseBaseline(
         uint8 role,
@@ -278,9 +310,10 @@ contract ConsentCode {
         uint16[] memory Disease_Array_Baseline
     ) public {
         Terms storage terms = TermsByRole(role, _address);
+         
         if (role == role_provider) {
             for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
-                terms.Disease_Map[Disease_Array_Baseline[i]] = true;
+                terms.Disease_Map_Baseline[Disease_Array_Baseline[i]] = true;
             }
         }
 
@@ -307,7 +340,7 @@ contract ConsentCode {
     // ) public view returns (uint32, uint128[26] memory, bool) {
     //     Terms storage terms = TermsByRole(role, _address);
 
-    //         return (terms.Disease_Group,terms.Disease_Category,terms.allow_all_disease );
+    //         return (terms.Disease_Group_Affordable;,terms.Disease_Category_Affordable;,terms.allow_all_disease );
         
     // }
 
@@ -447,7 +480,7 @@ contract ConsentCode {
             uint16 requester_code = requesterMapping[_requester_address]
                 .Disease_Array_Baseline[index_requester];
             if (
-                providerMapping[_provider_address].Disease_Map[
+                providerMapping[_provider_address].Disease_Map_Baseline[
                     requester_code
                 ] == false
             ) {
@@ -470,8 +503,8 @@ contract ConsentCode {
             return false;
         }
 
-        uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group;
-        uint32 provider_group_code = providerMapping[_provider_address].Disease_Group;
+        uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group_Affordable;
+        uint32 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;
         if ((requester_group_code & provider_group_code) != requester_group_code) {
             return false;
         }
@@ -480,22 +513,22 @@ contract ConsentCode {
         for (
             uint index_requester = 0;
             index_requester <
-            requesterMapping[_requester_address].Disease_Category.length;
+            requesterMapping[_requester_address].Disease_Category_Affordable.length;
             index_requester++
         ) {
             // uint8 requester_group_code = requesterMapping[_requester_address]
-            //     .Disease_Group[index_requester];
+            //     .Disease_Group_Affordable;[index_requester];
             uint128 requester_category_code = requesterMapping[
-                _requester_address].Disease_Category[index_requester];
+                _requester_address].Disease_Category_Affordable[index_requester];
             allowed = false;
             for (
                 uint index_provider = 0;
                 index_provider <
-                providerMapping[_provider_address].Disease_Category.length;
+                providerMapping[_provider_address].Disease_Category_Affordable.length;
                 index_provider++
             ) {
-                // uint8 provider_group_code = providerMapping[_provider_address].Disease_Group[index_requester];
-                uint128 provider_category_code = providerMapping[_provider_address].Disease_Category[index_provider];
+                // uint8 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;[index_requester];
+                uint128 provider_category_code = providerMapping[_provider_address].Disease_Category_Affordable[index_provider];
                 if (provider_category_code & requester_category_code == requester_category_code) {
                     allowed = true;
                     break;

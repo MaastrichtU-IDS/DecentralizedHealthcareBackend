@@ -153,7 +153,7 @@ contract = w3.eth.contract(
 )
 # Extract default accounts created by ganache
 accounts = w3.eth.accounts
-accounts
+# accounts
 
 # %% [markdown]
 # # Test cases
