@@ -234,6 +234,39 @@ contract ConsentCode {
         }
     }
 
+    function delete_area_baseline(
+        uint8 role,
+        address _address,
+        uint8[] memory Group_Code,
+        uint8[] memory Country_Code
+    ) public {
+        Terms storage terms = TermsByRole(role, _address);
+
+        if (role == role_provider) {
+            // require(msg.sender == dataProvider, "Invalid sender");
+            for (uint8 i = 0; i < Country_Code.length; i++) {
+                delete terms.Area_Country_Map_Baseline[Country_Code[i]];
+            }
+            for (uint8 i = 0; i < Group_Code.length; i++) {
+                delete terms.Area_Group_Map_Baseline[Group_Code[i]];
+            }
+            delete terms.Area_Group_Affordable;
+            delete terms.Area_Country_Affordable;
+            // provider_areaMapping[_address].Area_Country_List_Baseline = Country_Code;
+            // provider_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
+        }
+
+        if (role == role_requester) {
+            delete terms.Area_Country_List_Baseline ;
+            delete terms.Area_Group_List_Baseline ;
+            
+            delete terms.Area_Group_Affordable;
+            delete terms.Area_Country_Affordable;
+        }
+    }
+
+
+
     // MARK: - DisplayAreaCode
     // function DisplayAreaCodeAffordable(
     //     uint8 role,
@@ -266,43 +299,38 @@ contract ConsentCode {
         }
     }
 
-    function RefreshState(address _address){
-        Terms storage terms = requesterMapping[_address];
-        terms.Disease_Array_Baseline = uint16[];
-        mapping(address => uint256) storage aMapping;
-        terms.Disease_Map_Baseline = aMapping;
-        mapping(address => uint256) storage aMapping;
-        terms.Area_Country_Map_Baseline =aMapping;
-        mapping(address => uint256) storage aMapping;
-        terms.Area_Group_Map_Baseline = aMapping;
+    // function RefreshState(address _address) public{
+    //     Terms storage terms = requesterMapping[_address];
+    //     terms.Disease_Array_Baseline = uint16[];
+    //     terms.Disease_Map_Baseline = aMapping;
+    //     terms.Area_Country_Map_Baseline =aMapping;
+    //     terms.Area_Group_Map_Baseline = aMapping;
 
-        terms.Area_Country_List_Baseline = uint8[];
-        terms.Area_Group_List_Baseline = uint8[];
+    //     terms.Area_Country_List_Baseline = uint8[];
+    //     terms.Area_Group_List_Baseline = uint8[];
 
-        terms.Area_Country_Affordable = 0;
-        terms.Area_Group_Affordable = 0;
-        terms.Disease_Category_Affordable = uint128[26];
-        terms.Disease_Group_Affordable = 0;
+    //     terms.Area_Country_Affordable = 0;
+    //     terms.Area_Group_Affordable = 0;
+    //     terms.Disease_Category_Affordable = uint128[26];
+    //     terms.Disease_Group_Affordable = 0;
     
-        Terms storage terms = providerMapping[_address];
-        terms.Disease_Array_Baseline = uint16[] ;
-        mapping(address => uint256) storage aMapping;
-        terms.Disease_Map_Baseline = aMapping;
-        mapping(address => uint256) storage aMapping;
-        terms.Area_Country_Map_Baseline = aMapping;
-        mapping(address => uint256) storage aMapping;
-        terms.Area_Group_Map_Baseline = aMapping;
+    //     Terms storage terms = providerMapping[_address];
+    //     terms.Disease_Array_Baseline = uint16[] ;
+    //     terms.Disease_Map_Baseline = aMapping;
+    //     terms.Area_Country_Map_Baseline = aMapping;
+    //     terms.Area_Group_Map_Baseline = aMapping;
 
-        terms.Area_Country_List_Baseline = uint8[];
-        terms.Area_Group_List_Baseline = uint8[];
+    //     terms.Area_Country_List_Baseline = uint8[];
+    //     terms.Area_Group_List_Baseline = uint8[];
 
-        terms.Area_Country_Affordable = 0;
-        terms.Area_Group_Affordable = 0;
-        terms.Disease_Category_Affordable = uint128[26];
-        terms.Disease_Group_Affordable = 0;
+    //     terms.Area_Country_Affordable = 0;
+    //     terms.Area_Group_Affordable = 0;
+    //     terms.Disease_Category_Affordable = uint128[26];
+    //     terms.Disease_Group_Affordable = 0;
 
 
-    }
+    // }
+
     // MARK: UploadDiseaseBaseline
     function UploadDiseaseBaseline(
         uint8 role,
@@ -324,6 +352,34 @@ contract ConsentCode {
             terms.Disease_Array_Baseline = Disease_Array_Baseline;
         }
     }
+
+    
+    // MARK: UploadDiseaseBaseline
+    function delete_disease_baseline(
+        uint8 role,
+        address _address,
+        uint16[] memory Disease_Array_Baseline
+    ) public {
+        Terms storage terms = TermsByRole(role, _address);
+         
+        if (role == role_provider) {
+            for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
+               delete terms.Disease_Map_Baseline[Disease_Array_Baseline[i]];
+            }
+            delete terms.Disease_Category_Affordable;
+            delete terms.Disease_Group_Affordable;
+        }
+
+        if (role == role_requester) {
+            // for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
+            //     terms.Disease_Array_Baseline.push(Disease_Array_Baseline[i]);
+            // }
+            delete terms.Disease_Array_Baseline;
+            delete terms.Disease_Category_Affordable;
+            delete terms.Disease_Group_Affordable;
+        }
+    }
+
 
     // MARK: - DisplayDiseaseCode
     function DisplayDiseaseCode(

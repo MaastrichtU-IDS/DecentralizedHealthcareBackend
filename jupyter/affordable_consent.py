@@ -167,7 +167,7 @@ def deploy_contract_local():
     # Extract default accounts created by ganache
     used_accounts = get_used_address()
     accounts = set(map(lambda x:str(x), w3.eth.accounts))
-    # accounts = list(accounts - used_accounts)
+    accounts = list(accounts - used_accounts)
     logger.info(f"actural accounts {len(accounts)}, used accounts {len(used_accounts)}")
     # print(f" actural {accounts.pop()}, used {used_accounts.pop()}")
     return w3, deployed_contract, accounts
@@ -230,6 +230,8 @@ def deploy_contract_polygon(force_deploy=False):
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
         assert tx_receipt['status'] == 1
         contract_address = tx_receipt.contractAddress 
+        polygon_config = {"contract_address": contract_address}
+        json.dump(polygon_config, open("data/polygon.json", "w"))
     else:
         polygon_config = json.load(open("data/polygon.json", "r"))
         contract_address = polygon_config.get("contract_address", None)
@@ -525,7 +527,7 @@ class Person:
 
             # balance = w3.eth.get_balance(address)
         else:
-            self.address = accounts.pop()
+            self.address = random.choice(accounts)
 
             # print(f"balance of {address} is {balance}")
 
@@ -612,6 +614,25 @@ class Person:
 
         print(f"{self.name} displaySimpleItems is {boolItems.show_true_items()}")
 
+    def delete_area(self):
+        country_codes = [country_name_code_dict[c]["index"] for c in self.country_names]
+
+        # print("UploadCountryItems", country_codes)
+        if hasattr(self, "group_names"):
+            group_codes = [group_index_dict[g] for g in self.group_names]
+        else:
+            group_codes = []
+            
+        func = self.contract.functions.delete_area_baseline(
+            self.role,
+            self.address,
+            group_codes,
+            country_codes,
+        )
+        # self.send_transaction(func)
+
+        return self.send_transaction(func)
+
     def upload_area_baseline(self):
 
         country_codes = [
@@ -625,6 +646,8 @@ class Person:
             group_codes = []
         # group_codes = [group_order_index_dict[g] for g in self.group_names]
         # logger.info(f"country_codes {country_codes} group_codes {group_codes}")
+        # if test_mode == TestEnum.polygon:
+
         func = self.contract.functions.UploadAreaBaseline(
             self.role,
             self.address,
@@ -812,6 +835,12 @@ class Person:
         self.upload_disease_affordable()
         self.upload_date()
 
+    def delete_disease(self):
+        func = self.contract.functions.delete_disease_baseline(
+            self.role, self.address, [diseaseCode2Int(d) for d in self.disease_items]
+        )
+        return self.send_transaction(func)
+    
     def upload_disease_baseline(self):
 
         disease_codes = [diseaseCode2Int(d) for d in self.disease_items]
@@ -1290,10 +1319,14 @@ def test_disease(one_group=False, test_mode=TestEnum.local):
         # disease_items = disease_list_all[0] if len(disease_items) == 0 else disease_items
         provider1.disease_items = disease_items
         requester1.disease_items = disease_items
-        provider1.address = accounts.pop()
-        requester1.address = accounts.pop()
-        record_used_address(provider1.address)
-        record_used_address(requester1.address)
+        if test_mode == TestEnum.polygon:
+            provider1.delete_area( )
+            requester1.delete_area()
+        else:
+            provider1.address = accounts.pop()
+            requester1.address = accounts.pop()
+            record_used_address(provider1.address)
+            record_used_address(requester1.address)
 
         gas_provider = provider1.upload_disease_baseline()
         gas_requester = requester1.upload_disease_baseline()
@@ -1354,30 +1387,27 @@ def test_area(env_name=TestEnum.local,label = ""):
     )
     data_baseline = []
     data_result = []
-    intevals = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    # if label == TestEnum.local:
+    intevals = [1,  20,  40,  60, 80,  100]
 
-    #     provider1.estimate_gas = True
-    #     requester1.estimate_gas = True
-    # else:
-    #     # intevals = [1]
-    #     provider1.estimate_gas = False
-    #     requester1.estimate_gas = False
-    # provider1.update_area_group_relation()
-    # provider1.estimate_gas = True
-    # requester1.estimate_gas = True
     for interval in tqdm(intevals):
         precentage = interval / 100
         length = int(len(country_name_code_dict)*precentage)
         countries = list(country_name_code_dict.keys())[:length]
         provider1.country_names = countries
         requester1.country_names = countries
-        provider1.address = accounts.pop()
-        requester1.address = accounts.pop()
-        record_used_address(provider1.address)
-        record_used_address(requester1.address)
+        # provider1.address = accounts.pop()
+        # requester1.address = accounts.pop()
+        # record_used_address(provider1.address)
+        # record_used_address(requester1.address)
         
         # gas_update_area_group_code = provider1.update_area_group_relation()
+        if env_name == TestEnum.polygon:
+            provider1.delete_area( )
+            requester1.delete_area()
+        else:
+            provider1.address = accounts.pop()
+            requester1.address = accounts.pop()
+            
         provider_affordable_result = provider1.upload_area_affordable()
         requester_affordable_result = requester1.upload_area_affordable()
         # # gas_access_simple = requester1.access_area_simple(provider1)
@@ -1401,28 +1431,42 @@ def test_area(env_name=TestEnum.local,label = ""):
 
 
 def plot_area(env_name=TestEnum.local,label = ""):
+    def transform(data_list, role, column, label=""):
+        return {
+            f"baseline{label}": [d["baseline"][role][column] for d in data_list],
+            f"affordable{label}": [d["affordable"][role][column] for d in data_list],
+            "interval": [d["interval"] for d in data_list],
+        }
 
     # plt.show()
     result = json.load(open(f"result/{env_name.name}_area{label}.json", "r"))
-    gas_provider = {
-        "baseline": [d["baseline"]["provider"]["gas_used"] for d in result],
-        "affordable": [d["affordable"]["provider"]["gas_used"] for d in result],
-        "interval": [d["interval"] for d in result],
-    }
-    gas_requester = {
-        "baseline": [d["baseline"]["requester"]["gas_used"] for d in result],
-        "affordable": [d["affordable"]["requester"]["gas_used"] for d in result],
-        "interval": [d["interval"] for d in result],
-    }
+   
+    result_polygon = json.load(open(f"result/{TestEnum.polygon.name}_area{label}.json", "r"))
+    intevals = [1,  20,  40,  60, 80,  100]
+    result_polygon = list(filter(lambda x: x["interval"] in intevals, result_polygon))
+    result_local = json.load(open(f"result/{TestEnum.local.name}_area{label}.json", "r"))
+    gas_provider_local = transform(result_local, "provider", "gas_used","_local")
+    gas_requester_local =transform(result_local, "requester", "gas_used","_local")
+    gas_provider_polygon = transform(result_polygon, "provider", "gas_used","_polygon")
+    gas_requester_polygon = transform(result_polygon, "requester", "gas_used","_polygon")
+    
     task = f"{env_name.name}_area_gas{label}"
-    plot(
+    gas_provider = gas_provider_local|gas_provider_polygon
+    gas_requester = gas_requester_local | gas_requester_polygon
+    plot_column(
         gas_provider,
         task,
         f"provider",
         "Precentage of countries (%)",
         "Gas cost ($ 1 \\times 10^{3}$ units)",
     )
-    plot(gas_requester, task, "requester","Precentage of countries (%)", "Gas cost ($ 1 \\times 10^{3}$ units)")
+    plot_column(
+        gas_requester,
+        task,
+        "requester",
+        "Precentage of countries (%)",
+        "Gas cost ($ 1 \\times 10^{3}$ units)",
+    )
 
     task_time = f"{env_name.name}_area_time{label}"
     time_provider = {
@@ -1444,6 +1488,90 @@ def plot_area(env_name=TestEnum.local,label = ""):
         "Time cost ( $ 1 \\times 10^{3}$ ms)",
     )
 
+def plot_column(data, task, role,x_label,y_label):
+    import matplotlib.pyplot as plt
+    data_frame = pd.DataFrame(data)
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+    width = 4
+    baseline_local_x = data_frame["interval"] - 1.5*width
+    affordable_local_x = data_frame["interval"] - 0.5*width
+    baseline_polygon_x = data_frame["interval"] + 0.5*width 
+    affordable_polygon_x = data_frame["interval"] + 1.5*width
+    factor = 1e3
+    bars1 = ax1.bar(
+        baseline_local_x,
+        data_frame["baseline_local"] / factor,
+        width=width,
+        label=f"Baseline-Local",
+        # color="r",
+        # alpha=0.6,
+    )
+    bars2 = ax1.bar(
+        affordable_local_x,
+        data_frame["affordable_local"] / factor,
+        width=width,
+        label=f"Affordable-Local",
+        # color="y",
+        # alpha=0.6,
+    )
+    bars3 = ax1.bar(
+        baseline_polygon_x,
+        data_frame["baseline_polygon"] / factor,
+        width=width,
+        label=f"Baseline-Amoy",
+        # color="y",
+        # alpha=0.6,
+    )
+    bars4 = ax1.bar(
+        affordable_polygon_x,
+        data_frame["affordable_polygon"] / factor,
+        width=width,
+        label=f"Affordable-Amoy",
+        # color="y",
+        # alpha=0.6,
+    )
+    # ax1.set_ylabel("Gas Used (Bar)")
+    ax1.set_xlabel(x_label)
+    ax1.tick_params(axis='y')
+    ax1.legend(loc='upper left')
+
+    for bar in bars1:
+        yval = bar.get_height()
+        ax1.text(
+            bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
+        )
+
+    for bar in bars2:
+        yval = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2, yval, int(yval), ha='center', va='bottom')
+    for bar in bars2:
+        yval = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2, yval, int(yval), ha='center', va='bottom')
+
+    for bar in bars3:
+        yval = bar.get_height()
+        ax1.text(
+            bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
+        )
+
+    for bar in bars4:
+        yval = bar.get_height()
+        ax1.text(
+            bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
+        )
+    plt.text(
+            -0.05,
+            1.02,
+            y_label,
+            ha="left",
+            va="center",
+            transform=ax1.transAxes,
+            # fontsize=12,
+        )
+
+    # plt.title("Provider and Requester Gas Usage Over Intervals")
+    plt.savefig(f"figs/column_{task}_{role}.pdf")
+
 def plot(data, task, role,x_label,y_label):
     data_frame = pd.DataFrame(data)
     factor = 1e3
@@ -1452,17 +1580,22 @@ def plot(data, task, role,x_label,y_label):
     intervals = data_frame["interval"]
     data_plot = pd.DataFrame()
     data_plot["interval"] = intervals
-    data_plot["baseline"] = (data_frame["baseline"] / factor).round(1)
-    data_plot["affordable"] = (data_frame["affordable"] / factor).round(1)
+    keys = data_frame.columns.to_list()
+    keys.remove("interval")
+    # print(keys)
+    for k in keys:
+        data_plot[k] = (data_frame[k] / factor).round(1)
+    # data_plot["baseline"] = (data_frame["baseline"] / factor).round(1)
+    # data_plot["affordable"] = (data_frame["affordable"] / factor).round(1)
     # data_plot["gas_update_area_group_code"] = data_frame["gas_update_area_group_code"] / factor
     # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
     ax = data_plot.plot.line(
         x="interval",
-        y=["baseline", "affordable"],
-        style=["o-", "*-"],
+        y=keys,
+        # style=["o-", "*-"],
         xlabel=x_label,
         # ylabel=y_label,
-        label=["baseline", "affordable"],
+        label=keys,
         # title="Gas cost for uploading area code of providers",
         # annotate=True,
     )
@@ -1547,176 +1680,6 @@ def generate_country_index():
     country_index = {k: 1<<v["index"] for k, v in country_name_code_dict.items()}
 
     json.dump(country_index, open(country_index_file, "w"), indent=4)
-
-# generate_country_index()
-# generate_group_index()
-
-# %%
-def test_group():
-
-    provider1.estimate_gas = True
-    requester1.estimate_gas = True
-    data = []
-    data_simple = []
-    data_only = []
-
-    for interval in range(1, 180, 20):
-        countries = list(provider1.country_name_code_dict.keys())[:interval]
-        provider1.country_names = countries
-        requester1.country_names = countries
-        provider1.group_names = ["EUROPEAN_UNION"]
-        requester1.group_names = ["EUROPEAN_UNION"]
-
-        gas_provider = provider1.upload_area_code_baseline()
-        gas_requester = requester1.upload_area_code_baseline()
-        gas_access = requester1.access_area_baseline(provider1)
-
-        gas_provider_simple = provider1.upload_area_code_simple()
-        gas_requester_simple = requester1.upload_area_code_simple()
-        gas_access_simple = requester1.access_area_simple(provider1)
-
-        data.append(
-            {
-                "interval": interval,
-                "gas_provider": gas_provider,
-                "gas_requester": gas_requester,
-                "gas_access": gas_access,
-                "gas_provider_simple": gas_provider_simple,
-                "gas_requester_simple": gas_requester_simple,
-                "gas_access_simple": gas_access_simple,
-                "category": "binary",
-            }
-        )
-
-    data_frame = pd.DataFrame(data)
-    factor = 1e3
-    import matplotlib.pyplot as plt
-
-    intervals = data_frame["interval"]
-    data_plot = pd.DataFrame()
-    data_plot["interval"] = intervals
-    data_plot["gas_provider"] = data_frame["gas_provider"] / factor
-    data_plot["gas_provider_simple"] = data_frame["gas_provider_simple"] / factor
-    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
-    ax = data_plot.plot.line(
-        x="interval",
-        y=["gas_provider", "gas_provider_simple"],
-        style=["o-", "*-"],
-        xlabel="Number of countries",
-        ylabel="Gas cost (1e3)",
-        label=["base", "binary"],
-        # title="Gas cost for uploading area code of providers",
-        # annotate=True,
-    )
-
-    plt.annotate(
-        data_plot["gas_provider"].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot["gas_provider"].iloc[-1]),
-        xytext=(intervals.iloc[-1] - 25, data_plot["gas_provider"].iloc[-1]),
-    )
-    plt.annotate(
-        data_plot["gas_provider_simple"].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot["gas_provider_simple"].iloc[-1]),
-        xytext=(
-            intervals.iloc[-1] - 10,
-            data_plot["gas_provider_simple"].iloc[-1] + 50,
-        ),
-    )
-    plt.savefig("figs/area_gas_provider.pdf")
-    plt.show()
-
-    line_role_baseline = "gas_requester"
-    line_role_binary = "gas_requester_simple"
-    data_plot[line_role_baseline] = data_frame[line_role_baseline] / factor
-    data_plot[line_role_binary] = data_frame[line_role_binary] / factor
-    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
-    ax = data_plot.plot.line(
-        x="interval",
-        y=[line_role_baseline, line_role_binary],
-        style=["o-", "*-"],
-        xlabel="Number of countries",
-        ylabel="Gas cost (1e3)",
-        label=["base", "binary"],
-        # title="Gas cost for uploading area code of requesters",
-        # annotate=True,
-    )
-
-    plt.annotate(
-        data_plot[line_role_baseline].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot[line_role_baseline].iloc[-1]),
-        xytext=(intervals.iloc[-1] - 22, data_plot[line_role_baseline].iloc[-1]),
-    )
-    plt.annotate(
-        data_plot[line_role_binary].iloc[-1],
-        xy=(intervals.iloc[-1], data_plot[line_role_binary].iloc[-1]),
-        xytext=(intervals.iloc[-1] - 10, data_plot[line_role_binary].iloc[-1] + 5),
-    )
-    plt.savefig("figs/area_gas_requester.pdf")
-    plt.show()
-
-
-def test_date():
-    provider1.Start_Year = 2021
-    provider1.Start_Month = 1
-    provider1.Start_Day = 1
-    provider1.Months = 12
-    date_gas = provider1.upload_date()
-
-    requester1.Start_Year = 2021
-    requester1.Start_Month = 1
-    requester1.Start_Day = 1
-    requester1.Months = 12
-    date_gas = requester1.upload_date()
-
-
-def test_simple():
-    provider = Provider(
-        name=f"provider",
-        description=f"provider",
-        address=accounts.pop(),
-        profile="open",
-    )
-
-    requester = Requester(
-        name=f"requester",
-        description=f"requester",
-         address=accounts.pop(),
-    )
-
-    provider.upload()
-
-    provider.update_area_group_relation()
-
-    requester.upload()
-
-    categories, codes, allow_all = provider.display_disease_herarchical()
-
-    # print(f"categories {categories}, codes {codes}, allow_all {allow_all}")
-
-    requester_categories, requester_codes, requester_allow_all = (
-        requester.display_disease_herarchical()
-    )
-
-    provider_groups, provider_countries = provider.display_area_affordable()
-
-    requester_groups, requester_countries = requester.display_area_affordable()
-
-    logger.info(f"provider_groups {provider_groups}, provider_countries {provider_countries}")
-    logger.info(
-
-        f"requester_groups {requester_groups}, requester_countries {requester_countries}"
-    )
-    country_grant = list(set(requester_countries) - set(provider_countries))
-    group_grant = list(set(requester_groups) - set(provider_groups))
-    logger.info(f"country_grant {country_grant}, group_grant {group_grant}")
-
-    access = requester.request_access(provider)
-
-    logger.info(f"access {access}")
-
-    access_disease = requester.access_disease_hierarchy(provider)
-
-    logger.info(f"access_disease {access_disease}")
 
 
 profile_list = [
@@ -2271,7 +2234,7 @@ if __name__ == "__main__":
     if test_mode == TestEnum.local:
         w3, contract,  accounts = deploy_contract_local()
     elif test_mode == TestEnum.polygon:
-        w3, contract,  accounts = deploy_contract_polygon()
+        w3, contract,  accounts = deploy_contract_polygon(force_deploy=False)
     # print(f"accounts {accounts[0]}")
     # test_scenarios(provider_number=100, requester_number=100)
     # plot_simulation_category()
@@ -2279,7 +2242,7 @@ if __name__ == "__main__":
 
     # print_boolean_items()
     # area_label = "local"
-    test_area(env_name=test_mode,label="_refresh")
+    # test_area(env_name=test_mode,label="_refresh")
     plot_area(env_name=test_mode,label="_refresh")
 
     # test_disease(one_group=False, test_mode=test_mode)
