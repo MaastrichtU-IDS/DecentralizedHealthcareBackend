@@ -1,12 +1,15 @@
 from cgi import test
 import dis
 from distutils.command import build
+import enum
 import json
 
 # import web3
 from datetime import datetime
 from tkinter import CURRENT
 from matplotlib import markers
+from matplotlib.font_manager import font_scalings
+from pyparsing import alphas
 from requests import get
 from web3 import Web3
 
@@ -106,9 +109,30 @@ abi = contract_interface["abi"]
 bytecode = contract_interface["bin"]
 bytecode_runtime = contract_interface["bin-runtime"]
 
+
 class TestEnum(Enum):
-    local = 1
-    polygon = 2
+    local = (1, "Local")
+    polygon = (2, "Polygon")
+
+    def __init__(self, code, name):
+        self._code = code
+        self._name = name
+
+    @property
+    def code(self):
+        return self._code
+
+    @property
+    def name(self):
+        return self._name
+
+
+class Env:
+    def __init__(self, name, w3, deployed_contract, accounts):
+        self.name = name
+        self.w3 = w3
+        self.contract = deployed_contract
+        self.accounts = accounts
 
 def deploy_contract_local():
     startTime = datetime.now()
@@ -171,7 +195,8 @@ def deploy_contract_local():
     accounts = list(accounts - used_accounts)
     logger.info(f"actural accounts {len(accounts)}, used accounts {len(used_accounts)}")
     # print(f" actural {accounts.pop()}, used {used_accounts.pop()}")
-    return w3, deployed_contract, accounts
+    env = Env(TestEnum.local.name, w3, deployed_contract, accounts)
+    return env
 
 private_key = "cef3155c18c010de238f98470f9a092159405cb6cd5ab25261e3fcdff23cd810"
 
@@ -241,7 +266,8 @@ def deploy_contract_polygon(force_deploy=False):
     deployed_contract = w3.eth.contract(address=contract_address, abi=abi, bytecode=bytecode)
     logger.critical(f"Contract deployed at address: {contract_address}")
     # print(f"Contract deployed at address: {contract_address}")
-    return w3,deployed_contract, [w3.to_checksum_address(account.address)]
+    env = Env(TestEnum.polygon.name,w3, deployed_contract, [w3.to_checksum_address(account.address)])
+    return env 
 
 
 pattern = r"^[A-Z][0-9\*]{2}$"
@@ -511,16 +537,20 @@ class TransactionResult:
 class Person:
     def __init__(
         self,
+         env  ,
         name="",
         description="",
         address=None,
         bool_items=None,
+       
         **kwargs,
     ):
 
         self.name = name
         self.estimate_gas = False
         self.print_time = False
+        self.w3 = env.w3
+        self.env = env 
 
         if address is not None:
 
@@ -528,7 +558,7 @@ class Person:
 
             # balance = w3.eth.get_balance(address)
         else:
-            self.address = random.choice(accounts)
+            self.address = random.choice(env.accounts)
 
             # print(f"balance of {address} is {balance}")
 
@@ -538,7 +568,7 @@ class Person:
 
         self.description = description
 
-        self.contract = contract
+        self.contract = env.contract
 
         # 'gasPrice': w3.eth.gas_price*0.1,
 
@@ -623,7 +653,7 @@ class Person:
             group_codes = [group_index_dict[g] for g in self.group_names]
         else:
             group_codes = []
-            
+
         func = self.contract.functions.delete_area_baseline(
             self.role,
             self.address,
@@ -841,7 +871,7 @@ class Person:
             self.role, self.address, [diseaseCode2Int(d) for d in self.disease_items]
         )
         return self.send_transaction(func)
-    
+
     def upload_disease_baseline(self):
 
         disease_codes = [diseaseCode2Int(d) for d in self.disease_items]
@@ -980,17 +1010,17 @@ class Person:
             # "gas": w3.to_wei(10, "gwei"),
             # "gas": 1000000,
             # "chainId": 80002,
-            "gasPrice": w3.to_wei(10, "gwei"),
+            "gasPrice": self.w3.to_wei(10, "gwei"),
         }
         dynamic_fee_transaction = {
             "from": self.address,
             "type": 2,  # Explicitly specify EIP-1559 transaction type
             "gas": 25_000_000,  # Ensure gas limit is reasonable
-            "maxFeePerGas": w3.to_wei(40, "gwei"),  # Reasonable max fee per gas
-            "maxPriorityFeePerGas": w3.to_wei(
+            "maxFeePerGas": self.w3.to_wei(40, "gwei"),  # Reasonable max fee per gas
+            "maxPriorityFeePerGas": self.w3.to_wei(
                 30, "gwei"
             ),  # Reasonable max priority fee per gas
-            "nonce": w3.eth.get_transaction_count(
+            "nonce": self.w3.eth.get_transaction_count(
                 self.address
             ),  # Correct nonce calculation
             "chainId": 80002,
@@ -1000,25 +1030,27 @@ class Person:
             start_time = time.time_ns()
             receipt = func.call()
             end_time = time.time_ns()
-        elif test_mode == TestEnum.polygon:
+        elif self.env.name == TestEnum.polygon.name:
             start_time = time.time_ns()
             build_transaction = func.build_transaction(dynamic_fee_transaction)
-            signed_txn = w3.eth.account.sign_transaction(build_transaction, private_key=private_key)
+            signed_txn = self.w3.eth.account.sign_transaction(
+                build_transaction, private_key=private_key
+            )
             start_time = time.time_ns()
-            logger.info(f"signed_txn {signed_txn}")
-            tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+            # logger.info(f"signed_txn {signed_txn}")
+            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
             end_time = time.time_ns()
 
-        elif test_mode == TestEnum.local:
+        elif self.env.name == TestEnum.local.name:
             start_time = time.time_ns()
             tx_hash = func.transact(person_dict)
-            receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
             end_time = time.time_ns()
 
         gas_used = receipt["gasUsed"]
         gas_price = receipt["effectiveGasPrice"]
-        time_diff = (end_time - start_time) / 10**6
+        time_diff = (end_time - start_time)
         return TransactionResult(gas_used=gas_used, time_used=time_diff, gas_price=gas_price, transaction_hash=receipt["transactionHash"].hex(), status=receipt["status"])
 
     def __str__(self):
@@ -1286,25 +1318,26 @@ def get_used_address():
         
     return set(map(lambda x: x.strip(), used_address))
 
-def test_disease(one_group=False, test_mode=TestEnum.local):
+def test_disease(env,one_group=False):
     provider1 = Provider(
+        env,
         name="Provider_disease",
         description="Provider1",
         # address=random.choice(accounts),
 
     )
     requester1 = Requester(
+        env,
         name="Requester_disease",
         description="Requester1",
         # address=random.choice(accounts),
   
     )
 
-    intevals = [0.01, 1, 5, 10, 20, 30, 40, 50, 60, 70,80,90,100]
+    # intevals = [0, 1, 5, 10, 20, 30, 40, 50, 60, 70,80,90,100]
     # intevals = [80]
     # intevals = [1]
-    provider1.estimate_gas = True
-    requester1.estimate_gas = True
+    intevals = [0,20,40,60,80,100]
 
     disease_data = []
     groups = [c for c in string.ascii_uppercase]
@@ -1320,12 +1353,12 @@ def test_disease(one_group=False, test_mode=TestEnum.local):
         # disease_items = disease_list_all[0] if len(disease_items) == 0 else disease_items
         provider1.disease_items = disease_items
         requester1.disease_items = disease_items
-        if test_mode == TestEnum.polygon:
+        if env.name == TestEnum.polygon.name:
             provider1.delete_disease()
             requester1.delete_disease()
         else:
-            provider1.address = accounts.pop()
-            requester1.address = accounts.pop()
+            provider1.address = env.accounts.pop()
+            requester1.address = env.accounts.pop()
             record_used_address(provider1.address)
             record_used_address(requester1.address)
 
@@ -1353,7 +1386,7 @@ def test_disease(one_group=False, test_mode=TestEnum.local):
         )
 
     result_fp = (
-        f"result/{test_mode.name}_disease_{'one' if one_group else 'whole'}.json"
+        f"result/{env.name}_disease_{'one' if one_group else 'whole'}.json"
     )
 
     json.dump(disease_data, open(result_fp, "w"), indent=4)
@@ -1379,7 +1412,7 @@ def plot_disease(one_group=False, test_mode=TestEnum.local):
     plot_line_combined(data = requester_data, task= task, role="requester", x_label="Precentage of diseases (%)", y_label="Gas Usage (10^3)")
 
 
-def plot_disease_all():
+def plot_disease_all(key_index_name="time_used",factor = 1e3 ):
     task = f'{test_mode.name}_disease'
     # result_fp = f"result/{task}.json"
     result_one_local = json.load(
@@ -1390,72 +1423,244 @@ def plot_disease_all():
     )
     result_one_polygon = json.load(open(f"result/{TestEnum.polygon.name}_disease_one.json", "r"))
     result_whole_polygon = json.load(open(f"result/{TestEnum.polygon.name}_disease_whole.json", "r"))
+    used_interval = [0,  20,  40,  60,  80, 100]
+    result_one_local = [d for d in result_one_local if d["interval"] in used_interval]
+    result_whole_local = [d for d in result_whole_local if d["interval"] in used_interval]
+    result_one_polygon = [d for d in result_one_polygon if d["interval"] in used_interval]
+    result_whole_polygon = [d for d in result_whole_polygon if d["interval"] in used_interval]
 
-    affordable_provider_one_local = plot_transform(result_one_local, "provider", "gas_used",label="-local")
-    affordable_requester_one_local = plot_transform(result_one_local, "requester", "gas_used",label="-local")
-    affordable_provider_whole_local = plot_transform(result_whole_local, "provider", "gas_used", label="-local")
-    affordable_requester_whole_local = plot_transform(result_whole_local, "requester", "gas_used", label="-local")
-    affordable_provider_one_polygon = plot_transform(result_one_polygon, "provider", "gas_used", label="-polygon")
-    affordable_requester_one_polygon = plot_transform(result_one_polygon, "requester", "gas_used", label="-polygon")
+    affordable_provider_one_local = plot_transform(result_one_local, "provider", key_index_name, label="_local")
+    affordable_requester_one_local = plot_transform(result_one_local, "requester", key_index_name,label="_local")
+    affordable_provider_whole_local = plot_transform(result_whole_local, "provider", key_index_name, label="_local")
+    affordable_requester_whole_local = plot_transform(result_whole_local, "requester", key_index_name, label="_local")
+    affordable_provider_one_polygon = plot_transform(result_one_polygon, "provider", key_index_name, label="_polygon")
+    affordable_requester_one_polygon = plot_transform(
+        result_one_polygon, "requester", key_index_name, label="_polygon"
+    )
     affordable_provider_whole_polygon = plot_transform(
-        result_whole_polygon, "provider", "gas_used", label="-polygon"
+        result_whole_polygon, "provider", key_index_name, label="_polygon"
     )
     affordable_requester_whole_polygon = plot_transform(
-        result_whole_polygon, "requester", "gas_used", label="-polygon"
+        result_whole_polygon, "requester", key_index_name, label="_polygon"
     )
 
-    baseline_provider_one_local = plot_transform(result_one_local, "provider", "gas_used", label="-local")
-    baseline_requester_one_local = plot_transform(result_one_local, "requester", "gas_used", label="-local")
-    baseline_provider_whole_local = plot_transform(result_whole_local, "provider", "gas_used", label="-local")
-    baseline_requester_whole_local = plot_transform(
-        result_whole_local, "requester", "gas_used", label="-local"
+    baseline_provider_one_local = plot_transform(result_one_local, "provider", key_index_name, label="_local")
+    baseline_requester_one_local = plot_transform(result_one_local, "requester", key_index_name, label="_local")
+
+    baseline_provider_whole_local = plot_transform(
+        result_whole_local, "provider", key_index_name, label="_local"
     )
-    baseline_provider_one_polygon = plot_transform(result_one_polygon, "provider", "gas_used", label="-polygon")
+    baseline_requester_whole_local = plot_transform(
+        result_whole_local, "requester", key_index_name, label="_local"
+    )
+    baseline_provider_one_polygon = plot_transform(result_one_polygon, "provider", key_index_name, label="_polygon")
     baseline_requester_one_polygon = plot_transform(
-        result_one_polygon, "requester", "gas_used", label="-polygon"
+        result_one_polygon, "requester", key_index_name, label="_polygon"
     )
     baseline_provider_whole_polygon = plot_transform(
-        result_whole_polygon, "provider", "gas_used", label="-polygon"
+        result_whole_polygon, "provider", key_index_name, label="_polygon"
     )
     baseline_requester_whole_polygon = plot_transform(
-        result_whole_polygon, "requester", "gas_used", label="-polygon"
+        result_whole_polygon, "requester", key_index_name, label="_polygon"
     )
 
-    provider_data = {**baseline_provider_whole_local, **affordable_provider_whole_local, **baseline_provider_whole_polygon, **affordable_provider_whole_polygon}
-    requester_data = {**affordable_requester_one_local, **baseline_requester_one_local, **affordable_requester_one_polygon, **baseline_requester_one_polygon}
+    # provider_data = {**baseline_provider_whole_local, **affordable_provider_whole_local, **baseline_provider_whole_polygon, **affordable_provider_whole_polygon}
+    # requester_data = {**affordable_requester_one_local, **baseline_requester_one_local, **affordable_requester_one_polygon, **baseline_requester_one_polygon}
+    provider_whole = {**baseline_provider_whole_local, **affordable_provider_whole_local, **baseline_provider_whole_polygon, **affordable_provider_whole_polygon}
+    requester_whole = {**affordable_requester_whole_local, **baseline_requester_whole_local, **affordable_requester_whole_polygon, **baseline_requester_whole_polygon}
+    provider_one = {**baseline_provider_one_local, **affordable_provider_one_local, **baseline_provider_one_polygon, **affordable_provider_one_polygon}
+    requester_one = {**affordable_requester_one_local, **baseline_requester_one_local, **affordable_requester_one_polygon, **baseline_requester_one_polygon}
+    y_label = "Gas Usage ($1 \\times 10^3$)"
 
-    plot_line_combined(
-        data=provider_data,
-        task=task,
+    plot_column(
+        data=provider_whole,
+        task=f"all_whole_disease_{key_index_name}",
         role="provider",
         x_label="Precentage of diseases (%)",
-        y_label="Gas Usage (10^3)",
+        y_label=y_label,factor=factor,
     )
-    plot_line_combined(
-        data=requester_data,
-        task=task,
+    plot_column(
+        data=requester_whole,
+        task=f"all_whole_disease_{key_index_name}",
         role="requester",
         x_label="Precentage of diseases (%)",
-        y_label="Gas Usage (10^3)",
+        y_label=y_label,
+        factor=factor,
+    )
+    plot_column(
+        data=provider_one,
+        task=f"all_one_disease_{key_index_name}",
+        role="provider",
+        x_label="Precentage of diseases (%)",
+        y_label=y_label,factor=factor,
+    )
+    plot_column(
+        data=requester_one,
+        task=f"all_one_disease_{key_index_name}",
+        role="requester",
+        x_label="Precentage of diseases (%)",
+        y_label=y_label,factor=factor,
     )
 
 
-def test_area(env_name=TestEnum.local,label = ""):
+def plot_disease_time(key_index_name="time_used", factor=1e6, y_label = "Time Usage (milliseconds)"):
+    task = f"{test_mode.name}_disease"
+    # result_fp = f"result/{task}.json"
+    result_one_local = json.load(
+        open(f"result/{TestEnum.local.name}_disease_one.json", "r")
+    )
+    result_whole_local = json.load(
+        open(f"result/{TestEnum.local.name}_disease_whole.json", "r")
+    )
+    result_one_polygon = json.load(
+        open(f"result/{TestEnum.polygon.name}_disease_one.json", "r")
+    )
+    result_whole_polygon = json.load(
+        open(f"result/{TestEnum.polygon.name}_disease_whole.json", "r")
+    )
+    used_interval = [0, 20, 40, 60, 80, 100]
+    result_one_local = [d for d in result_one_local if d["interval"] in used_interval]
+    result_whole_local = [
+        d for d in result_whole_local if d["interval"] in used_interval
+    ]
+    result_one_polygon = [
+        d for d in result_one_polygon if d["interval"] in used_interval
+    ]
+    result_whole_polygon = [
+        d for d in result_whole_polygon if d["interval"] in used_interval
+    ]
 
-    # intevals = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90,100]
+    affordable_provider_one_local = plot_transform(
+        result_one_local, "provider", key_index_name, label="_local"
+    )
+    affordable_requester_one_local = plot_transform(
+        result_one_local, "requester", key_index_name, label="_local"
+    )
+    affordable_provider_whole_local = plot_transform(
+        result_whole_local, "provider", key_index_name, label="_local"
+    )
+    affordable_requester_whole_local = plot_transform(
+        result_whole_local, "requester", key_index_name, label="_local"
+    )
+    affordable_provider_one_polygon = plot_transform(
+        result_one_polygon, "provider", key_index_name, label="_polygon"
+    )
+    affordable_requester_one_polygon = plot_transform(
+        result_one_polygon, "requester", key_index_name, label="_polygon"
+    )
+    affordable_provider_whole_polygon = plot_transform(
+        result_whole_polygon, "provider", key_index_name, label="_polygon"
+    )
+    affordable_requester_whole_polygon = plot_transform(
+        result_whole_polygon, "requester", key_index_name, label="_polygon"
+    )
+
+    baseline_provider_one_local = plot_transform(
+        result_one_local, "provider", key_index_name, label="_local"
+    )
+    baseline_requester_one_local = plot_transform(
+        result_one_local, "requester", key_index_name, label="_local"
+    )
+
+    baseline_provider_whole_local = plot_transform(
+        result_whole_local, "provider", key_index_name, label="_local"
+    )
+    baseline_requester_whole_local = plot_transform(
+        result_whole_local, "requester", key_index_name, label="_local"
+    )
+    baseline_provider_one_polygon = plot_transform(
+        result_one_polygon, "provider", key_index_name, label="_polygon"
+    )
+    baseline_requester_one_polygon = plot_transform(
+        result_one_polygon, "requester", key_index_name, label="_polygon"
+    )
+    baseline_provider_whole_polygon = plot_transform(
+        result_whole_polygon, "provider", key_index_name, label="_polygon"
+    )
+    baseline_requester_whole_polygon = plot_transform(
+        result_whole_polygon, "requester", key_index_name, label="_polygon"
+    )
+
+    # provider_data = {**baseline_provider_whole_local, **affordable_provider_whole_local, **baseline_provider_whole_polygon, **affordable_provider_whole_polygon}
+    # requester_data = {**affordable_requester_one_local, **baseline_requester_one_local, **affordable_requester_one_polygon, **baseline_requester_one_polygon}
+    provider_whole = {
+        **baseline_provider_whole_local,
+        **affordable_provider_whole_local,
+        **baseline_provider_whole_polygon,
+        **affordable_provider_whole_polygon,
+    }
+    requester_whole = {
+        **affordable_requester_whole_local,
+        **baseline_requester_whole_local,
+        **affordable_requester_whole_polygon,
+        **baseline_requester_whole_polygon,
+    }
+    provider_one = {
+        **baseline_provider_one_local,
+        **affordable_provider_one_local,
+        **baseline_provider_one_polygon,
+        **affordable_provider_one_polygon,
+    }
+    requester_one = {
+        **affordable_requester_one_local,
+        **baseline_requester_one_local,
+        **affordable_requester_one_polygon,
+        **baseline_requester_one_polygon,
+    }
+    # y_label = "Time Usage (milliseconds)"
+
+    plot_column(
+        data=provider_whole,
+        task=f"all_whole_disease_{key_index_name}",
+        role="provider",
+        x_label="Precentage of diseases (%)",
+        y_label=y_label,
+        factor=factor,
+    )
+    plot_column(
+        data=requester_whole,
+        task=f"all_whole_disease_{key_index_name}",
+        role="requester",
+        x_label="Precentage of diseases (%)",
+        y_label=y_label,
+        factor=factor,
+    )
+    plot_column(
+        data=provider_one,
+        task=f"all_one_disease_{key_index_name}",
+        role="provider",
+        x_label="Precentage of diseases (%)",
+        y_label=y_label,
+        factor=factor,
+    )
+    plot_column(
+        data=requester_one,
+        task=f"all_one_disease_{key_index_name}",
+        role="requester",
+        x_label="Precentage of diseases (%)",
+        y_label=y_label,
+        factor=factor,
+    )
+
+
+def test_area(env ,label = ""):
+
+    # intevals = [0,  10, 20, 30, 40, 50, 60, 70, 80, 90,100]
     provider1 = Provider(
+        env=env,
         name="Provider_area",
         description="Provider1",
         # address = random.choice(accounts),
     )
     requester1 = Requester(
+        env=env,
         name="Requester_area",
         description="Requester1",
         #  address =  random.choice(accounts),
     )
     data_baseline = []
     data_result = []
-    intevals = [1,  20,  40,  60, 80,  100]
+    intevals = [0,  20,  40,  60, 80,  100]
 
     for interval in tqdm(intevals):
         precentage = interval / 100
@@ -1469,12 +1674,12 @@ def test_area(env_name=TestEnum.local,label = ""):
         # record_used_address(requester1.address)
 
         # gas_update_area_group_code = provider1.update_area_group_relation()
-        if env_name == TestEnum.polygon:
+        if env.name == TestEnum.polygon.name:
             provider1.delete_area( )
             requester1.delete_area()
         else:
-            provider1.address = accounts.pop()
-            requester1.address = accounts.pop()
+            provider1.address = env.accounts.pop()
+            requester1.address = env.accounts.pop()
 
         provider_affordable_result = provider1.upload_area_affordable()
         requester_affordable_result = requester1.upload_area_affordable()
@@ -1495,7 +1700,7 @@ def test_area(env_name=TestEnum.local,label = ""):
                 },
             }
         )
-    json.dump(data_result, open(f"result/{env_name.name}_area{label}.json", "w"), indent=4)
+    json.dump(data_result, open(f"result/{env.name}_area{label}.json", "w"), indent=4)
 
 def plot_transform(data_list, role, column, label=""):
     return {
@@ -1505,142 +1710,324 @@ def plot_transform(data_list, role, column, label=""):
     }
 
 
-def plot_area(env_name=TestEnum.local,label = ""):
-
+def plot_area(env, label = "", key_index_name="time_used", factor=1e6, y_label="Time cost ($1 \\times 10^{6}$)"):
 
     # plt.show()
     # result = json.load(open(f"result/{env_name.name}_area{label}.json", "r"))
 
     result_polygon = json.load(open(f"result/{TestEnum.polygon.name}_area{label}.json", "r"))
-    intevals = [1,  20,  40,  60, 80,  100]
+    intevals = [0,  20,  40,  60, 80,  100]
     result_polygon = list(filter(lambda x: x["interval"] in intevals, result_polygon))
-    # result_local = json.load(open(f"result/{TestEnum.local.name}_area{label}.json", "r"))
-    # gas_provider_local = transform(result_local, "provider", "gas_used","_local")
-    # gas_requester_local =transform(result_local, "requester", "gas_used","_local")
-    gas_provider_polygon = plot_transform(result_polygon, "provider", "gas_used","_polygon")
-    gas_requester_polygon = plot_transform(result_polygon, "requester", "gas_used","_polygon")
+    result_local = json.load(open(f"result/{TestEnum.local.name}_area{label}.json", "r"))
+    result_local = list(filter(lambda x: x["interval"] in intevals, result_local))
 
-    task = f"area_gas{label}"
-    # gas_provider = gas_provider_local|gas_provider_polygon
-    # gas_requester = gas_requester_local | gas_requester_polygon
-    plot_line(
-        gas_provider_polygon,
+    gas_provider_local = plot_transform(
+        result_local, "provider", key_index_name, "_local"
+    )
+    gas_requester_local =plot_transform(result_local, "requester", key_index_name,"_local")
+    gas_provider_polygon = plot_transform(
+        result_polygon, "provider", key_index_name, "_polygon"
+    )
+    gas_requester_polygon = plot_transform(result_polygon, "requester", key_index_name,"_polygon")
+
+    task = f"all_area_{key_index_name}{label}"
+    gas_provider = gas_provider_local|gas_provider_polygon
+    gas_requester = gas_requester_local | gas_requester_polygon
+   
+    plot_column(
+        gas_provider,
         task,
         f"provider",
         "Precentage of countries (%)",
-        "Gas cost ($ 1 \\times 10^{3}$)",
+        "Time cost ($ 1 \\times 10^{3}$)",
+        factor = factor,
     )
-    plot_line(
-        gas_requester_polygon,
+    plot_column(
+        gas_requester,
         task,
         "requester",
         "Precentage of countries (%)",
-        "Gas cost ($ 1 \\times 10^{3}$)",
+        "Time cost ($ 1 \\times 10^{3}$)",
+        factor=factor,
+        # label=label,
     )
 
-    # task_time = f"area_time{label}"
-    # time_provider = {
-    #     "baseline": [d["baseline"]["provider"]["time_used"] for d in result],
-    #     "affordable": [d["affordable"]["provider"]["time_used"] for d in result],
-    #     "interval": [d["interval"] for d in result],
-    # }
-    # time_requester = {
-    #     "baseline": [d["baseline"]["requester"]["time_used"] for d in result],
-    #     "affordable": [d["affordable"]["requester"]["time_used"] for d in result],
-    #     "interval": [d["interval"] for d in result],
-    # }
-    # plot_line(time_provider, task_time, f"provider", "Precentage of countries (%)", "Time cost ($ 1 \\times 10^{3}$ ms)")
-    # plot_line(
-    #     time_requester,
-    #     task_time,
-    #     "requester",
-    #     "Precentage of countries (%)",
-    #     "Time cost ( $ 1 \\times 10^{3}$ ms)",
-    # )
+def plot_area_time(label = "", key_index_name="time_used", factor=1e6, y_label="Time cost ($1 \\times 10^{6}$)"):
 
-def plot_column(data, task, role,x_label,y_label):
+    result_polygon = json.load(
+        open(f"result/{TestEnum.polygon.name}_area{label}.json", "r")
+    )
+    intevals = [0, 20, 40, 60, 80, 100]
+    result_polygon = list(filter(lambda x: x["interval"] in intevals, result_polygon))
+    result_local = json.load(
+        open(f"result/{TestEnum.local.name}_area{label}.json", "r")
+    )
+    result_local = list(filter(lambda x: x["interval"] in intevals, result_local))
+
+    gas_provider_local = plot_transform(
+        result_local, "provider", key_index_name, "_local"
+    )
+    gas_requester_local = plot_transform(
+        result_local, "requester", key_index_name, "_local"
+    )
+    gas_provider_polygon = plot_transform(
+        result_polygon, "provider", key_index_name, "_polygon"
+    )
+    gas_requester_polygon = plot_transform(
+        result_polygon, "requester", key_index_name, "_polygon"
+    )
+
+    task = f"all_area_{key_index_name}{label}"
+    gas_provider = gas_provider_local | gas_provider_polygon
+    gas_requester = gas_requester_local | gas_requester_polygon
+
+    plot_column(
+        gas_provider,
+        task,
+        f"provider",
+        "Precentage of countries (%)",
+        y_label,
+        factor=factor,
+    )
+    plot_column(
+        gas_requester,
+        task,
+        "requester",
+        "Precentage of countries (%)",
+        # "Time cost ($ 1 \\times 10^{3}$)",
+        y_label,
+        factor=factor,
+        # label=label,
+    )
+
+
+def plot_column(data, task, role,x_label,y_label,factor=1e3):
     import matplotlib.pyplot as plt
     data_frame = pd.DataFrame(data)
-    fig, ax1 = plt.subplots(figsize=(8, 8))
+    fig, ax1 = plt.subplots(figsize=(16, 4))
     width = 4
+    alpha = 0.6
+    data_font_size = None
     baseline_local_x = data_frame["interval"] - 1.5*width
     affordable_local_x = data_frame["interval"] - 0.5*width
     baseline_polygon_x = data_frame["interval"] + 0.5*width 
     affordable_polygon_x = data_frame["interval"] + 1.5*width
-    factor = 1e3
-    bars1 = ax1.bar(
+
+    # factor = 1e3
+    keys = data.keys() - ["interval"]
+    for k in keys:
+        data_frame[k] /= factor
+        # data_frame[k].round(1)
+    # for k in keys:
+    #     bars = ax1.bar(
+    #         data_frame["interval"],
+    #         data_frame[k] / factor,
+    #         width=width,
+    #         label=f"{k}",
+    #     )
+    #     for i, bar in enumerate(bars):
+    #         yval = bar.get_height()
+    #         xval = bar.get_x() + bar.get_width() * 0.9
+    #         ax1.text(xval, yval, int(yval), ha="right", va="bottom")
+    baseline_local_bars = ax1.bar(
         baseline_local_x,
-        data_frame["baseline_local"] / factor,
+        data_frame["baseline_local"],
         width=width,
         label=f"Baseline-Local",
         # color="r",
-        # alpha=0.6,
+        alpha=alpha,
     )
-    bars2 = ax1.bar(
+    affordable_local_bars = ax1.bar(
         affordable_local_x,
-        data_frame["affordable_local"] / factor,
+        data_frame["affordable_local"],
         width=width,
         label=f"Affordable-Local",
         # color="y",
-        # alpha=0.6,
+        alpha=alpha,
     )
-    bars3 = ax1.bar(
+    baseline_amoy_bars = ax1.bar(
         baseline_polygon_x,
-        data_frame["baseline_polygon"] / factor,
+        data_frame["baseline_polygon"],
         width=width,
         label=f"Baseline-Amoy",
         # color="y",
-        # alpha=0.6,
+        alpha=alpha,
     )
-    bars4 = ax1.bar(
+    affordable_amoy_bars = ax1.bar(
         affordable_polygon_x,
-        data_frame["affordable_polygon"] / factor,
+        data_frame["affordable_polygon"],
         width=width,
         label=f"Affordable-Amoy",
         # color="y",
-        # alpha=0.6,
+        alpha=alpha,
     )
     # ax1.set_ylabel("Gas Used (Bar)")
+    y_max = max([data_frame[k].max() for k in keys])
+    # x_max = data_plot["interval"].max()
+    ax1.set_ylim(0, y_max * 1.08)
+    # ax1.xlim(0, x_max + 15)
+
+    # ax1.set_ylim(0, 100)
     ax1.set_xlabel(x_label)
+    ax1.set_ylabel(y_label)
     ax1.tick_params(axis='y')
     ax1.legend(loc='upper left')
+    
 
-    for bar in bars1:
+    for i, bar in enumerate(baseline_local_bars):
         yval = bar.get_height()
+        # if i == 0:
+        #     yval_location = yval +  100
+        xval = bar.get_x()  + bar.get_width() /2
+        # xval = bar.get_x()
         ax1.text(
-            bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
+            xval, yval, int(yval), ha="center", va="bottom", fontsize=data_font_size
         )
 
-    for bar in bars2:
+    for i,bar in enumerate(affordable_local_bars):
         yval = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width()/2, yval, int(yval), ha='center', va='bottom')
-    for bar in bars2:
-        yval = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width()/2, yval, int(yval), ha='center', va='bottom')
+        # if i == 0:
+        #     x_loc = bar.get_x()
+        #     y_loc = 0
+        #     ha = "right"
+        # else:
+        x_loc = bar.get_x() + bar.get_width()/2
+        y_loc = yval
+        ha="center"
 
-    for bar in bars3:
+        ax1.text(x_loc, y_loc, int(yval), ha=ha, va="bottom", fontsize=data_font_size)
+
+    for i,bar in enumerate(baseline_amoy_bars):
         yval = bar.get_height()
+        xval = bar.get_x() + bar.get_width()/2
         ax1.text(
-            bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
+            xval, yval, int(yval), ha="center", va="bottom", fontsize=data_font_size
         )
 
-    for bar in bars4:
+    for i, bar in enumerate(affordable_amoy_bars):
         yval = bar.get_height()
-        ax1.text(
-            bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
-        )
-    plt.text(
-            -0.05,
-            1.02,
-            y_label,
-            ha="left",
-            va="center",
-            transform=ax1.transAxes,
-            # fontsize=12,
-        )
+        # if i == 0:
+        #     x_loc = bar.get_x() + bar.get_width()
+        #     y_loc = 0
+        #     ha = "left"
+        # else:
+        x_loc = bar.get_x() + bar.get_width() /2
+        y_loc = yval
+        ha = "center"
+
+        ax1.text(x_loc, y_loc, int(yval), ha=ha, va="bottom", fontsize=data_font_size)
+    # plt.text(
+    #         -0.05,
+    #         1.04,
+    #         y_label,
+    #         ha="left",
+    #         va="center",
+    #         transform=ax1.transAxes,
+    #         # fontsize=12,
+    #     )
+
+    # ax1.annotate(
+    #     "Important Point",
+    #     xy=(
+    #         affordable_local_bars[0].get_x() + affordable_local_bars[0].get_width() * 0.1,
+    #         affordable_local_bars[0].get_height() + 100,
+    #     ),
+    #     xytext=(2, 35),  # Position of the text
+    #     arrowprops=dict(facecolor="red", shrink=0.05),
+    # )
 
     # plt.title("Provider and Requester Gas Usage Over Intervals")
     plt.savefig(f"figs/column_{task}_{role}.pdf")
+
+
+# def plot_column(data, task, role, x_label, y_label):
+#     import matplotlib.pyplot as plt
+
+#     data_frame = pd.DataFrame(data)
+#     fig, ax1 = plt.subplots(figsize=(8, 8))
+#     width = 2
+#     baseline_local_x = data_frame["interval"] - 1.5 * width
+#     affordable_local_x = data_frame["interval"] - 0.5 * width
+#     baseline_polygon_x = data_frame["interval"] + 0.5 * width
+#     affordable_polygon_x = data_frame["interval"] + 1.5 * width
+
+#     factor = 1e3
+#     bars1 = ax1.bar(
+#         baseline_local_x,
+#         data_frame["baseline_local"] / factor,
+#         width=width,
+#         label=f"Baseline-Local",
+#         # color="r",
+#         # alpha=0.6,
+#     )
+#     bars2 = ax1.bar(
+#         affordable_local_x,
+#         data_frame["affordable_local"] / factor,
+#         width=width,
+#         label=f"Affordable-Local",
+#         # color="y",
+#         # alpha=0.6,
+#     )
+#     bars3 = ax1.bar(
+#         baseline_polygon_x,
+#         data_frame["baseline_polygon"] / factor,
+#         width=width,
+#         label=f"Baseline-Amoy",
+#         # color="y",
+#         # alpha=0.6,
+#     )
+#     bars4 = ax1.bar(
+#         affordable_polygon_x,
+#         data_frame["affordable_polygon"] / factor,
+#         width=width,
+#         label=f"Affordable-Amoy",
+#         # color="y",
+#         # alpha=0.6,
+#     )
+#     # ax1.set_ylabel("Gas Used (Bar)")
+#     ax1.set_xlabel(x_label)
+#     ax1.tick_params(axis="y")
+#     ax1.legend(loc="upper left")
+
+#     for bar in bars1:
+#         yval = bar.get_height()
+#         xval = bar.get_x() + bar.get_width()
+#         # xval = bar.get_x()
+#         ax1.text(xval, yval, int(yval), ha="right", va="bottom")
+
+#     for bar in bars2:
+#         yval = bar.get_height()
+#         ax1.text(
+#             bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
+#         )
+
+#     # for bar in bars2:
+#     #     yval = bar.get_height()+1000
+#     #     ax1.text(bar.get_x() + bar.get_width()/2, yval, int(yval), ha='center', va='bottom')
+
+#     for bar in bars3:
+#         yval = bar.get_height()
+#         xval = bar.get_x()
+#         ax1.text(xval, yval, int(yval), ha="left", va="bottom")
+
+#     for bar in bars4:
+#         yval = bar.get_height()
+#         ax1.text(
+#             bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
+#         )
+#     plt.text(
+#         -0.05,
+#         1.02,
+#         y_label,
+#         ha="left",
+#         va="center",
+#         transform=ax1.transAxes,
+#         # fontsize=12,
+#     )
+
+#     # plt.title("Provider and Requester Gas Usage Over Intervals")
+#     plt.savefig(f"figs/column_combined_{task}_{role}.pdf")
+
 
 def plot_line(data, task, role,x_label,y_label):
     data_frame = pd.DataFrame(data)
@@ -1747,8 +2134,8 @@ def plot_line_combined(data, task, role, x_label, y_label):
             random.sample(markers, k=len(keys)),
         )
     ]
-    styles = ["o-", "8-.", "v-", "_:"]
-    colors = ["r", "g", "b", "y"]
+    styles = ["o-", "8-.", "v-", "+:"]
+    colors = ["r", "g", "b", "black"]
     fig, ax = plt.subplots(figsize=(6, 10))  # Width: 10 inches, Height: 6 inches
 
     ax = data_plot.plot.line(
@@ -2260,11 +2647,12 @@ def test_polygon():
 def plot_simulation_category():
     import matplotlib.pyplot as plt
     import numpy as np
+    alpha = 0.8
 
     # Define the data
     data = json.load(open(result_simulation_fp, "r"))
     category_dict = dict()
-    
+
     for k, v in data.items():
         for category, value in v.items():
             total = value["total"]
@@ -2285,16 +2673,17 @@ def plot_simulation_category():
                 category_dict[category]["error"][k] += v
 
     # Extract data points
-    # categories = list(category_dict.keys())
-    categories = ["open", "medium", "strict"]
-    success_rates = [category_dict[cat]["success"] / category_dict[cat]["total"] for cat in categories]
+    categories = list(category_dict.keys())
+    # categories = ["open", "medium", "consevative"]
+    # categories = ["open", "moderate", "consevative"]
+    success_rates = [category_dict[category]["success"] / category_dict[category]["total"] for category in categories]
 
     # Create a bar chart
     x = np.arange(len(categories))  # the label locations
     width = 0.4  # the width of the bars
 
     fig, ax = plt.subplots(figsize=(5, 4))
-    bars = ax.bar(x, success_rates, width, label="Success Rate")
+    bars = ax.bar(x, success_rates, width, label="Success Rate", alpha=alpha)
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_xlabel('Categories')
@@ -2302,7 +2691,8 @@ def plot_simulation_category():
     # ax.set_title('Success Rate by Category')
     ax.set_xticks(x)
     ax.set_ylim(0, 0.175)
-    ax.set_xticklabels(categories)
+    categories_label =  ["open", "moderate", "consevative"]
+    ax.set_xticklabels(categories_label)
     ax.legend()
     # Add labels to the bars
     def add_labels(bars):
@@ -2323,7 +2713,7 @@ def plot_simulation_category():
 def plot_simulation_scenario():
     import matplotlib.pyplot as plt
     import numpy as np
-
+    alpha = 0.8
     # Define the data
     data = json.load(open(result_simulation_fp, "r"))
     scenario_dict = dict()
@@ -2336,8 +2726,6 @@ def plot_simulation_scenario():
             "success": success,
             "error": error,
         }
-            
-        
 
     # Extract data points
     scenarios = list(scenario_dict.keys())
@@ -2351,7 +2739,7 @@ def plot_simulation_scenario():
     width = 0.4  # the width of the bars
 
     fig, ax = plt.subplots(figsize=(5, 4))
-    bars = ax.bar(x, success_rates, width, label="Success Rate")
+    bars = ax.bar(x, success_rates, width, label="Success Rate", alpha=alpha)
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_xlabel("Scenarios")
@@ -2388,26 +2776,31 @@ def print_boolean_items():
 
 if __name__ == "__main__":
 
-    test_mode = TestEnum.polygon
-    if test_mode == TestEnum.local:
-        w3, contract,  accounts = deploy_contract_local()
-    elif test_mode == TestEnum.polygon:
-        w3, contract,  accounts = deploy_contract_polygon(force_deploy=False)
+    # test_mode = TestEnum.polygon
+    test_mode = TestEnum.local
+    local_env = deploy_contract_local()
+    polygon_env = deploy_contract_polygon(force_deploy=False)
     # print(f"accounts {accounts[0]}")
     # test_scenarios(provider_number=100, requester_number=100)
     # plot_simulation_category()
     # plot_simulation_scenario()
 
-    # print_boolean_items()
-    # area_label = "local"
-    # test_area(env_name=test_mode,label="_refresh")
-    # plot_area(env_name=test_mode,label="_refresh")
+    # test_area(env=local_env, label="_zero")
+    # test_area(env=polygon_env, label="_zero")
 
-    # test_disease(one_group=False, test_mode=test_mode)
-    # test_disease(one_group=True, test_mode=test_mode)
-    
-    plot_disease_all()
+    # plot_area(env=test_mode, label="_zero",key_index_name="gas_used",factor = 1e3)
+    # plot_area_time(label="_zero")
+    plot_area_time(label="_zero", key_index_name="gas_used",factor=1e3,y_label="Gas Used ($10^{3}$)")
+    # test_disease(local_env,one_group=False)
+    # test_disease(local_env,one_group=True)
+    # test_disease(polygon_env, one_group=False)
+    # test_disease(polygon_env, one_group=True)
+
+    # plot_disease_time()
+    plot_disease_time(key_index_name="gas_used",factor=1e3, y_label="Gas Used ($10^{3}$)")
     # plot_disease(one_group=True, test_mode=test_mode)
+
+    # plot_time()
 
     # test_polygon()
 
