@@ -7,7 +7,7 @@ import json
 # import web3
 from datetime import datetime
 from tkinter import CURRENT
-from matplotlib import markers
+from matplotlib import hatch, markers
 from matplotlib.font_manager import font_scalings
 from pyparsing import alphas
 from requests import get
@@ -1752,7 +1752,7 @@ def plot_area(env, label = "", key_index_name="time_used", factor=1e6, y_label="
         # label=label,
     )
 
-def plot_area_time(label = "", key_index_name="time_used", factor=1e6, y_label="Time cost ($1 \\times 10^{6}$)"):
+def plot_area_time(label = "", key_index_name="time_used", factor=1e6, y_label="Time usage (milliseconds)"):
 
     result_polygon = json.load(
         open(f"result/{TestEnum.polygon.name}_area{label}.json", "r")
@@ -1803,10 +1803,11 @@ def plot_area_time(label = "", key_index_name="time_used", factor=1e6, y_label="
 
 def plot_column(data, task, role,x_label,y_label,factor=1e3):
     import matplotlib.pyplot as plt
+    patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
     data_frame = pd.DataFrame(data)
     fig, ax1 = plt.subplots(figsize=(16, 4))
     width = 4
-    alpha = 0.6
+    alpha = 0.5
     data_font_size = None
     baseline_local_x = data_frame["interval"] - 1.5*width
     affordable_local_x = data_frame["interval"] - 0.5*width
@@ -1833,46 +1834,49 @@ def plot_column(data, task, role,x_label,y_label,factor=1e3):
         baseline_local_x,
         data_frame["baseline_local"],
         width=width,
-        label=f"Baseline-Local",
-        # color="r",
+        label=f"Baseline (Ganache)",
+        color="red",
+        # hatch=patterns[4],
         alpha=alpha,
     )
     affordable_local_bars = ax1.bar(
         affordable_local_x,
         data_frame["affordable_local"],
         width=width,
-        label=f"Affordable-Local",
-        # color="y",
+        label=f"Proposed (Ganache)",
+        color="yellow",
+        # hatch=patterns[5],
         alpha=alpha,
     )
     baseline_amoy_bars = ax1.bar(
         baseline_polygon_x,
         data_frame["baseline_polygon"],
         width=width,
-        label=f"Baseline-Amoy",
-        # color="y",
+        label=f"Baseline (Amoy)",
+        color="blue",
+        # hatch=patterns[6],
         alpha=alpha,
     )
     affordable_amoy_bars = ax1.bar(
         affordable_polygon_x,
         data_frame["affordable_polygon"],
         width=width,
-        label=f"Affordable-Amoy",
-        # color="y",
+        label=f"Proposed (Amoy)",
+        color="green",
+        # hatch=patterns[7],
         alpha=alpha,
     )
     # ax1.set_ylabel("Gas Used (Bar)")
     y_max = max([data_frame[k].max() for k in keys])
     # x_max = data_plot["interval"].max()
-    ax1.set_ylim(0, y_max * 1.08)
+    ax1.set_ylim(0, y_max * 1.2)
     # ax1.xlim(0, x_max + 15)
 
     # ax1.set_ylim(0, 100)
     ax1.set_xlabel(x_label)
     ax1.set_ylabel(y_label)
     ax1.tick_params(axis='y')
-    ax1.legend(loc='upper left')
-    
+    ax1.legend(loc='upper left',ncol=4)
 
     for i, bar in enumerate(baseline_local_bars):
         yval = bar.get_height()
@@ -1906,128 +1910,12 @@ def plot_column(data, task, role,x_label,y_label,factor=1e3):
 
     for i, bar in enumerate(affordable_amoy_bars):
         yval = bar.get_height()
-        # if i == 0:
-        #     x_loc = bar.get_x() + bar.get_width()
-        #     y_loc = 0
-        #     ha = "left"
-        # else:
         x_loc = bar.get_x() + bar.get_width() /2
         y_loc = yval
         ha = "center"
 
         ax1.text(x_loc, y_loc, int(yval), ha=ha, va="bottom", fontsize=data_font_size)
-    # plt.text(
-    #         -0.05,
-    #         1.04,
-    #         y_label,
-    #         ha="left",
-    #         va="center",
-    #         transform=ax1.transAxes,
-    #         # fontsize=12,
-    #     )
-
-    # ax1.annotate(
-    #     "Important Point",
-    #     xy=(
-    #         affordable_local_bars[0].get_x() + affordable_local_bars[0].get_width() * 0.1,
-    #         affordable_local_bars[0].get_height() + 100,
-    #     ),
-    #     xytext=(2, 35),  # Position of the text
-    #     arrowprops=dict(facecolor="red", shrink=0.05),
-    # )
-
-    # plt.title("Provider and Requester Gas Usage Over Intervals")
     plt.savefig(f"figs/column_{task}_{role}.pdf")
-
-
-# def plot_column(data, task, role, x_label, y_label):
-#     import matplotlib.pyplot as plt
-
-#     data_frame = pd.DataFrame(data)
-#     fig, ax1 = plt.subplots(figsize=(8, 8))
-#     width = 2
-#     baseline_local_x = data_frame["interval"] - 1.5 * width
-#     affordable_local_x = data_frame["interval"] - 0.5 * width
-#     baseline_polygon_x = data_frame["interval"] + 0.5 * width
-#     affordable_polygon_x = data_frame["interval"] + 1.5 * width
-
-#     factor = 1e3
-#     bars1 = ax1.bar(
-#         baseline_local_x,
-#         data_frame["baseline_local"] / factor,
-#         width=width,
-#         label=f"Baseline-Local",
-#         # color="r",
-#         # alpha=0.6,
-#     )
-#     bars2 = ax1.bar(
-#         affordable_local_x,
-#         data_frame["affordable_local"] / factor,
-#         width=width,
-#         label=f"Affordable-Local",
-#         # color="y",
-#         # alpha=0.6,
-#     )
-#     bars3 = ax1.bar(
-#         baseline_polygon_x,
-#         data_frame["baseline_polygon"] / factor,
-#         width=width,
-#         label=f"Baseline-Amoy",
-#         # color="y",
-#         # alpha=0.6,
-#     )
-#     bars4 = ax1.bar(
-#         affordable_polygon_x,
-#         data_frame["affordable_polygon"] / factor,
-#         width=width,
-#         label=f"Affordable-Amoy",
-#         # color="y",
-#         # alpha=0.6,
-#     )
-#     # ax1.set_ylabel("Gas Used (Bar)")
-#     ax1.set_xlabel(x_label)
-#     ax1.tick_params(axis="y")
-#     ax1.legend(loc="upper left")
-
-#     for bar in bars1:
-#         yval = bar.get_height()
-#         xval = bar.get_x() + bar.get_width()
-#         # xval = bar.get_x()
-#         ax1.text(xval, yval, int(yval), ha="right", va="bottom")
-
-#     for bar in bars2:
-#         yval = bar.get_height()
-#         ax1.text(
-#             bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
-#         )
-
-#     # for bar in bars2:
-#     #     yval = bar.get_height()+1000
-#     #     ax1.text(bar.get_x() + bar.get_width()/2, yval, int(yval), ha='center', va='bottom')
-
-#     for bar in bars3:
-#         yval = bar.get_height()
-#         xval = bar.get_x()
-#         ax1.text(xval, yval, int(yval), ha="left", va="bottom")
-
-#     for bar in bars4:
-#         yval = bar.get_height()
-#         ax1.text(
-#             bar.get_x() + bar.get_width() / 2, yval, int(yval), ha="center", va="bottom"
-#         )
-#     plt.text(
-#         -0.05,
-#         1.02,
-#         y_label,
-#         ha="left",
-#         va="center",
-#         transform=ax1.transAxes,
-#         # fontsize=12,
-#     )
-
-#     # plt.title("Provider and Requester Gas Usage Over Intervals")
-#     plt.savefig(f"figs/column_combined_{task}_{role}.pdf")
-
 
 def plot_line(data, task, role,x_label,y_label):
     data_frame = pd.DataFrame(data)
@@ -2042,10 +1930,7 @@ def plot_line(data, task, role,x_label,y_label):
     # print(keys)
     for k in keys:
         data_plot[k] = (data_frame[k] / factor).round(1)
-    # data_plot["baseline"] = (data_frame["baseline"] / factor).round(1)
-    # data_plot["affordable"] = (data_frame["affordable"] / factor).round(1)
-    # data_plot["gas_update_area_group_code"] = data_frame["gas_update_area_group_code"] / factor
-    # data_frame_simple["gas_provider"] = data_frame_simple["gas_provider"] / factor
+
     ax = data_plot.plot.line(
         x="interval",
         y=keys,
@@ -2056,13 +1941,10 @@ def plot_line(data, task, role,x_label,y_label):
         # title="Gas cost for uploading area code of providers",
         # annotate=True,
     )
-    # ax.set_ylabel(
-    #     f"Gas Usage ({factor})", rotation=0, labelpad=50, ha="left", va="top"
-    # )
-    # ax.yaxis.set_label_coords(-0.1, 1.05)
+
     y_max = max(data_plot["baseline"].max(),data_plot["affordable"].max())
     x_max = data_plot["interval"].max()
-    plt.ylim(0, y_max*1.08)
+    plt.ylim(0, y_max*1.4)
     plt.xlim(0, x_max+15)
     x_shift= -5
     y_shift = y_max* 0.02
@@ -2789,15 +2671,15 @@ if __name__ == "__main__":
     # test_area(env=polygon_env, label="_zero")
 
     # plot_area(env=test_mode, label="_zero",key_index_name="gas_used",factor = 1e3)
-    # plot_area_time(label="_zero")
-    plot_area_time(label="_zero", key_index_name="gas_used",factor=1e3,y_label="Gas Used ($10^{3}$)")
+    plot_area_time(label="_zero")
+    plot_area_time(label="_zero", key_index_name="gas_used",factor=1e3,y_label="Gas usage ($10^{3}$)")
     # test_disease(local_env,one_group=False)
     # test_disease(local_env,one_group=True)
     # test_disease(polygon_env, one_group=False)
     # test_disease(polygon_env, one_group=True)
 
-    # plot_disease_time()
-    plot_disease_time(key_index_name="gas_used",factor=1e3, y_label="Gas Used ($10^{3}$)")
+    plot_disease_time()
+    plot_disease_time(key_index_name="gas_used",factor=1e3, y_label="Gas usage ($10^{3}$)")
     # plot_disease(one_group=True, test_mode=test_mode)
 
     # plot_time()
