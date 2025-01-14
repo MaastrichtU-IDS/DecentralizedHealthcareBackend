@@ -78,7 +78,7 @@ logger.info("This is an info message")
 logger.debug("This is a debug message")
 logger.critical("This is a critical message")
 
-consent_fp = Path("solidity","AffordableConsentModel.sol")
+consent_fp = Path("solidity", "InformedConsentWithMapping.sol")
 
 result_simulation_fp = "data/result_simulation.json"
 
@@ -104,7 +104,7 @@ compiled_sol = solcx.compile_files(
 )
 
 print(compiled_sol.keys())
-contract_interface = compiled_sol["solidity/AffordableConsentModel.sol:ConsentCode"]
+contract_interface = compiled_sol["solidity/InformedConsentWithMapping.sol:ConsentCode"]
 abi = contract_interface["abi"]
 bytecode = contract_interface["bin"]
 bytecode_runtime = contract_interface["bin-runtime"]
@@ -338,126 +338,65 @@ import random
 
 from enum import Enum, auto
 import random
-
 class ADAM(Enum):
-    UseByClinicalProfessionals = 1
-    UseByAcademicProfessionals = 2
-    UseForReferenceOrControlMaterial = 4
-    UseForMethodsDevelopment = 8
+    UseForMethodsDevelopment = 1
+    UseForReferenceOrControlMaterial = 2
+    UseForPopulationsResearch = 4
+    UseForAncestryResearch = 8
     UseForHMBResearch = 16
-    UseForPopulationsResearch = 32
-    UseForAncestryResearch = 64
-    UseForFundamentalBioResearch = 128
-    UseForGeneticsResearch = 256
-    UseForDrugDevelopmentResearch = 512
-    UseForAnyDiseaseResearch = 1024
-    UseForAgeCategoriesResearch = 2048
-    UseForGenderCategoriesResearch = 4096
-    UseForProfitPurpose = 8192
-    UseByProfitMakingProfessionals = 16384
-    PublicationRequired = 32768
-    CollaborationRequired = 65536
-    FormalApprovalRequired = 131072
-    FeesForAccess = 262144
+    UseForFundamentalBioResearch = 32
+    UseForGeneticsResearch = 64
+    UseForDrugDevelopmentResearch = 128
+    UseForAnyDiseaseResearch = 256
+    UseForAgeCategoriesResearch = 512
+    UseForGenderCategoriesResearch = 1024
+    UseForDecisionSupport = 2048
+    UseForDiseaseSupport = 4096
+    UseByAcademicProfessionals = 8192
+    UseByClinicalProfessionals = 16384
+    UseByProfitMakingProfessionals = 32768
+    UseByNonProfessionals = 65536
+    UseBySpecifiedCountries = 131072
+    UseForProfitPurpose = 262144
+    UseForNonProfitPurpose = 524288
+    TimelineRestrictions = 1048576
+    FormalApprovalRequired = 2097152
+    CollaborationRequired = 4194304
+    PublicationRequired = 8388608
+    # DataSecurityMeasures = 16777216
+    DataDestructionRequired = 33554432
+    LinkingOfAccessedRecords = 67108864
+    RecontactingDataSubjects = 134217728
+    IntellectualPropertyClaims = 268435456
+    UseOfAccessedResources = 536870912
+    FeesForAccess = 1073741824
+    
+ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForAnyDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, ADAM.UseForNonProfitPurpose, ADAM.TimelineRestrictions, ADAM.FormalApprovalRequired, ADAM.CollaborationRequired, ADAM.PublicationRequired, ADAM.DataSecurityMeasures, ADAM.DataDestructionRequired, ADAM.LinkingOfAccessedRecords, ADAM.RecontactingDataSubjects, ADAM.IntellectualPropertyClaims, ADAM.UseOfAccessedResources, ADAM.FeesForAccess]
 
 class DUO(Enum):
-    OpenToGeneralResearchAndClinicalCare = (0, "Open to General Research and Clinical Care")
-    OpenToHMBResearch = (0, "Open to HMB Research")
-    OpenToPopulationAndAncestryResearch = (0, "Open to Population and Ancestry Research")
-    ResearchSpecificRestrictions = (0, "Research Specific Restrictions")
-    OpenToResearchUseOnly = (0, "Open to Research Use Only")
-    OpenToGeneticStudiesOnly = (0, "Open to Genetic Studies Only")
-    NoGeneralMethodResearch = (0, "No General Method Research")
-    OpenToNonProfitUseOnly = (0, "Open to Non-Profit Use Only")
-    PublicationRequired = (0, "Publication Required")
-    CollaborationRequired = (0, "Collaboration Required")
-    EthicsApprovalRequired = (0, "Ethics Approval Required")
-    CostOnUse = (0, "Cost on Use")
+    Allow_All = 1
+    OpenToGeneralResearchAndClinicalCare = 2
+    OpenToHMBResearch = 4
+    OpenToPopulationAndAncestryResearch = 8
+    OpenToDiseaseSpecific = 16
+    OpenToGeneticStudiesOnly = 32
+    ResearchSpecificRestrictions = 64
+    OpenToResearchUseOnly = 128
+    GeneralMethodResearch = 256
+    GeographicSpecificRestriction = 512
+    OpenToNonProfitUseOnly = 1024
+    PublicationRequired = 2048
+    CollaborationRequired = 4096
+    EthicsApprovalrequired = 8192
+    TimeLimitOnUse = 16384
+    CostOnUse = 32768
 
+DUO_order_list = [DUO.Allow_All, DUO.OpenToGeneralResearchAndClinicalCare, DUO.OpenToHMBResearch, DUO.OpenToPopulationAndAncestryResearch, DUO.OpenToDiseaseSpecific, DUO.OpenToGeneticStudiesOnly, DUO.ResearchSpecificRestrictions, DUO.OpenToResearchUseOnly, DUO.GeneralMethodResearch, DUO.GeographicSpecificRestriction, DUO.OpenToNonProfitUseOnly, DUO.PublicationRequired, DUO.CollaborationRequired, DUO.EthicsApprovalrequired, DUO.TimeLimitOnUse, DUO.CostOnUse]
 
-
-class Purpose(Enum):
-    ClinicalProfessionals = (1, "Clinical Professionals", "CP")
-    AcademicProfessionals = (2, "Academic Professionals", "AP")
-    ReferenceOrControlMaterial = (4, "Reference or Control Material", "RCM")
-    MethodsDevelopment = (8, "Methods Development", "MD")
-    PopulationsResearch = (16, "Populations Research", "PR")
-    AncestryResearch = (32, "Ancestry Research", "AR")
-    FundamentalBioResearch = (64, "Fundamental Bio Research", "FBR")
-    DrugDevelopmentResearch = (128, "Drug Development Research", "DDR")
-    AgeCategoriesResearch = (256, "Age Categories Research", "ACR")
-    GenderCategoriesResearch = (512, "Gender Categories Research", "GCR")
-    ProfitPurpose = (1024, "Profit Purpose", "PP")
-    ProfitMakingProfessionals = (2048, "Profit Making Professionals", "PMP")
-    FormalApprovalRequired = (4096, "Formal Approval Required", "FAR")
-
-    def __init__(self, code, message, abbreviation):
-        self.code = code
-        self.message = message
-        self.abbreviation = abbreviation
-
-    @classmethod
-    def get_message(cls, code):
-        for item in cls:
-            if item.code == code:
-                return item.message
-        return None
-
-    @classmethod
-    def get_abbreviation(cls, code):
-        for item in cls:
-            if item.code == code:
-                return item.abbreviation
-        return None
-
-
-# Example usage
-print(Purpose.ClinicalProfessionals.message)  # Output: Clinical Professionals
-print(Purpose.get_message(1))  # Output: Clinical Professionals
-print(Purpose.get_abbreviation(1))  # Output: CP
-
-
-class PurposeItems:
-    abbr_dict = {item.abbreviation: item.name for item in Purpose}
-    full_dict = {v: k for k, v in abbr_dict.items()}
-
-    name_index_dict = {item.name: item.code for item in Purpose}
-    index_name_dict = {item.code: item.name for item in Purpose}
-
-    def __init__(self, true_prob=None, true_set=None):
-        self.true_set = set()
-        if true_prob is not None:
-            for item in Purpose:
-                rand_num = random.random()
-                if rand_num <= true_prob:
-                    self.true_set.add(item.name)
-        if true_set is not None:
-            self.set_purpose(true_set)
-
-    def set_purpose(self, purpose_list):
-        extra_purpose = set(purpose_list) - set(item.name for item in Purpose)
-        if extra_purpose:
-            raise Exception(f"extra_purpose {extra_purpose}")
-        self.true_set = set(purpose_list)
-
-    def to_int(self):
-        result = 0
-        for tname in self.true_set:
-            result += Purpose[tname].code
-        return result
-
-    def decode_from_int(self, int_value):
-        true_item = set()
-        for item in Purpose:
-            if int_value & item.code:
-                true_item.add(item.name)
-        return true_item
 
 
 role_provider = 1
 role_requester = 2
-simple_1 = PurposeItems(true_prob=0.5)
-print(simple_1.to_int())
 
 # %%
 from re import L
@@ -615,9 +554,6 @@ class Person:
 
     def random_init(self, profile_dict):
         # if risk_level is not None:
-
-        self.bool_items = PurposeItems(true_prob=profile_dict["simple_items"])
-
         self.months = profile_dict["months"]
 
         # while True:
@@ -650,17 +586,7 @@ class Person:
             k=int(profile_dict["group_code"] * len(all_group_names)),
         )
 
-    def upload_purpose_items(self):
-        simple_value = self.bool_items.to_int()
-        # logging.info(
-        #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
-        # )
 
-        upload_func = self.contract.functions.UploadSimpleItems(
-            self.role, self.address, simple_value
-        )
-
-        return self.send_transaction(upload_func)
 
     # display_simple_items
     def display_simple_items(self):
@@ -1147,6 +1073,10 @@ class Provider(Person):
             profile_dict = self.profiles[self.profile]
             self.random_init(profile_dict)
 
+            self.bool_items = dict()
+            for item in DUO:
+                self.bool_items[item] = random.random() < profile_dict['simple_items']
+
             if self.profile == profile_open:
                 self.start_year = 2020
             else:
@@ -1159,6 +1089,18 @@ class Provider(Person):
             logger.info(
                 f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
             )
+            
+    def upload_purpose_items(self):
+        simple_value = [self.bool_items[item] for item in DUO_order_list]
+        # logging.info(
+        #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
+        # )
+
+        upload_func = self.contract.functions.uploadPurposeProvider(
+            self.address, simple_value
+        )
+
+        return self.send_transaction(upload_func)
 
 
 # p = Person("test", "test", contract, address=w3.eth.accounts[1])
@@ -1213,7 +1155,7 @@ class Requester(Person):
         self.role = role_requester
         random_init = kwargs.get("random_init", False)
         if random_init:
-            self.bool_items = PurposeItems(true_prob=random.uniform(0,0.2))
+  
             # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
             profile_dict = {
                 "simple_items": random.uniform(0, 0.2),
@@ -1223,7 +1165,14 @@ class Requester(Person):
                 "disease_groups": random.uniform(0, 0.05),
                 "months": random.randint(1, 24),
             }
+            # profile_dict = self.profiles[self.profile]
+            # self.random_init(profile_dict)
             self.random_init(profile_dict)
+
+            self.bool_items = dict()
+            for item in ADAM:
+                self.bool_items[item] = random.random() < profile_dict['simple_items']
+
             self.start_year = random.randint(2024, 2025)
             self.start_month = random.randint(1, 12)
             self.start_day = random.randint(1, 28)
@@ -1244,6 +1193,18 @@ class Requester(Person):
         if self.role != role_requester:
 
             raise Exception("requestAccess: requester is not a Requester")
+
+    def upload_purpose_items(self):
+        simple_value = [self.bool_items[item] for item in ADAM_order_list]
+        # logging.info(
+        #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
+        # )
+
+        upload_func = self.contract.functions.uploadPurposeRequester(
+            self.address, simple_value
+        )
+
+        return self.send_transaction(upload_func)
 
     def request_access(self, provider: Provider):
 
