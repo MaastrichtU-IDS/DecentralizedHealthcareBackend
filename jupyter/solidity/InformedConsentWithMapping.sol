@@ -148,7 +148,7 @@ contract ConsentCode {
         bool _EthicsApprovalrequired,
         bool _TimeLimitOnUse,
         bool _CostOnUse
-        // bool _DataSecurityMeasuresRequired
+        bool _DataSecurityMeasuresRequired
     ) public {
         require(msg.sender == dataProvider);
         purpose_providers_mapping[_address1] = DataProvider(
@@ -168,7 +168,7 @@ contract ConsentCode {
             _EthicsApprovalrequired,
             _TimeLimitOnUse,
             _CostOnUse
-            // _DataSecurityMeasuresRequired
+            _DataSecurityMeasuresRequired
         );
         // DataSubjectAcc.push(_address1);
     }
@@ -321,13 +321,13 @@ contract ConsentCode {
         // EthicsApprovalrequired, FormalApprovalRequired
         bool ethicsApprovalrequired = provider.EthicsApprovalrequired ? requester.FormalApprovalRequired:true;
 
-        // bool dataSecurityMeasuresRequired = provider.DataSecurityMeasuresRequired &&
-        //     (requester.DataSecurityMeasures ||
-        //     requester.DataDestructionRequired ||
-        //     requester.LinkingOfAccessedRecords ||
-        //     requester.RecontactingDataSubjects ||
-        //     requester.IntellectualPropertyClaims ||
-            // requester.UseOfAccessedResources);
+        bool dataSecurityMeasuresRequired = provider.DataSecurityMeasuresRequired? 
+            (requester.DataSecurityMeasures ||
+            requester.DataDestructionRequired ||
+            requester.LinkingOfAccessedRecords ||
+            requester.RecontactingDataSubjects ||
+            requester.IntellectualPropertyClaims ||
+            requester.UseOfAccessedResources) : true;
         // CostOnUse, FeesForAccess
         bool costOnUse = provider.CostOnUse && requester.FeesForAccess;
 
