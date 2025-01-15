@@ -279,13 +279,13 @@ def diseaseCode2IntHierarchy(code: str):
     if not pattern_compiled.match(code):
         print(f"The string {code} not matches the pattern")
         return 0
-    chapter_str = code[0]
+    group_str = code[0]
     # if chapter_str == "*":
     #     return 2**8-1,2**128-1
-    group_int = int(ord(code[0]) - ord("A")) + 1
+    group_int = int(ord(group_str) - ord("A")) + 1
     category_str = code[1:3]
     if category_str == "**":
-        return group_int, 2**128 - 1
+        return group_int, 2**100 - 1
     chapter_int = 1 << int(category_str)
     # represent group_int as 128 bits
     return group_int, chapter_int
@@ -517,7 +517,13 @@ class Person:
         description="",
         address=None,
         bool_items=None,
-       
+        country_names=['*'],
+        group_names=[],
+        disease_items=['*'],
+        start_year=2021,
+        start_month=1,
+        start_day=1,
+        months=12,
         **kwargs,
     ):
 
@@ -533,13 +539,11 @@ class Person:
 
             # balance = w3.eth.get_balance(address)
         else:
-            self.address = random.choice(env.accounts)
+            self.address = env.accounts.pop()
 
             # print(f"balance of {address} is {balance}")
 
-        if bool_items is not None:
-
-            self.bool_items = bool_items
+        self.bool_items = bool_items
 
         self.description = description
 
@@ -549,8 +553,14 @@ class Person:
 
         # print(f"person_dict {self.person_dict}")
         self.debug = False
-        self.disease_items = []
-        self.disease_groups=[]
+        self.disease_items = disease_items
+        self.disease_groups= []
+        self.country_names = country_names
+        self.group_names = group_names
+        self.start_year = start_year
+        self.start_month = start_month
+        self.start_day = start_day
+        self.months = months
 
     def random_init(self, profile_dict):
         # if risk_level is not None:
@@ -585,8 +595,6 @@ class Person:
             all_group_names,
             k=int(profile_dict["group_code"] * len(all_group_names)),
         )
-
-
 
     # display_simple_items
     def display_simple_items(self):
@@ -756,7 +764,7 @@ class Person:
         country_codes = [
             country_index_dict[c] for c in self.country_names
         ]
-        if hasattr(self, "group_names"):
+        if hasattr(self, "group_names") and self.group_names is not None and len(self.group_names) > 0:
 
             group_codes = [group_index_dict[g] for g in self.group_names]
             group_code = sum(group_codes)
@@ -859,13 +867,11 @@ class Person:
         # print(f"name {self.name}  disease_codes {disease_codes} ")
         disease_dict = {}
 
-        for d in disease_codes:
+        for group_code, chapter_code in disease_codes:
+            if group_code not in disease_dict:
+                disease_dict[group_code] = 0
 
-            if d[0] not in disease_dict:
-
-                disease_dict[d[0]] = 0
-
-            disease_dict[d[0]] |= d[1]
+            disease_dict[group_code] |= chapter_code
 
         # disease_group_codes, disease_chapter_codes = (
         #     list(self.disease_dict.keys()),
@@ -874,12 +880,15 @@ class Person:
         disease_group_codes = [1 << (ord(d) - ord("A") + 1) for d in self.disease_groups]
         disease_group_code = sum(disease_group_codes)
 
-        disease_combined_codes = [(1<< (k+99)) + v for k,v in disease_dict.items()]
+        disease_combined_codes = [(1<< (group_code+100)) + chapter_code for group_code,chapter_code in disease_dict.items()]
         # print(f"name {self.name} disease_dict {disease_dict}")
         # print(f"name {self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
+        max_code = 1<<128
         for code in disease_combined_codes:
-            if code > 1<<128:
-                print(f"code {code} larger than 2**128 disease_dict {disease_dict}")
+            if code > max_code:
+                print(
+                    f"code {code} larger than 2**128 disease_dict {disease_dict}, self.disease_items {self.disease_items}"
+                )
             # print(f"code {code} disease_code {int2DiseaseCode(code)}")
         # logger.info(f"disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
         func = self.contract.functions.UploadDiseaseAffordable(
@@ -992,6 +1001,8 @@ class Person:
             start_time = time.time_ns()
             receipt = func.call()
             end_time = time.time_ns()
+            time_diff = end_time - start_time
+            return TransactionResult(time_used=time_diff, result=receipt)
         elif self.env.name == TestEnum.polygon.name:
             start_time = time.time_ns()
             build_transaction = func.build_transaction(dynamic_fee_transaction)
@@ -1010,6 +1021,7 @@ class Person:
             receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
             end_time = time.time_ns()
 
+        # logger.info(f"receipt {receipt}")
         gas_used = receipt["gasUsed"]
         gas_price = receipt["effectiveGasPrice"]
         time_diff = (end_time - start_time)
@@ -1091,7 +1103,8 @@ class Provider(Person):
             )
             
     def upload_purpose_items(self):
-        simple_value = [self.bool_items[item] for item in DUO_order_list]
+        simple_value = [True if item in self.bool_items else False for item in DUO_order_list]
+        
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
         # )
@@ -1195,7 +1208,7 @@ class Requester(Person):
             raise Exception("requestAccess: requester is not a Requester")
 
     def upload_purpose_items(self):
-        simple_value = [self.bool_items[item] for item in ADAM_order_list]
+        simple_value = [True if item in self.bool_items else False for item in ADAM_order_list]
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
         # )
@@ -1220,7 +1233,7 @@ class Requester(Person):
 
         func = self.contract.functions.AccessData(provider.address, self.address)
 
-        result = self.send_transaction(func, True)
+        result = self.send_transaction(func, True).result 
         result_set = set()
         for error in AccessError:
             if result & error.code:
@@ -2210,231 +2223,6 @@ def test_scenarios(    requester_number = 200,
 # accounts.pop()
 
 
-def test_case_study():
-    result_map = {
-        AccessError.AREA_ERROR.message: r"\faFlag[regular]",
-        AccessError.DISEASE_ERROR.message: r"\faCapsules",
-        AccessError.DATE_ERROR.message: r"\faCalendar*[regular]",
-        AccessError.PURPOSE_ERROR.message: r"\circletfillhl",
-    }
-    # accounts = w3.eth.accounts.copy()
-
-    provider1 = Provider(
-        name="Provider 1",
-        description=r"Provider.\ref{provider:a}",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-    provider2 = Provider(
-        name="Provider 2",
-        description=r"Provider.\ref{provider:b}",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    provider3 = Provider(
-        name="Provider 3",
-        description=r"Provider.\ref{provider:c}",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    provider4 = Provider(
-        name="Provider 4",
-        description=r"Provider.\ref{provider:d}",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-    provider5 = Provider(
-        name="Provider 5",
-        description=r"Provider.\ref{provider:e}",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester1 = Requester(
-        name="Requester 1",
-        description="1",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester2 = Requester(
-        name="Requester 2",
-        description="Requester2",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester3 = Requester(
-        name="Requester 3",
-        description="Requester3",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester4 = Requester(
-        name="Requester 4",
-        description="Requester4",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester5 = Requester(
-        name="Requester 5",
-        description="Requester5",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester6 = Requester(
-        name="Requester 6",
-        description="Requester6",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester7 = Requester(
-        name="Requester 7",
-        description="Requester7",
-        # contract=deployed_contract,
-        address=accounts.pop(),
-    )
-
-    requester8 = Requester(
-        name="Requester 8",
-        description="Requester8",
-        # contract=deployed_contract,
-        # address=accounts.pop(),
-    )
-    requester9 = Requester(
-        name="Requester 9",
-        description="Requester9",
-        # contract=deployed_contract,
-        # address=accounts.pop(),
-    )
-    
-    r = provider1.update_area_group_relation()
-    # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
-    # print("update_area_group_code ", r)
-
-    provider1.bool_items = PurposeItems(true_prob=1)
-    provider1.country_names = ["*"]
-    provider1.disease_items = ["*"]
-
-    provider2.disease_items = ["A**", "B00"]
-    provider2.country_names = ["*"]
-    provider2.bool_items = PurposeItems(true_prob=1)
-
-    provider3.group_names = ["EUROPEAN_UNION"]
-    provider3.country_names = ["USA"]
-    provider3.disease_items = ["*"]
-    provider3.bool_items = PurposeItems(true_prob=1)
-
-    provider4.start_year = 2024
-    provider4.start_month = 6
-    provider4.start_day = 1
-    provider4.months = 6
-    provider4.disease_items = ["*"]
-    provider4.country_names = ["*"]
-    provider4.bool_items = PurposeItems(true_prob=1)
-
-    provider5.disease_items = ["*"]
-    provider5.country_names = ["*"]
-    provider5.bool_items = PurposeItems(true_set={"ClinicalProfessionals", "AcademicProfessionals"})
-
-    requester1.start_year = 2024
-    requester1.start_month = 6
-    requester1.start_day = 1
-    requester1.months = 6
-    requester1.country_names = ["*"]
-    requester1.disease_items = ["*"]
-    requester1.bool_items = PurposeItems(true_prob=1)
-
-    requester2.disease_items = ["A01"]
-    requester2.country_names = ["*"]
-    requester2.bool_items = PurposeItems(true_prob=1)
-
-    requester3.disease_items = ["B02"]
-    requester3.country_names = ["*"]
-    requester3.bool_items = PurposeItems(true_prob=1)
-
-    requester4.country_names = ["USA"]
-    requester4.disease_items = ["*"]
-    requester4.bool_items = PurposeItems(true_prob=1)
-
-    requester5.country_names = ["NLD"]
-    requester5.disease_items = ["*"]
-    requester5.bool_items = PurposeItems(true_prob=1)
-
-    requester6.country_names = ["USA", "THA"]
-    requester6.disease_items = ["*"]
-    requester6.bool_items = PurposeItems(true_prob=1)
-
-    requester7.group_names = ["EUROPEAN_UNION"]
-    requester7.disease_items = ["*"]
-    requester7.bool_items = PurposeItems(true_prob=1)
-
-    requester8.start_year = 2024
-    requester8.start_month = 1
-    requester8.start_day = 1
-    requester8.months = 6
-    requester8.country_names = ["*"]
-    requester8.disease_items = ["*"]
-    requester8.bool_items = PurposeItems(true_prob=1)
-
-
-    requester9.bool_items =  PurposeItems(true_set={"ClinicalProfessionals"})
-    requester9.country_names = ["*"]
-    requester9.disease_items = ["*"]
-
-    provider_list = [provider1, provider2, provider3, provider4, provider5]
-    requester_list = [
-        requester1,
-        requester2,
-        requester3,
-        requester4,
-        requester5,
-        requester6,
-        requester7,
-        requester8,
-        requester9,
-    ]
-
-    for i, requester in enumerate(requester_list):
-        requester.description = f"Requester.\\ref{{requester:{i+1}}}"
-        requester.upload()
-        # print(w3.eth.block_number)
-
-    for provider in provider_list:
-        provider.upload()
-
-    result_list = []
-    header_list = [""]
-    for provider in provider_list:
-        header_list.append(provider.description)
-
-    result_list.append("&".join(header_list) + r"\\")
-    for ir, requester in enumerate(requester_list):
-        row_list = []
-        row_list.append(requester.description)
-        for ip, provider in enumerate(provider_list):
-            access_result = requester.request_access(provider)
-            access_str = []
-            for error in access_result:
-                access_str.append(result_map[error])
-                
-            if len(access_str) == 0:
-                access_result = "\cmark"
-            else:
-                access_result = " ".join(access_str)
-            row_list.append(access_result)
-            # requester.access_area_simple(provider)
-            # requester.access_disease(provider)
-        result_list.append("&".join(row_list) + r"\\")
-    
-    print("\n".join(r))
-
 def test_time_area():
     provider1 = Provider(
         name="Provider 1",
@@ -2647,46 +2435,242 @@ def plot_simulation_scenario():
     # Display the chart
     plt.savefig("figs/simulation_scenario.pdf")
 
-def print_boolean_items():
-    bools = PurposeItems()
-    keys = bools.name_index_dict.keys(    )
-    print(keys)
+class Experiment_Case_Study:
+    def __init__(self, env):
+        self.env = env
+        self.init_person()
+        self.result_map = {
+            AccessError.AREA_ERROR.message: r"\faFlag[regular]",
+            AccessError.DISEASE_ERROR.message: r"\faCapsules",
+            AccessError.DATE_ERROR.message: r"\faCalendar*[regular]",
+            AccessError.PURPOSE_ERROR.message: r"\circletfillhl",
+        }
+
+    def init_person(self):
+        provider1 = Provider(
+            name="Provider 1",
+            env = self.env,
+            description=r"Provider.\ref{provider:a}",
+            bool_items={item for item in DUO},
+            country_names=["*"],
+            disease_items=["*"],
+        )
+        provider2 = Provider(
+            name="Provider 2",
+            env=self.env,
+            description=r"Provider.\ref{provider:b}",
+            bool_items={item for item in DUO},
+            country_names=["*"],
+            disease_items=["A**", "B00"],
+        )
+
+        provider3 = Provider(
+            name="Provider 3",
+            env=self.env,
+            description=r"Provider.\ref{provider:c}",
+            bool_items={item for item in DUO},
+            country_names=["USA"],
+            group_names=["EUROPEAN_UNION"],
+            disease_items=["*"],
+        )
+
+        provider4 = Provider(
+            name="Provider 4",
+            env=self.env,
+            description=r"Provider.\ref{provider:d}",
+            bool_items={item for item in DUO},
+            country_names=["*"],
+            start_year=2024,
+            start_month=6,
+            start_day=1,
+            months=6,
+            disease_items=["*"],
+        )
+        provider5 = Provider(
+            name="Provider 5",
+            env=self.env,
+            description=r"Provider.\ref{provider:e}",
+            bool_items={item for item in DUO},
+            country_names=["*"],
+            disease_items=["*"],
+        )
+        requester1 = Requester(
+            name="Requester 1",
+            env=self.env,
+            description="Requester1",
+            bool_items={item for item in ADAM},
+            start_year=2024,
+            start_month=6,
+            start_day=1,
+            months=6,
+            country_names=["*"],
+            disease_items=["*"],
+        )
+
+        requester2 = Requester(
+            name="Requester 2",
+            env=self.env,
+            description="Requester2",
+            bool_items={item for item in ADAM},
+            disease_items=["A01"],
+            country_names=["*"],
+        )
+
+        requester3 = Requester(
+            name="Requester 3",
+            env=self.env,
+            description="Requester3",
+            bool_items={item for item in ADAM},
+            disease_items=["B02"],
+            country_names=["*"],
+        )
+
+        requester4 = Requester(
+            name="Requester 4",
+            env=self.env,
+            description="Requester4",
+            bool_items={item for item in ADAM},
+            country_names=["USA"],
+            disease_items=["*"],
+        )
+
+        requester5 = Requester(
+            name="Requester 5",
+            env=self.env,
+            description="Requester5",
+            bool_items={item for item in ADAM},
+            country_names=["NLD"],
+            disease_items=["*"],
+        )
+
+        requester6 = Requester(
+            name="Requester 6",
+            env=self.env,
+            description="Requester6",
+            bool_items={item for item in ADAM},
+            country_names=["USA", "THA"],
+            disease_items=["*"],
+        )
+
+        requester7 = Requester(
+            name="Requester 7",
+            env=self.env,
+            description="Requester7",
+            bool_items={item for item in ADAM},
+            group_names=["EUROPEAN_UNION"],
+            disease_items=["*"],
+        )
+
+        requester8 = Requester(
+            name="Requester 8",
+            env=self.env,
+            description="Requester8",
+            bool_items={item for item in ADAM},
+            start_year=2024,
+            start_month=1,
+            start_day=1,
+            months=6,
+            country_names=["*"],
+            disease_items=["*"],
+        )
+
+        requester9 = Requester(
+            name="Requester 9",
+            env=self.env,
+            description="Requester9",
+            bool_items={ADAM.UseByClinicalProfessionals},
+            country_names=["*"],
+            disease_items=["*"],
+        )
+
+        r = provider1.update_area_group_relation()
+        # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
+        # print("update_area_group_code ", r)
+
+        self.provider_list = [provider1, provider2, provider3, provider4, provider5]
+        self.requester_list = [
+            requester1,
+            requester2,
+            requester3,
+            requester4,
+            requester5,
+            requester6,
+            requester7,
+            requester8,
+            requester9,
+        ]
+        for i, requester in enumerate(self.requester_list):
+            requester.description = f"Requester.\\ref{{requester:{i+1}}}"
+            requester.upload()
+            # print(w3.eth.block_number)
+
+        for provider in self.provider_list:
+            provider.upload()
+
+    def test_case_study(self):
+
+        result_list = []
+        header_list = [""]
+        for provider in self.provider_list:
+            header_list.append(provider.description)
+
+        result_list.append("&".join(header_list) + r"\\")
+        for ir, requester in enumerate(self.requester_list):
+            row_list = []
+            row_list.append(requester.description)
+            for ip, provider in enumerate(self.provider_list):
+                access_result = requester.request_access(provider)
+                access_str = []
+                for error in access_result:
+                    access_str.append(self.result_map[error])
+
+                if len(access_str) == 0:
+                    access_result = "\cmark"
+                else:
+                    access_result = " ".join(access_str)
+                row_list.append(access_result)
+                # requester.access_area_simple(provider)
+                # requester.access_disease(provider)
+            result_list.append("&".join(row_list) + r"\\")
+
+        print("\n".join(result_list))
 
 
 if __name__ == "__main__":
 
     # test_mode = TestEnum.polygon
-    test_mode = TestEnum.local
+    
     local_env = deploy_contract_local()
-    polygon_env = deploy_contract_polygon(force_deploy=False)
+    # polygon_env = deploy_contract_polygon(force_deploy=False)
     # print(f"accounts {accounts[0]}")
     # test_scenarios(provider_number=10, requester_number=10)
     # plot_simulation_category()
     # plot_simulation_scenario()
-    date_format = "%S:%M:%H %d-%m-%Y"
-    
-    logger.info(f"area start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
-    # test_area(env=local_env, label="_zero")
-    test_area(env=polygon_env, label="_zero")
-    logger.info(f"area end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
-    time.sleep(10)
-    # plot_area(env=test_mode, label="_zero",key_index_name="gas_used",factor = 1e3)
-    # plot_area_time(label="_zero")
-    # plot_area_time(label="_zero", key_index_name="gas_used",factor=1e3,y_label="Gas usage ($10^{3}$)")
-    logger.info(f"disease whole group start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
-    # test_disease(local_env,one_group=False)
-    # test_disease(local_env,one_group=True)
-    test_disease(polygon_env, one_group=False)
-    logger.info(f"disease whole group end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
-    time.sleep(10)
-    
-    logger.info(f"disease one group start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
-    test_disease(polygon_env, one_group=True)
-    logger.info(f"disease one group end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
+    # date_format = "%S:%M:%H %d-%m-%Y"
+
+    Experiment_Case_Study(local_env).test_case_study()
+
+    # logger.info(f"area start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
+    # # test_area(env=local_env, label="_zero")
+    # test_area(env=polygon_env, label="_zero")
+    # logger.info(f"area end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
+    # time.sleep(10)
+    # # plot_area(env=test_mode, label="_zero",key_index_name="gas_used",factor = 1e3)
+    # # plot_area_time(label="_zero")
+    # # plot_area_time(label="_zero", key_index_name="gas_used",factor=1e3,y_label="Gas usage ($10^{3}$)")
+    # logger.info(f"disease whole group start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
+    # # test_disease(local_env,one_group=False)
+    # # test_disease(local_env,one_group=True)
+    # test_disease(polygon_env, one_group=False)
+    # logger.info(f"disease whole group end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
+    # time.sleep(10)
+
+    # logger.info(f"disease one group start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
+    # test_disease(polygon_env, one_group=True)
+    # logger.info(f"disease one group end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
 
     # plot_disease_time()
     # plot_disease_time(key_index_name="gas_used",factor=1e3, y_label="Gas usage ($10^{3}$)")
-
 
     # plot_time()
 

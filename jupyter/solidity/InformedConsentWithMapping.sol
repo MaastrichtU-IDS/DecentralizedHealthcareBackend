@@ -132,114 +132,38 @@ contract ConsentCode {
 
      function uploadPurposeProvider(
         address _address1,
-        bool _Allow_All,
-        bool _OpenToGeneralResearchAndClinicalCare,
-        bool _OpenToHMBResearch,
-        bool _OpenToPopulationAndAncestryResearch,
-        bool _OpenToDiseaseSpecific,
-        bool _OpenToGeneticStudiesOnly,
-        bool _ResearchSpecificRestrictions,
-        bool _OpenToResearchUseOnly,
-        bool _GeneralMethodResearch,
-        bool _GeographicSpecificRestriction,
-        bool _OpenToNonProfitUseOnly,
-        bool _PublicationRequired,
-        bool _CollaborationRequired,
-        bool _EthicsApprovalrequired,
-        bool _TimeLimitOnUse,
-        bool _CostOnUse
-        bool _DataSecurityMeasuresRequired
+        PurposeProvider memory purpose
     ) public {
-        require(msg.sender == dataProvider);
-        purpose_providers_mapping[_address1] = DataProvider(
-            _Allow_All,
-            _OpenToGeneralResearchAndClinicalCare,
-            _OpenToHMBResearch,
-            _OpenToPopulationAndAncestryResearch,
-            _OpenToDiseaseSpecific,
-            _OpenToGeneticStudiesOnly,
-            _ResearchSpecificRestrictions,
-            _OpenToResearchUseOnly,
-            _GeneralMethodResearch,
-            _GeographicSpecificRestriction,
-            _OpenToNonProfitUseOnly,
-            _PublicationRequired,
-            _CollaborationRequired,
-            _EthicsApprovalrequired,
-            _TimeLimitOnUse,
-            _CostOnUse
-            _DataSecurityMeasuresRequired
-        );
+        // // require(msg.sender == dataProvider);
+        // PurposeProvider memory purpose = PurposeProvider(
+        //     _Allow_All,
+        //     _OpenToGeneralResearchAndClinicalCare,
+        //     _OpenToHMBResearch,
+        //     _OpenToPopulationAndAncestryResearch,
+        //     _OpenToDiseaseSpecific,
+        //     _OpenToGeneticStudiesOnly,
+        //     _ResearchSpecificRestrictions,
+        //     _OpenToResearchUseOnly,
+        //     _GeneralMethodResearch,
+        //     _GeographicSpecificRestriction,
+        //     _OpenToNonProfitUseOnly,
+        //     _PublicationRequired,
+        //     _CollaborationRequired,
+        //     _EthicsApprovalrequired,
+        //     _TimeLimitOnUse,
+        //     _CostOnUse,
+        //     _DataSecurityMeasuresRequired
+        // );
+
+        purpose_providers_mapping[_address1] = purpose;
         // DataSubjectAcc.push(_address1);
     }
 
     function uploadPurposeRequester(
         address _address2,
-        bool _UseForMethodsDevelopment,
-        bool _UseForReferenceOrControlMaterial,
-        bool _UseForPopulationsResearch,
-        bool _UseForAncestryResearch,
-        bool _UseForHMBResearch,
-        bool _UseForFundamentalBioResearch,
-        bool _UseForGeneticsResearch,
-        bool _UseForDrugDevelopmentResearch,
-        bool _UseForAnyDiseaseResearch,
-        bool _UseForAgeCategoriesResearch,
-        bool _UseForGenderCategoriesResearch,
-        bool _UseForDecisionSupport,
-        bool _UseForDiseaseSupport,
-        bool _UseByAcademicProfessionals,
-        bool _UseByClinicalProfessionals,
-        bool _UseByProfitMakingProfessionals,
-        bool _UseByNonProfessionals,
-        bool _UseBySpecifiedCountries,
-        bool _UseForProfitPurpose,
-        bool _UseForNonProfitPurpose,
-        bool _TimelineRestrictions,
-        bool _FormalApprovalRequired,
-        bool _CollaborationRequired,
-        bool _PublicationRequired,
-        bool _DataSecurityMeasures,
-        bool _DataDestructionRequired,
-        bool _LinkingOfAccessedRecords,
-        bool _RecontactingDataSubjects,
-        bool _IntellectualPropertyClaims,
-        bool _UseOfAccessedResources,
-        bool _FeesForAccess
+        PurposeRequester memory purpose
     ) public {
-        purpose_requesters_mapping[_address2] = DataRequester(
-            _UseForMethodsDevelopment,
-            _UseForReferenceOrControlMaterial,
-            _UseForPopulationsResearch,
-            _UseForAncestryResearch,
-            _UseForHMBResearch,
-            _UseForFundamentalBioResearch,
-            _UseForGeneticsResearch,
-            _UseForDrugDevelopmentResearch,
-            _UseForAnyDiseaseResearch,
-            _UseForAgeCategoriesResearch,
-            _UseForGenderCategoriesResearch,
-            _UseForDecisionSupport,
-            _UseForDiseaseSupport,
-            _UseByAcademicProfessionals,
-            _UseByClinicalProfessionals,
-            _UseByProfitMakingProfessionals,
-            _UseByNonProfessionals,
-            _UseBySpecifiedCountries,
-            _UseForProfitPurpose,
-            _UseForNonProfitPurpose,
-            _TimelineRestrictions,
-            _FormalApprovalRequired,
-            _CollaborationRequired,
-            _PublicationRequired,
-            _DataSecurityMeasures,
-            _DataDestructionRequired,
-            _LinkingOfAccessedRecords,
-            _RecontactingDataSubjects,
-            _IntellectualPropertyClaims,
-            _UseOfAccessedResources,
-            _FeesForAccess
-        );
+        purpose_requesters_mapping[_address2] = purpose;
         // DataRequesterAcc.push(_address2);
     }
 
@@ -251,10 +175,10 @@ contract ConsentCode {
     //     return DataRequesterAcc;
     // }
 
-    function CheckBoolItems(address _address1, address _address2) view public returns (bool) {
+    function CheckBoolItems(address provider_address, address requester_address) view public returns (bool) {
 
-        purposeProvider memory provider = dataProviders[_address1];
-        DataRequester memory requester = dataRequesters[_address2];
+        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
+        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
 
         if (provider.Allow_All == true) {
             return true;
