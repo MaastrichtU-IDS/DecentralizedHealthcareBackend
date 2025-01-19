@@ -113,7 +113,7 @@ contract ConsentCode {
         bool UseByNonProfessionals;
         bool UseBySpecifiedCountries;
         bool UseForProfitPurpose;
-        bool UseForNonProfitPurpose;
+        // bool UseForNonProfitPurpose;
         bool TimelineRestrictions;
         bool FormalApprovalRequired;
         bool CollaborationRequired;
@@ -175,6 +175,13 @@ contract ConsentCode {
     //     return DataRequesterAcc;
     // }
 
+    function GetPurposeItemsProvider(address _address) view public returns (PurposeProvider memory) {
+              return purpose_providers_mapping[_address];
+    }
+
+    function GetPurposeItemsRequester(address _address) view public returns (PurposeRequester memory) {
+        return purpose_requesters_mapping[_address];
+    }
     function CheckBoolItems(address provider_address, address requester_address) view public returns (bool) {
 
         PurposeProvider memory provider = purpose_providers_mapping[provider_address];
@@ -184,6 +191,8 @@ contract ConsentCode {
             return true;
         }
 
+
+
 // DUO (Provider) mapping to AdA-M (Requester)
 // OpenToGeneralResearchAndClinicalCare,  UseByAcademicProfessionals and (  UseForMethodsDevelopment or UseForReferenceOrControlMaterial or Not UseForHMBResearch or UseForPopulationsResearch or UseForAncestryResearch )
 
@@ -192,8 +201,8 @@ contract ConsentCode {
             requester.UseForReferenceOrControlMaterial ||
             (!requester.UseForHMBResearch) ||
             requester.UseForPopulationsResearch ||
-            requester.UseForAncestryResearch) &&
-            requester.UseByAcademicProfessionals : true;
+            requester.UseForAncestryResearch ||
+            requester.UseByAcademicProfessionals ) : false;
 
 // OpenToHMBResearch, UseByClinicalProfessionals and (  UseForFundamentalBioResearch or UseForGeneticsResearch or UseForDrugDevelopmentResearch or Not UseForAnyDiseaseResearch or UseForAgeCategoriesResearch or UseForGenderCategoriesResearch )
 
@@ -203,13 +212,15 @@ contract ConsentCode {
             requester.UseForDrugDevelopmentResearch ||
             (!requester.UseForAnyDiseaseResearch) ||
             requester.UseForAgeCategoriesResearch ||
-            requester.UseForGenderCategoriesResearch) &&
-            requester.UseByClinicalProfessionals : true;
+            requester.UseForGenderCategoriesResearch) ||
+            requester.UseByClinicalProfessionals : false;
 // OpenToPopulationAndAncestryResearch, UseByAcademicProfessionals and (  UseForPopulationsResearch or UseForAncestryResearch )
 
         bool populationAndAncestryResearch = provider.OpenToPopulationAndAncestryResearch ? (requester.UseForPopulationsResearch ||
-            requester.UseForAncestryResearch) &&
-            requester.UseByAcademicProfessionals:true;
+            requester.UseForAncestryResearch ||
+            requester.UseByAcademicProfessionals):false;
+
+        // bool first_category_bool = generalMethodResearch || populationAndAncestryResearch || hmbResearch;
 
         // bool diseaseSpecificResearch = provider.OpenToDiseaseSpecific ? 
         //     requester.UseForAnyDiseaseResearch &&
@@ -227,7 +238,7 @@ contract ConsentCode {
 
         // NoGeneralMethodResearch, Not UseForMethodsDevelopment
 
-        bool generalMethodResearch = provider.GeneralMethodResearch ? requester.UseForMethodsDevelopment:true;
+        bool generalMethodResearch = provider.GeneralMethodResearch ? true: requester.UseForMethodsDevelopment==false;
 
         // OpenToNonProfitUseOnly, Not UseForProfitPurpose and Not UseByProfitMakingProfessionals
 
@@ -246,19 +257,20 @@ contract ConsentCode {
         bool ethicsApprovalrequired = provider.EthicsApprovalrequired ? requester.FormalApprovalRequired:true;
 
         bool dataSecurityMeasuresRequired = provider.DataSecurityMeasuresRequired? 
-            (requester.DataSecurityMeasures ||
-            requester.DataDestructionRequired ||
-            requester.LinkingOfAccessedRecords ||
-            requester.RecontactingDataSubjects ||
-            requester.IntellectualPropertyClaims ||
+            (requester.DataSecurityMeasures &&
+            requester.DataDestructionRequired &&
+            requester.LinkingOfAccessedRecords &&
+            requester.RecontactingDataSubjects &&
+            requester.IntellectualPropertyClaims &&
             requester.UseOfAccessedResources) : true;
         // CostOnUse, FeesForAccess
-        bool costOnUse = provider.CostOnUse && requester.FeesForAccess;
+        bool costOnUse = provider.CostOnUse ? requester.FeesForAccess: true;
 
+        // bool second_cartegory_bool = collaborationRequired && ethicsApprovalrequired && dataSecurityMeasuresRequired && costOnUse;
         return 
-            generalResearchAndClinicalCare &&
-            hmbResearch &&
-            populationAndAncestryResearch &&
+            (generalResearchAndClinicalCare ||
+            hmbResearch ||
+            populationAndAncestryResearch ) &&
             // diseaseSpecificResearch &&
             researchSpecificRestrictions &&
             openToResearchUseOnly &&

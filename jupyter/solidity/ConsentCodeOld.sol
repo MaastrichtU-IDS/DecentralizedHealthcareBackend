@@ -287,7 +287,7 @@ contract ConsentCode{
             researchpurpose[_address2].UseForReferenceOrControlMaterial == true || 
             researchpurpose[_address2].UseForHMBResearch == false ||
             researchpurpose[_address2].UseForPopulationsResearch == true ||
-            researchpurpose[_address2].UseForAncestryResearch == true) || person[_address2].UseByAcademicProfessionals==true)||
+            researchpurpose[_address2].UseForAncestryResearch == true) || person[_address2].UseByAcademicProfessionals==true) ||
             
             /// HMB research block
             (objects[_address1].OpenToHMBResearch == true && 

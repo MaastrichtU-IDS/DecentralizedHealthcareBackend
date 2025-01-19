@@ -80,7 +80,6 @@ logger.critical("This is a critical message")
 
 consent_fp = Path("solidity", "InformedConsentWithMapping.sol")
 
-result_simulation_fp = "data/result_simulation.json"
 
 # consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
 with open(consent_fp) as file:
@@ -193,7 +192,7 @@ def deploy_contract_local():
     used_accounts = get_used_address()
     accounts = set(map(lambda x:str(x), w3.eth.accounts))
     accounts = list(accounts - used_accounts)
-    logger.info(f"actural accounts {len(accounts)}, used accounts {len(used_accounts)}")
+    # logger.info(f"actural accounts {len(accounts)}, used accounts {len(used_accounts)}")
     # print(f" actural {accounts.pop()}, used {used_accounts.pop()}")
     env = Env(TestEnum.local.name, w3, deployed_contract, accounts)
     return env
@@ -358,7 +357,7 @@ class ADAM(Enum):
     UseByNonProfessionals = 65536
     UseBySpecifiedCountries = 131072
     UseForProfitPurpose = 262144
-    UseForNonProfitPurpose = 524288
+    # UseForNonProfitPurpose = 524288
     TimelineRestrictions = 1048576
     FormalApprovalRequired = 2097152
     CollaborationRequired = 4194304
@@ -371,7 +370,9 @@ class ADAM(Enum):
     UseOfAccessedResources = 536870912
     FeesForAccess = 1073741824
 
-ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForAnyDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, ADAM.UseForNonProfitPurpose, ADAM.TimelineRestrictions, ADAM.FormalApprovalRequired, ADAM.CollaborationRequired, ADAM.PublicationRequired, ADAM.DataSecurityMeasures, ADAM.DataDestructionRequired, ADAM.LinkingOfAccessedRecords, ADAM.RecontactingDataSubjects, ADAM.IntellectualPropertyClaims, ADAM.UseOfAccessedResources, ADAM.FeesForAccess]
+ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForAnyDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, 
+                #    ADAM.UseForNonProfitPurpose, 
+                   ADAM.TimelineRestrictions, ADAM.FormalApprovalRequired, ADAM.CollaborationRequired, ADAM.PublicationRequired, ADAM.DataSecurityMeasures, ADAM.DataDestructionRequired, ADAM.LinkingOfAccessedRecords, ADAM.RecontactingDataSubjects, ADAM.IntellectualPropertyClaims, ADAM.UseOfAccessedResources, ADAM.FeesForAccess]
 
 class DUO(Enum):
     Allow_All = 1
@@ -757,7 +758,7 @@ class Person:
             func = self.contract.functions.UploadAreaAffordable(
                 self.role, self.address, True, 0, 0
             )
-            logger.debug("allow all countries")
+            # logger.debug("allow all countries")
 
             return self.send_transaction(func)
 
@@ -828,6 +829,9 @@ class Person:
 
         logging.info(f"displayAreaCodes is {result}")
 
+    def upload_purpose_items(self):
+        raise NotImplementedError("upload_purpose_items")
+
     def upload(self):
         self.upload_purpose_items()
 
@@ -859,7 +863,7 @@ class Person:
             func = self.contract.functions.UploadDiseaseAffordable(
                 self.role, self.address, True, 0, []
             )
-            logger.debug("allow all disease")
+            # logger.debug("allow all disease")
 
             return self.send_transaction(func)
 
@@ -1085,9 +1089,10 @@ class Provider(Person):
             profile_dict = self.profiles[self.profile]
             self.random_init(profile_dict)
 
-            self.bool_items = dict()
+            self.bool_items = set()
             for item in DUO:
-                self.bool_items[item] = random.random() < profile_dict['simple_items']
+                if random.random() < profile_dict['simple_items']:
+                    self.bool_items.add(item)
 
             if self.profile == profile_open:
                 self.start_year = 2020
@@ -1099,12 +1104,12 @@ class Provider(Person):
             self.start_day = random.randint(1, 28)
 
             logger.info(
-                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
+                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items}"
             )
-            
+
     def upload_purpose_items(self):
         simple_value = [True if item in self.bool_items else False for item in DUO_order_list]
-        
+
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
         # )
@@ -1114,6 +1119,14 @@ class Provider(Person):
         )
 
         return self.send_transaction(upload_func)
+
+    def get_purpose_items(self):
+        duo_list = self.contract.functions.GetPurposeItemsProvider(self.address).call()
+        result_set = set()
+        for result_item, duo_item in zip(duo_list, DUO_order_list):
+            if result_item:
+                result_set.add(duo_item)
+        return result_set
 
 
 # p = Person("test", "test", contract, address=w3.eth.accounts[1])
@@ -1182,18 +1195,17 @@ class Requester(Person):
             # self.random_init(profile_dict)
             self.random_init(profile_dict)
 
-            self.bool_items = dict()
-            for item in ADAM:
-                self.bool_items[item] = random.random() < profile_dict['simple_items']
+            self.bool_items = set()
+            for item in DUO:
+                if random.random() < profile_dict['simple_items']:
+                    self.bool_items.add(item)
 
             self.start_year = random.randint(2024, 2025)
             self.start_month = random.randint(1, 12)
             self.start_day = random.randint(1, 28)
             # self.months = random.randint(1, 24)
             # generate icd-10 codes
-            logger.info(
-                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items.to_int()}"
-            )
+            # logger.info(                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items}" )
 
    
 
@@ -1218,6 +1230,14 @@ class Requester(Person):
         )
 
         return self.send_transaction(upload_func)
+
+    def get_purpose_items(self):
+        duo_list = self.contract.functions.GetPurposeItemsRequester(self.address).call()
+        result_set = set()
+        for result_item, duo_item in zip(duo_list, ADAM_order_list):
+            if result_item:
+                result_set.add(duo_item)
+        return result_set
 
     def request_access(self, provider: Provider):
 
@@ -2127,9 +2147,10 @@ profile_list = [
 
 
 class Scenarios:
-    def __init__(self, proportion: list, size, requesters: list) -> None:
+    def __init__(self, env, proportion: list, size, requesters: list) -> None:
         self.proportion = proportion
         self.size = size
+        self.env = env
 
         self.levels = [
             profile_list[i]
@@ -2147,7 +2168,8 @@ class Scenarios:
             provider = Provider(
                 name=f"provider_{i}",
                 description=f"provider_{i}",
-                address=accounts.pop(),
+                env = self.env,
+                # address=accounts.pop(),
                 profile=i,
                 random_init=True,
             )
@@ -2179,261 +2201,193 @@ class Scenarios:
 
         return result_map
 
-def test_scenarios(    requester_number = 200,
-    provider_number = 100):
-    # requester_number = 200
-    # provider_number = 100
-    requester_list = []
 
-    for i in range(requester_number):
-        requester = Requester(
-            name=f"requester_{i}",
-            description=f"requester_{i}",
-            address=local_env.accounts.pop(),
-            random_init=True,
-        )
-        requester.upload()
-        requester_list.append(requester)
+class Experiment_Simulation:
+    def __init__(self, env,requester_number = 200,
+        provider_number = 100):
+        self.env = env
+        # requester_number = 200
+        # provider_number = 100
+        self.requester_list = []
+        self.provider_number = provider_number
+        self.result_fp = "result/result_simulation.json"
 
-    # print(random.random())
-    requester_list[0].update_area_group_relation()
-
-    scenarios_1 = Scenarios([1, 0, 0], provider_number, requester_list)
-    scenarios_2 = Scenarios([0.5, 0.25, 0.25], provider_number, requester_list)
-    scenarios_3 = Scenarios([0.2, 0.4, 0.4], provider_number, requester_list)
-
-
-    result_map_2 = scenarios_2.start()
-    logger.critical(json.dumps(result_map_2))
-    result_map_3 = scenarios_3.start()
-    logger.critical(json.dumps(result_map_3))
-    result_map_1 = scenarios_1.start()
-    logger.critical(json.dumps(result_map_1))
-
-    result_dict = {
-        "scenario_1": result_map_1,
-        "scenario_2": result_map_2,
-        "scenario_3": result_map_3,
-    }
-    logger.critical(json.dumps(result_dict))
-
-    json.dump(result_dict, open(result_simulation_fp, "w"), indent=4)
-
-
-# accounts.pop()
-
-
-def test_time_area():
-    provider1 = Provider(
-        name="Provider 1",
-        description=r"Provider.\ref{provider:a}",
-        # contract=deployed_contract,
-        address=accounts[1],
-    )
-    provider1.print_time = True
-    provider1.update_area_group_relation()
-
-def test_polygon():
-    from web3 import Web3
-
-    from eth_account import Account
-
-    # Generate a new private key
-    account = Account.create()
-    private_key = account._private_key.hex()
-    address = account.address
-
-    print(f"Private Key: {private_key}")
-    print(f"Address: {address}")
-
-    # Connect to a Polygon node
-    polygon_rpc_url = "https://polygon-rpc.com"  # You can use other RPC URLs as well
-    web3 = Web3(Web3.HTTPProvider(polygon_rpc_url))
-
-    # Check if the connection is successful
-    if web3.is_connected():
-        print("Connected to Polygon")
-    else:
-        print("Failed to connect to Polygon")
-
-    from web3.middleware import geth_poa_middleware
-
-    # Add the PoA middleware for Polygon
-    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-
-    # Set up the account (replace with your private key)
-    # private_key = "YOUR_PRIVATE_KEY"
-    # account = web3.eth.account.privateKeyToAccount(private_key)
-    web3.eth.defaultAccount = account.address
-
-    # Get the contract bytecode and ABI
-    # bytecode = contract_interface['bin']
-    # abi = contract_interface['abi']
-
-    # Create the contract in Python
-    Person = web3.eth.contract(abi=abi, bytecode=bytecode)
-
-    # Build the transaction
-    construct_txn = Person.constructor().build_transaction({
-        'from': account.address,
-        'nonce': web3.eth.get_transaction_count(account.address),
-        'gas': 2000000,
-        'gasPrice': web3.to_wei('50', 'gwei')
-    })
-
-    # Sign the transaction
-    signed_txn = web3.eth.account.sign_transaction(
-        construct_txn, private_key=private_key
-    )
-
-    # Send the transaction
-    tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-
-    # Wait for the transaction receipt
-    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
-
-    print(f"Contract deployed at address: {tx_receipt.contractAddress}")
-
-    # Function to get transaction details
-    def get_transaction_details(tx_hash):
-        tx = web3.eth.get_transaction(tx_hash)
-        return tx
-
-    # Example transaction hash (replace with your actual transaction hash)
-    # tx_hash = "YOUR_TRANSACTION_HASH"
-
-    # Fetch the transaction details
-    transaction_details = get_transaction_details(tx_hash)
-
-    # Print the transaction details
-    print(transaction_details)
-
-
-# test_time_area()
-
-def plot_simulation_category():
-    import matplotlib.pyplot as plt
-    import numpy as np
-    alpha = 0.8
-
-    # Define the data
-    data = json.load(open(result_simulation_fp, "r"))
-    category_dict = dict()
-
-    for k, v in data.items():
-        for category, value in v.items():
-            total = value["total"]
-            success = value["success"]
-            error = value["error"]
-            if category not in category_dict:
-                category_dict[category] = {
-                    "total": 0,
-                    "success": 0,
-                    "error": {},
-                }
-
-            category_dict[category]["total"] += total
-            category_dict[category]["success"] += success
-            for k, v in error.items():
-                if k not in category_dict[category]["error"]:
-                    category_dict[category]["error"][k] = 0
-                category_dict[category]["error"][k] += v
-
-    # Extract data points
-    categories = list(category_dict.keys())
-    # categories = ["open", "medium", "consevative"]
-    # categories = ["open", "moderate", "consevative"]
-    success_rates = [category_dict[category]["success"] / category_dict[category]["total"] for category in categories]
-
-    # Create a bar chart
-    x = np.arange(len(categories))  # the label locations
-    width = 0.4  # the width of the bars
-
-    fig, ax = plt.subplots(figsize=(5, 4))
-    bars = ax.bar(x, success_rates, width, label="Success Rate", alpha=alpha)
-
-    # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_xlabel('Categories')
-    ax.set_ylabel('Success Rate')
-    # ax.set_title('Success Rate by Category')
-    ax.set_xticks(x)
-    ax.set_ylim(0, 0.175)
-    categories_label =  ["open", "moderate", "consevative"]
-    ax.set_xticklabels(categories_label)
-    ax.legend()
-    # Add labels to the bars
-    def add_labels(bars):
-        for bar in bars:
-            height = bar.get_height()
-            ax.annotate(f'{height:.2%}',
-                        xy=(bar.get_x() + bar.get_width() / 2, height),
-                        xytext=(0, 3),  # 3 points vertical offset
-                        textcoords="offset points",
-                        ha='center', va='bottom')
-
-    add_labels(bars)
-
-    # Display the chart
-    plt.savefig("figs/simulation_category.pdf")
-
-
-def plot_simulation_scenario():
-    import matplotlib.pyplot as plt
-    import numpy as np
-    alpha = 0.8
-    # Define the data
-    data = json.load(open(result_simulation_fp, "r"))
-    scenario_dict = dict()
-    for k, v in data.items():
-        total = sum([value["total"] for value in v.values()])
-        success = sum([value["success"] for value in v.values()])
-        error = {k:v for value in v.values() for k, v in value["error"].items()}
-        scenario_dict[k] = {
-            "total": total,
-            "success": success,
-            "error": error,
-        }
-
-    # Extract data points
-    scenarios = list(scenario_dict.keys())
-    success_rates = [
-        scenario_dict[cat]["success"] / scenario_dict[cat]["total"]
-        for cat in scenarios
-    ]
-
-    # Create a bar chart
-    x = np.arange(len(scenarios))  # the label locations
-    width = 0.4  # the width of the bars
-
-    fig, ax = plt.subplots(figsize=(5, 4))
-    bars = ax.bar(x, success_rates, width, label="Success Rate", alpha=alpha)
-
-    # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_xlabel("Scenarios")
-    ax.set_ylabel("Success Rate")
-    # ax.set_title("Success Rate by Scenarios")
-    ax.set_xticks(x)
-    ax.set_ylim(0,0.175)
-    ax.set_xticklabels(scenarios)
-    ax.legend()
-
-    # Add labels to the bars
-    def add_labels(bars):
-        for bar in bars:
-            height = bar.get_height()
-            ax.annotate(
-                f"{height:.2%}",
-                xy=(bar.get_x() + bar.get_width() / 2, height),
-                xytext=(0, 3),  # 3 points vertical offset
-                textcoords="offset points",
-                ha="center",
-                va="bottom",
+        for i in range(requester_number):
+            requester = Requester(
+                name=f"requester_{i}",
+                description=f"requester_{i}",
+                env = self.env,
+                # address=local_env.accounts.pop(),
+                random_init=True,
             )
+            requester.upload()
+            self.requester_list.append(requester)
 
-    add_labels(bars)
+        # print(random.random())
+        self.requester_list[0].update_area_group_relation()
 
-    # Display the chart
-    plt.savefig("figs/simulation_scenario.pdf")
+    def start(self):
+        scenarios_1 = Scenarios(
+            env=self.env,
+            proportion=[1, 0, 0],
+            size=self.provider_number,
+            requesters=self.requester_list,
+        )
+        scenarios_2 = Scenarios(env = self.env, proportion=[0.5, 0.25, 0.25], size=self.provider_number, requesters = self.requester_list)
+        scenarios_3 = Scenarios(
+            env=self.env,
+            proportion=[0.2, 0.4, 0.4],
+            size=self.provider_number,
+            requesters=self.requester_list,
+        )
+
+        result_map_2 = scenarios_2.start()
+        logger.critical(json.dumps(result_map_2))
+        result_map_3 = scenarios_3.start()
+        logger.critical(json.dumps(result_map_3))
+        result_map_1 = scenarios_1.start()
+        logger.critical(json.dumps(result_map_1))
+
+        result_dict = {
+            "scenario_1": result_map_1,
+            "scenario_2": result_map_2,
+            "scenario_3": result_map_3,
+        }
+        logger.critical(json.dumps(result_dict))
+
+        json.dump(result_dict, open(self.result_fp, "w"), indent=4)
+
+    def plot_simulation_category(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        alpha = 0.8
+
+        # Define the data
+        data = json.load(open(self.result_fp, "r"))
+        category_dict = dict()
+
+        for k, v in data.items():
+            for category, value in v.items():
+                total = value["total"]
+                success = value["success"]
+                error = value["error"]
+                if category not in category_dict:
+                    category_dict[category] = {
+                        "total": 0,
+                        "success": 0,
+                        "error": {},
+                    }
+
+                category_dict[category]["total"] += total
+                category_dict[category]["success"] += success
+                for k, v in error.items():
+                    if k not in category_dict[category]["error"]:
+                        category_dict[category]["error"][k] = 0
+                    category_dict[category]["error"][k] += v
+
+        # Extract data points
+        categories = list(category_dict.keys())
+        # categories = ["open", "medium", "consevative"]
+        # categories = ["open", "moderate", "consevative"]
+        success_rates = [
+            category_dict[category]["success"] / category_dict[category]["total"]
+            for category in categories
+        ]
+
+        # Create a bar chart
+        x = np.arange(len(categories))  # the label locations
+        width = 0.4  # the width of the bars
+
+        fig, ax = plt.subplots(figsize=(5, 4))
+        bars = ax.bar(x, success_rates, width, label="Success Rate", alpha=alpha)
+
+        # Add some text for labels, title and custom x-axis tick labels, etc.
+        ax.set_xlabel("Categories")
+        ax.set_ylabel("Success Rate")
+        # ax.set_title('Success Rate by Category')
+        ax.set_xticks(x)
+        ax.set_ylim(0, 0.175)
+        categories_label = ["open", "moderate", "consevative"]
+        ax.set_xticklabels(categories_label)
+        ax.legend()
+
+        # Add labels to the bars
+        def add_labels(bars):
+            for bar in bars:
+                height = bar.get_height()
+                ax.annotate(
+                    f"{height:.2%}",
+                    xy=(bar.get_x() + bar.get_width() / 2, height),
+                    xytext=(0, 3),  # 3 points vertical offset
+                    textcoords="offset points",
+                    ha="center",
+                    va="bottom",
+                )
+
+        add_labels(bars)
+
+        # Display the chart
+        plt.savefig("figs/simulation_category.pdf")
+
+    def plot_simulation_scenario(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        alpha = 0.8
+        # Define the data
+        data = json.load(open(self.result_fp, "r"))
+        scenario_dict = dict()
+        for k, v in data.items():
+            total = sum([value["total"] for value in v.values()])
+            success = sum([value["success"] for value in v.values()])
+            error = {k: v for value in v.values() for k, v in value["error"].items()}
+            scenario_dict[k] = {
+                "total": total,
+                "success": success,
+                "error": error,
+            }
+
+        # Extract data points
+        scenarios = list(scenario_dict.keys())
+        success_rates = [
+            scenario_dict[cat]["success"] / scenario_dict[cat]["total"] for cat in scenarios
+        ]
+
+        # Create a bar chart
+        x = np.arange(len(scenarios))  # the label locations
+        width = 0.4  # the width of the bars
+
+        fig, ax = plt.subplots(figsize=(5, 4))
+        bars = ax.bar(x, success_rates, width, label="Success Rate", alpha=alpha)
+
+        # Add some text for labels, title and custom x-axis tick labels, etc.
+        ax.set_xlabel("Scenarios")
+        ax.set_ylabel("Success Rate")
+        # ax.set_title("Success Rate by Scenarios")
+        ax.set_xticks(x)
+        ax.set_ylim(0, 0.175)
+        ax.set_xticklabels(scenarios)
+        ax.legend()
+
+        # Add labels to the bars
+        def add_labels(bars):
+            for bar in bars:
+                height = bar.get_height()
+                ax.annotate(
+                    f"{height:.2%}",
+                    xy=(bar.get_x() + bar.get_width() / 2, height),
+                    xytext=(0, 3),  # 3 points vertical offset
+                    textcoords="offset points",
+                    ha="center",
+                    va="bottom",
+                )
+
+        add_labels(bars)
+
+        # Display the chart
+        plt.savefig("figs/simulation_scenario.pdf")
+
 
 class Experiment_Case_Study:
     def __init__(self, env):
@@ -2459,7 +2413,7 @@ class Experiment_Case_Study:
             name="Provider 2",
             env=self.env,
             description=r"Provider.\ref{provider:b}",
-            bool_items={item for item in DUO},
+            bool_items={DUO.Allow_All},
             country_names=["*"],
             disease_items=["A**", "B00"],
         )
@@ -2490,7 +2444,7 @@ class Experiment_Case_Study:
             name="Provider 5",
             env=self.env,
             description=r"Provider.\ref{provider:e}",
-            bool_items={item for item in DUO},
+            bool_items={DUO.OpenToGeneralResearchAndClinicalCare},
             country_names=["*"],
             disease_items=["*"],
         )
@@ -2565,7 +2519,7 @@ class Experiment_Case_Study:
             name="Requester 8",
             env=self.env,
             description="Requester8",
-            bool_items={item for item in ADAM},
+            bool_items=set(),
             start_year=2024,
             start_month=1,
             start_day=1,
@@ -2578,7 +2532,7 @@ class Experiment_Case_Study:
             name="Requester 9",
             env=self.env,
             description="Requester9",
-            bool_items={ADAM.UseByClinicalProfessionals},
+            bool_items={ADAM.UseByAcademicProfessionals},
             country_names=["*"],
             disease_items=["*"],
         )
@@ -2602,12 +2556,18 @@ class Experiment_Case_Study:
         for i, requester in enumerate(self.requester_list):
             requester.description = f"Requester.\\ref{{requester:{i+1}}}"
             requester.upload()
+            logger.info(
+                f"requester {requester.name} address {requester.address}, purpose item missed {requester.bool_items - requester.get_purpose_items()} added {requester.get_purpose_items()-requester.bool_items}"
+            )
             # print(w3.eth.block_number)
 
         for provider in self.provider_list:
             provider.upload()
+            logger.info(
+                f"provider {provider.name} address {provider.address}, purpose item missed {provider.bool_items - provider.get_purpose_items()} added {provider.get_purpose_items()-provider.bool_items}"
+            )
 
-    def test_case_study(self):
+    def start(self):
 
         result_list = []
         header_list = [""]
@@ -2639,7 +2599,7 @@ class Experiment_Case_Study:
 if __name__ == "__main__":
 
     # test_mode = TestEnum.polygon
-    
+
     local_env = deploy_contract_local()
     # polygon_env = deploy_contract_polygon(force_deploy=False)
     # print(f"accounts {accounts[0]}")
@@ -2648,7 +2608,11 @@ if __name__ == "__main__":
     # plot_simulation_scenario()
     # date_format = "%S:%M:%H %d-%m-%Y"
 
-    Experiment_Case_Study(local_env).test_case_study()
+    # Experiment_Case_Study(local_env).start()
+    experiment_simulation =  Experiment_Simulation(local_env,provider_number=100,requester_number=200)
+    experiment_simulation.start()
+    experiment_simulation.plot_simulation_category()
+    experiment_simulation.plot_simulation_scenario()
 
     # logger.info(f"area start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
     # # test_area(env=local_env, label="_zero")
