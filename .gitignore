@@ -62,3 +62,7 @@ my_files/**
 js/node_modules/
 .vscode/
 .conda/
+
+/jupyter/data/*
+/jupyter/results/*
+/jupyter/figs/*
