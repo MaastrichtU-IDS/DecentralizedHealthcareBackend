@@ -63,6 +63,6 @@ js/node_modules/
 .vscode/
 .conda/
 
-/jupyter/data/*
-/jupyter/results/*
-/jupyter/figs/*
+jupyter/data/**
+jupyter/results/** 
+jupyter/figs/**
