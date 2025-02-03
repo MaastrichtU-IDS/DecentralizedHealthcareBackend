@@ -413,7 +413,7 @@ contract ConsentCode {
         uint256 Country_Code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        if (allow_all && (role == role_provider)) {
+        if (allow_all) {
             terms.Allow_all_area = true;
         } else {
             terms.Area_Group_Affordable = Group_Code;
@@ -675,6 +675,11 @@ contract ConsentCode {
        if ((requester_country & provider_country) == requester_country) {
             return true;
         }
+
+    //    if ((requester_group & provider_group) != requester_group) {
+    //         // if the group of requester is not a subset of group of provider, return false
+    //         return false;
+    //     }
         return false;
     }
 
@@ -777,9 +782,9 @@ contract ConsentCode {
 
         uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group_Affordable;
         uint32 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;
-        if ((requester_group_code & provider_group_code) != requester_group_code) {
-            return false;
-        }
+        // if ((requester_group_code & provider_group_code) != requester_group_code) {
+        //     return false;
+        // }
 
         bool allowed = false;
         for (

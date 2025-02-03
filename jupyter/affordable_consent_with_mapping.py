@@ -80,6 +80,43 @@ logger.critical("This is a critical message")
 
 consent_fp = Path("solidity", "InformedConsentWithMapping.sol")
 
+profile_strict = "conservative"
+profile_medium = "moderate"
+profile_open = "open"
+profile_list = [
+    profile_open,
+    profile_medium,
+    profile_strict,
+]
+
+
+profiles_dict = {
+    profile_strict: {
+        "simple_items": 0.2,
+        "group_code": 0.2,
+        "country_code": 0.2,
+        "disease_items": 0.2,
+        "disease_groups": 0.2,
+        "months": 6,
+    },
+    profile_medium: {
+        "simple_items": 0.5,
+        "group_code": 0.5,
+        "country_code": 0.5,
+        "disease_items": 0.5,
+        "disease_groups": 0.5,
+        "months": 12,
+    },
+    profile_open: {
+        "simple_items": 0.8,
+        "group_code": 0.8,
+        "country_code": 0.8,
+        "disease_items": 0.8,
+        "disease_groups": 0.8,
+        "months": 2**8 - 1,
+    },
+}
+
 
 # consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
 with open(consent_fp) as file:
@@ -189,12 +226,12 @@ def deploy_contract_local():
         # bytecode=bytecode,
     )
     # Extract default accounts created by ganache
-    used_accounts = get_used_address()
-    accounts = set(map(lambda x:str(x), w3.eth.accounts))
-    accounts = list(accounts - used_accounts)
+    # used_accounts = get_used_address()
+    # accounts = set(map(lambda x:str(x), w3.eth.accounts))
+    # accounts = list(accounts - used_accounts)
     # logger.info(f"actural accounts {len(accounts)}, used accounts {len(used_accounts)}")
     # print(f" actural {accounts.pop()}, used {used_accounts.pop()}")
-    env = Env(TestEnum.local.name, w3, deployed_contract, accounts)
+    env = Env(TestEnum.local.name, w3, deployed_contract, w3.eth.accounts)
     return env
 
 private_key = "cef3155c18c010de238f98470f9a092159405cb6cd5ab25261e3fcdff23cd810"
@@ -393,14 +430,15 @@ class DUO(Enum):
     CostOnUse = 32768
     DataSecurityMeasuresRequired = 65536
 
-DUO_order_list = [DUO.Allow_All, DUO.OpenToGeneralResearchAndClinicalCare, DUO.OpenToHMBResearch, DUO.OpenToPopulationAndAncestryResearch, DUO.OpenToDiseaseSpecific, DUO.OpenToGeneticStudiesOnly, DUO.ResearchSpecificRestrictions, DUO.OpenToResearchUseOnly, DUO.GeneralMethodResearch, DUO.GeographicSpecificRestriction, DUO.OpenToNonProfitUseOnly, DUO.PublicationRequired, DUO.CollaborationRequired, DUO.EthicsApprovalrequired, DUO.TimeLimitOnUse, DUO.CostOnUse, DUO.DataSecurityMeasuresRequired]
+DUO_order_list = [
+    DUO.Allow_All, 
+                  DUO.OpenToGeneralResearchAndClinicalCare, DUO.OpenToHMBResearch, DUO.OpenToPopulationAndAncestryResearch, DUO.OpenToDiseaseSpecific, DUO.OpenToGeneticStudiesOnly, DUO.ResearchSpecificRestrictions, DUO.OpenToResearchUseOnly, DUO.GeneralMethodResearch, DUO.GeographicSpecificRestriction, DUO.OpenToNonProfitUseOnly, DUO.PublicationRequired, DUO.CollaborationRequired, DUO.EthicsApprovalrequired, DUO.TimeLimitOnUse, DUO.CostOnUse, DUO.DataSecurityMeasuresRequired]
 
 
-role_provider = 1
-role_requester = 2
+ROLE_PROVIDER = 1
+ROLE_REQUESTER = 2
 
-# %%
-from re import L
+
 import time
 
 
@@ -511,20 +549,22 @@ class TransactionResult:
         return f"status {self.status}, gas_used {self.gas_used}, transaction_hash {self.transaction_hash}, time_used {self.time_used}, result {self.result}"
 
 class Person:
+
     def __init__(
         self,
-         env  ,
+        env,
         name="",
         description="",
         address=None,
-        bool_items=None,
-        country_names=['*'],
-        group_names=[],
-        disease_items=['*'],
+        bool_items=set(),
+        country_names=list(),
+        group_names=list(),
+        disease_items=list(),
         start_year=2021,
         start_month=1,
         start_day=1,
         months=12,
+        level=profile_open,
         **kwargs,
     ):
 
@@ -533,6 +573,7 @@ class Person:
         self.print_time = False
         self.w3 = env.w3
         self.env = env 
+        self.level = level
 
         if address is not None:
 
@@ -765,7 +806,7 @@ class Person:
         country_codes = [
             country_index_dict[c] for c in self.country_names
         ]
-        if hasattr(self, "group_names") and self.group_names is not None and len(self.group_names) > 0:
+        if  self.group_names is not None and len(self.group_names) > 0:
 
             group_codes = [group_index_dict[g] for g in self.group_names]
             group_code = sum(group_codes)
@@ -781,7 +822,7 @@ class Person:
         # print("country_group_data length", len(country_group_data))
 
         # logger.info(
-        #     f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}"
+        #     f"upload_area_affordable name {self.name}, group_code {group_code}, country_code {country_code}"
         # )
         # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
 
@@ -794,13 +835,13 @@ class Person:
         return self.send_transaction(func)
 
     def display_area_affordable(self):
-        group_code, country_code, version, Allow_all_area = (
+        group_code, country_code, Allow_all_area = (
             self.contract.functions.DisplayAreaAffordable(self.role, self.address).call()
         )
         countries = decode_country_code(country_code)
         groups = decode_group_code(group_code)
 
-        return groups, countries
+        return groups, countries, Allow_all_area
 
     def display_area_codes(self):
         (
@@ -1037,10 +1078,6 @@ class Person:
 
 import string
 
-profile_strict = "strict"
-profile_medium = "medium"
-profile_open = "open"
-
 
 class Provider(Person):
 
@@ -1048,53 +1085,29 @@ class Provider(Person):
 
     #     # super().__init__(*args,**kwargs)
 
-    profiles = {
-        "strict": {
-            "simple_items": 0.2,
-            "group_code": 0.2,
-            "country_code": 0.2,
-            "disease_items": 0.2,
-            "disease_groups": random.uniform(0, 0.2),
-            "months": 6,
-        },
-        "medium": {
-            "simple_items": 0.5,
-            "group_code": 0.5,
-            "country_code": 0.5,
-            "disease_items": 0.5,
-            "disease_groups": random.uniform(0, 0.5),
-            "months": 12,
-        },
-        "open": {
-            "simple_items": 0.8,
-            "group_code": 0.8,
-            "country_code": 0.8,
-            "disease_items": 0.8,
-            "disease_groups": random.uniform(0, 0.8),
-            "months": 2**8 - 1,
-        },
-    }
+    
 
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
 
-        self.role = role_provider
+        self.role = ROLE_PROVIDER
 
         # risk_level = kwargs.get("risk_level", None)
         random_init = kwargs.get("random_init", False)
         if random_init:
-            self.profile = kwargs.get("profile", "medium")
+            profile_dict = kwargs.get("profile")
 
-            profile_dict = self.profiles[self.profile]
             self.random_init(profile_dict)
 
             self.bool_items = set()
             for item in DUO:
+                if self.level != profile_open and item == DUO.Allow_All:
+                    continue
                 if random.random() < profile_dict['simple_items']:
                     self.bool_items.add(item)
 
-            if self.profile == profile_open:
+            if self.level == profile_open:
                 self.start_year = 2020
             else:
                 self.start_year = random.randint(2023, 2025)
@@ -1103,9 +1116,9 @@ class Provider(Person):
 
             self.start_day = random.randint(1, 28)
 
-            logger.info(
-                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items}"
-            )
+            # logger.info(
+            #     f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items}"
+            # )
 
     def upload_purpose_items(self):
         simple_value = [True if item in self.bool_items else False for item in DUO_order_list]
@@ -1178,7 +1191,7 @@ class Requester(Person):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.role = role_requester
+        self.role = ROLE_REQUESTER
         random_init = kwargs.get("random_init", False)
         if random_init:
   
@@ -1211,11 +1224,11 @@ class Requester(Person):
 
     def _check_role(self, provider: Provider):
 
-        if provider.role != role_provider:
+        if provider.role != ROLE_PROVIDER:
 
             raise Exception("requestAccess: provider is not a Provider")
 
-        if self.role != role_requester:
+        if self.role != ROLE_REQUESTER:
 
             raise Exception("requestAccess: requester is not a Requester")
 
@@ -1241,12 +1254,12 @@ class Requester(Person):
 
     def request_access(self, provider: Provider):
 
-        if provider.role != role_provider:
+        if provider.role != ROLE_PROVIDER:
 
             print("requestAccess: provider is not a Provider")
             return
 
-        if self.role != role_requester:
+        if self.role != ROLE_REQUESTER:
 
             print("requestAccess: requester is not a Requester")
             return
@@ -1262,12 +1275,12 @@ class Requester(Person):
 
     def access_disease(self, provider: Provider):
 
-        if provider.role != role_provider:
+        if provider.role != ROLE_PROVIDER:
 
             print("requestAccess: provider is not a Provider")
             return
 
-        if self.role != role_requester:
+        if self.role != ROLE_REQUESTER:
 
             print("requestAccess: requester is not a Requester")
             return
@@ -1278,12 +1291,12 @@ class Requester(Person):
 
     def access_disease_hierarchy(self, provider: Provider):
 
-        if provider.role != role_provider:
+        if provider.role != ROLE_PROVIDER:
 
             print("requestAccess: provider is not a Provider")
             return
 
-        if self.role != role_requester:
+        if self.role != ROLE_REQUESTER:
 
             print("requestAccess: requester is not a Requester")
             return
@@ -1296,12 +1309,12 @@ class Requester(Person):
 
     def access_area_baseline(self, provider: Provider):
 
-        if provider.role != role_provider:
+        if provider.role != ROLE_PROVIDER:
 
             print("requestAccess: provider is not a Provider")
             return
 
-        if self.role != role_requester:
+        if self.role != ROLE_REQUESTER:
 
             print("requestAccess: requester is not a Requester")
             return
@@ -2139,38 +2152,31 @@ def generate_country_index():
     json.dump(country_index, open(country_index_file, "w"), indent=4)
 
 
-profile_list = [
-    profile_open,
-    profile_medium,
-    profile_strict,
-]
-
-
 class Scenarios:
     def __init__(self, env, proportion: list, size, requesters: list) -> None:
         self.proportion = proportion
         self.size = size
         self.env = env
 
-        self.levels = [
-            profile_list[i]
-            for i, p in enumerate(proportion)
-            for _ in range(int(p * size))
-        ]
+        self.levels = [profile_open for _ in range(int(proportion[0] * size))] + [  
+            profile_medium for _ in range(int(proportion[1] * size))] + [
+            profile_strict for _ in range(int(proportion[2] * size))    ]
+
         random.shuffle(self.levels)
-        logger.info("levels", self.levels)
+        # logger.info("levels", self.levels)
         self.provider_list = self.initial_scenarios()
         self.requester_list = requesters
 
     def initial_scenarios(self):
         provider_list = []
-        for i in self.levels:
+        for i, level in enumerate(self.levels):
             provider = Provider(
                 name=f"provider_{i}",
                 description=f"provider_{i}",
                 env = self.env,
                 # address=accounts.pop(),
-                profile=i,
+                level = level,
+                profile=profiles_dict[level],
                 random_init=True,
             )
             provider.upload()
@@ -2182,22 +2188,21 @@ class Scenarios:
         for provider in tqdm(self.provider_list):
             for requester in self.requester_list:
                 access_result = requester.request_access(provider)
-                if provider.profile not in result_map:
-                    result_map[provider.profile] = {
+                if provider.level not in result_map:
+                    result_map[provider.level] = {
                         "total": 0,
                         "success": 0,
-                        "error": {
-                        },
+                        "error": {},
                     }
-                result_map[provider.profile]["total"] += 1
+                result_map[provider.level]["total"] += 1
                 if not access_result:
-                    result_map[provider.profile]["success"] += 1
+                    result_map[provider.level]["success"] += 1
                 else:
                     for error_str in access_result:
-                        if error_str in result_map[provider.profile]["error"]:
-                            result_map[provider.profile]["error"][error_str] += 1
+                        if error_str in result_map[provider.level]["error"]:
+                            result_map[provider.level]["error"][error_str] += 1
                         else:
-                            result_map[provider.profile]["error"][error_str] = 1
+                            result_map[provider.level]["error"][error_str] = 1
 
         return result_map
 
@@ -2253,7 +2258,7 @@ class Experiment_Simulation:
             "scenario_2": result_map_2,
             "scenario_3": result_map_3,
         }
-        logger.critical(json.dumps(result_dict))
+        # logger.info(json.dumps(result_dict, indent=2))
 
         json.dump(result_dict, open(self.result_fp, "w"), indent=4)
 
@@ -2286,17 +2291,14 @@ class Experiment_Simulation:
                         category_dict[category]["error"][k] = 0
                     category_dict[category]["error"][k] += v
 
-        # Extract data points
-        categories = list(category_dict.keys())
-        # categories = ["open", "medium", "consevative"]
-        # categories = ["open", "moderate", "consevative"]
+
         success_rates = [
             category_dict[category]["success"] / category_dict[category]["total"]
-            for category in categories
+            for category in profile_list
         ]
 
         # Create a bar chart
-        x = np.arange(len(categories))  # the label locations
+        x = np.arange(len(profile_list))  # the label locations
         width = 0.4  # the width of the bars
 
         fig, ax = plt.subplots(figsize=(5, 4))
@@ -2308,8 +2310,7 @@ class Experiment_Simulation:
         # ax.set_title('Success Rate by Category')
         ax.set_xticks(x)
         ax.set_ylim(0, 0.175)
-        categories_label = ["open", "moderate", "consevative"]
-        ax.set_xticklabels(categories_label)
+        ax.set_xticklabels(profile_list)
         ax.legend()
 
         # Add labels to the bars
@@ -2329,6 +2330,8 @@ class Experiment_Simulation:
 
         # Display the chart
         plt.savefig("figs/simulation_category.pdf")
+
+
 
     def plot_simulation_scenario(self):
         import matplotlib.pyplot as plt
@@ -2405,7 +2408,7 @@ class Experiment_Case_Study:
             name="Provider 1",
             env = self.env,
             description=r"Provider.\ref{provider:a}",
-            bool_items={item for item in DUO},
+            bool_items={DUO.Allow_All},
             country_names=["*"],
             disease_items=["*"],
         )
@@ -2415,14 +2418,14 @@ class Experiment_Case_Study:
             description=r"Provider.\ref{provider:b}",
             bool_items={DUO.Allow_All},
             country_names=["*"],
-            disease_items=["A**", "B00"],
+            disease_items=["A**", "B01"],
         )
 
         provider3 = Provider(
             name="Provider 3",
             env=self.env,
             description=r"Provider.\ref{provider:c}",
-            bool_items={item for item in DUO},
+            bool_items={DUO.Allow_All},
             country_names=["USA"],
             group_names=["EUROPEAN_UNION"],
             disease_items=["*"],
@@ -2432,7 +2435,7 @@ class Experiment_Case_Study:
             name="Provider 4",
             env=self.env,
             description=r"Provider.\ref{provider:d}",
-            bool_items={item for item in DUO},
+            bool_items={DUO.Allow_All},
             country_names=["*"],
             start_year=2024,
             start_month=6,
@@ -2511,6 +2514,7 @@ class Experiment_Case_Study:
             env=self.env,
             description="Requester7",
             bool_items={item for item in ADAM},
+            country_names = [],
             group_names=["EUROPEAN_UNION"],
             disease_items=["*"],
         )
@@ -2539,8 +2543,8 @@ class Experiment_Case_Study:
 
         r = provider1.update_area_group_relation()
         # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
-        # print("update_area_group_code ", r)
-
+        print("update_area_group_code ", r)
+   
         self.provider_list = [provider1, provider2, provider3, provider4, provider5]
         self.requester_list = [
             requester1,
@@ -2556,16 +2560,19 @@ class Experiment_Case_Study:
         for i, requester in enumerate(self.requester_list):
             requester.description = f"Requester.\\ref{{requester:{i+1}}}"
             requester.upload()
-            logger.info(
-                f"requester {requester.name} address {requester.address}, purpose item missed {requester.bool_items - requester.get_purpose_items()} added {requester.get_purpose_items()-requester.bool_items}"
-            )
+            # logger.info(
+            #     f"requester {requester.name} address {requester.address}, purpose item missed {requester.bool_items - requester.get_purpose_items()} added {requester.get_purpose_items()-requester.bool_items}"
+            # )
             # print(w3.eth.block_number)
 
         for provider in self.provider_list:
             provider.upload()
-            logger.info(
-                f"provider {provider.name} address {provider.address}, purpose item missed {provider.bool_items - provider.get_purpose_items()} added {provider.get_purpose_items()-provider.bool_items}"
-            )
+            # logger.info(
+            #     f"provider {provider.name} address {provider.address}, purpose item missed {provider.bool_items - provider.get_purpose_items()} added {provider.get_purpose_items()-provider.bool_items}"
+            # )
+
+        logger.debug(f"requester7 area {requester7.display_area_affordable()}" )
+        logger.debug(f"provider3 area {provider3.display_area_affordable()}")
 
     def start(self):
 
@@ -2609,8 +2616,9 @@ if __name__ == "__main__":
     # date_format = "%S:%M:%H %d-%m-%Y"
 
     # Experiment_Case_Study(local_env).start()
-    experiment_simulation =  Experiment_Simulation(local_env,provider_number=100,requester_number=200)
-    experiment_simulation.start()
+    
+    experiment_simulation =  Experiment_Simulation(local_env,provider_number=100,requester_number = 200)
+    # experiment_simulation.start()
     experiment_simulation.plot_simulation_category()
     experiment_simulation.plot_simulation_scenario()
 
