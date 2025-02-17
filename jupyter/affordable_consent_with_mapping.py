@@ -9,8 +9,11 @@ from datetime import datetime
 from tkinter import CURRENT
 from matplotlib import hatch, markers
 from matplotlib.font_manager import font_scalings
+from numpy import isin
+from pymysql import Time
 from pyparsing import alphas
 from requests import get
+from traitlets import Instance
 from web3 import Web3
 
 # import py_solc_x as px
@@ -90,34 +93,6 @@ profile_list = [
 ]
 
 
-profiles_dict = {
-    profile_strict: {
-        "simple_items": 0.2,
-        "group_code": 0.2,
-        "country_code": 0.2,
-        "disease_items": 0.2,
-        "disease_groups": 0.2,
-        "months": 6,
-    },
-    profile_medium: {
-        "simple_items": 0.5,
-        "group_code": 0.5,
-        "country_code": 0.5,
-        "disease_items": 0.5,
-        "disease_groups": 0.5,
-        "months": 12,
-    },
-    profile_open: {
-        "simple_items": 0.8,
-        "group_code": 0.8,
-        "country_code": 0.8,
-        "disease_items": 0.8,
-        "disease_groups": 0.8,
-        "months": 2**8 - 1,
-    },
-}
-
-
 # consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
 with open(consent_fp) as file:
     contract_source_code = file.read()
@@ -144,6 +119,31 @@ contract_interface = compiled_sol["solidity/InformedConsentWithMapping.sol:Conse
 abi = contract_interface["abi"]
 bytecode = contract_interface["bin"]
 bytecode_runtime = contract_interface["bin-runtime"]
+
+class RESULT_CODE(Enum):
+    Success = 0
+    FirstCategory = 1
+    OpenToGeneralResearchAndClinicalCare = 2**1
+    OpenToHMBResearch = 2**2
+    OpenToPopulationAndAncestryResearch = 2**3
+    OpenToDiseaseSpecific = 2**4
+    OpenToGeneticStudiesOnly = 2**5
+    ResearchSpecificRestrictions = 2**6
+    OpenToResearchUseOnly = 2**7
+    GeneralMethodResearch = 2**8
+    GeographicSpecificRestriction = 2**9
+    OpenToNonProfitUseOnly = 2**10
+    PublicationRequired = 2**11
+    CollaborationRequired = 2**12
+    EthicsApprovalrequired = 2**13
+    TimeLimitOnUse = 2**14
+    CostOnUse = 2**15
+    DataSecurityMeasuresRequired = 2**16
+    # DiseaseSpecificResearch = 2**17
+
+    # @property
+    # def code(self):
+    #     return self.value
 
 
 class TestEnum(Enum):
@@ -312,9 +312,9 @@ def diseaseCode2IntHierarchy(code: str):
     #  the code is a string like A00,B11, etc.
     #  return the int code for chapter, group as a tuple
     # print(f"code is {code}")
-    if not pattern_compiled.match(code):
-        print(f"The string {code} not matches the pattern")
-        return 0
+    # if not pattern_compiled.match(code):
+    #     print(f"The string {code} not matches the pattern")
+    #     return 0
     group_str = code[0]
     # if chapter_str == "*":
     #     return 2**8-1,2**128-1
@@ -383,7 +383,7 @@ class ADAM(Enum):
     UseForFundamentalBioResearch = 32
     UseForGeneticsResearch = 64
     UseForDrugDevelopmentResearch = 128
-    UseForAnyDiseaseResearch = 256
+    UseForSpecificDiseaseResearch = 256
     UseForAgeCategoriesResearch = 512
     UseForGenderCategoriesResearch = 1024
     UseForDecisionSupport = 2048
@@ -394,7 +394,7 @@ class ADAM(Enum):
     UseByNonProfessionals = 65536
     UseBySpecifiedCountries = 131072
     UseForProfitPurpose = 262144
-    # UseForNonProfitPurpose = 524288
+    UseForNonProfitPurpose = 524288
     TimelineRestrictions = 1048576
     FormalApprovalRequired = 2097152
     CollaborationRequired = 4194304
@@ -407,8 +407,8 @@ class ADAM(Enum):
     UseOfAccessedResources = 536870912
     FeesForAccess = 1073741824
 
-ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForAnyDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, 
-                #    ADAM.UseForNonProfitPurpose, 
+ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForSpecificDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, 
+                   ADAM.UseForNonProfitPurpose, 
                    ADAM.TimelineRestrictions, ADAM.FormalApprovalRequired, ADAM.CollaborationRequired, ADAM.PublicationRequired, ADAM.DataSecurityMeasures, ADAM.DataDestructionRequired, ADAM.LinkingOfAccessedRecords, ADAM.RecontactingDataSubjects, ADAM.IntellectualPropertyClaims, ADAM.UseOfAccessedResources, ADAM.FeesForAccess]
 
 class DUO(Enum):
@@ -429,6 +429,8 @@ class DUO(Enum):
     TimeLimitOnUse = 16384
     CostOnUse = 32768
     DataSecurityMeasuresRequired = 65536
+    # DiseaseSpecificResearch = 131072
+
 
 DUO_order_list = [
     DUO.Allow_All, 
@@ -612,31 +614,56 @@ class Person:
         #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
         #     if len(disease_list) > 0:
         #         break
-        if profile_dict["disease_items"] == 1:
-            self.disease_items = ["*"]
+        disease_setting = profile_dict["disease_items"]
+        while True:
+            disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+            if len(disease_list) > 0:
+                break
+   
+            
+        if isinstance(disease_setting, float):
+            if disease_setting == 1.0:
+                self.disease_items = ["*"]
+            else:
+                self.disease_items = random.choices(
+                    disease_list,
+                    k=int(disease_setting * len(disease_list)),
+                )
+                self.disease_groups = random.choices(
+                    string.ascii_uppercase, k=int(disease_setting * 26)
+                )
+        elif isinstance(disease_setting, str):
+            self.disease_items = [disease_setting]
+            
         else:
-            while True:
-                disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-                if len(disease_list) > 0:
-                    break
-
             self.disease_items = random.choices(
                 disease_list,
-                k=int(profile_dict["disease_items"] * len(disease_list)),
-            )
-            self.disease_groups = random.choices(
-                string.ascii_uppercase, k=int(profile_dict["disease_items"] * 26)
+                k=disease_setting,
             )
 
-        self.country_names = random.sample(
-            all_countries_name,
-            k=int(profile_dict["country_code"] * len(all_countries_name)),
-        )
+        country_setting = profile_dict["country_code"]
+        if isinstance(country_setting, float):
+            self.country_names = random.sample(
+                all_countries_name,
+                k=int(country_setting * len(all_countries_name)),
+            )
+        else:
+            self.country_names = random.sample(
+                all_countries_name,
+                k=country_setting,
+            )
 
-        self.group_names = random.sample(
-            all_group_names,
-            k=int(profile_dict["group_code"] * len(all_group_names)),
-        )
+        country_group_setting = profile_dict["group_code"]
+        if isinstance(country_group_setting, float):
+            self.group_names = random.sample(
+                all_group_names,
+                k=int(country_group_setting * len(all_group_names)),
+            )
+        else:
+            self.group_names = random.sample(
+                all_group_names,
+                k=country_group_setting,
+            )
 
     # display_simple_items
     def display_simple_items(self):
@@ -794,20 +821,19 @@ class Person:
 
     def upload_area_affordable(self) -> TransactionResult:
 
-        if "*" in self.country_names:
+        # if "*" in self.country_names:
 
-            func = self.contract.functions.UploadAreaAffordable(
-                self.role, self.address, True, 0, 0
-            )
-            # logger.debug("allow all countries")
+        # #     func = self.contract.functions.UploadAreaAffordable(
+        # #         self.role, self.address, True, 0, 0
+        # #     )
+        # #     # logger.debug("allow all countries")
 
-            return self.send_transaction(func)
+        # #     return self.send_transaction(func)
 
         country_codes = [
             country_index_dict[c] for c in self.country_names
         ]
         if  self.group_names is not None and len(self.group_names) > 0:
-
             group_codes = [group_index_dict[g] for g in self.group_names]
             group_code = sum(group_codes)
         else:
@@ -827,7 +853,7 @@ class Person:
         # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
 
         func = self.contract.functions.UploadAreaAffordable(
-            self.role, self.address, False, group_code, country_code
+            self.role, self.address, group_code, country_code
         )
 
         # print("UploadAreaCode role", self.role)
@@ -835,13 +861,13 @@ class Person:
         return self.send_transaction(func)
 
     def display_area_affordable(self):
-        group_code, country_code, Allow_all_area = (
+        group_code, country_code = (
             self.contract.functions.DisplayAreaAffordable(self.role, self.address).call()
         )
         countries = decode_country_code(country_code)
         groups = decode_group_code(group_code)
 
-        return groups, countries, Allow_all_area
+        return groups, countries
 
     def display_area_codes(self):
         (
@@ -875,11 +901,9 @@ class Person:
 
     def upload(self):
         self.upload_purpose_items()
+        
 
-        self.upload_area_affordable()
-
-        self.upload_disease_affordable()
-        self.upload_date()
+ 
 
     def delete_disease(self):
         func = self.contract.functions.delete_disease_baseline(
@@ -899,14 +923,14 @@ class Person:
 
     def upload_disease_affordable(self):
 
-        if "*" in self.disease_items:
+        # if "*" in self.disease_items:
 
-            func = self.contract.functions.UploadDiseaseAffordable(
-                self.role, self.address, True, 0, []
-            )
-            # logger.debug("allow all disease")
+        #     func = self.contract.functions.UploadDiseaseAffordable(
+        #         self.role, self.address, True, 0, []
+        #     )
+        #     # logger.debug("allow all disease")
 
-            return self.send_transaction(func)
+        #     return self.send_transaction(func)
 
         disease_codes = [diseaseCode2IntHierarchy(d) for d in self.disease_items]
         # print(f"name {self.name}  disease_codes {disease_codes} ")
@@ -935,11 +959,11 @@ class Person:
                     f"code {code} larger than 2**128 disease_dict {disease_dict}, self.disease_items {self.disease_items}"
                 )
             # print(f"code {code} disease_code {int2DiseaseCode(code)}")
-        # logger.info(f"disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
+        logger.info(f"{self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
         func = self.contract.functions.UploadDiseaseAffordable(
             self.role,
             self.address,
-            False,
+            # False,
             disease_group_code,
             disease_combined_codes
         )
@@ -1081,12 +1105,6 @@ import string
 
 class Provider(Person):
 
-    # def __init__(self):
-
-    #     # super().__init__(*args,**kwargs)
-
-    
-
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -1101,11 +1119,13 @@ class Provider(Person):
             self.random_init(profile_dict)
 
             self.bool_items = set()
-            for item in DUO:
-                if self.level != profile_open and item == DUO.Allow_All:
-                    continue
-                if random.random() < profile_dict['simple_items']:
-                    self.bool_items.add(item)
+            purpose_setting = profile_dict["simple_items"]
+            self.bool_items.add(purpose_setting)
+            # for item in DUO:
+            #     if self.level != profile_open and item == DUO.Allow_All:
+            #         continue
+            #     if random.random() < profile_dict['simple_items']:
+            #         self.bool_items.add(item)
 
             if self.level == profile_open:
                 self.start_year = 2020
@@ -1121,7 +1141,7 @@ class Provider(Person):
             # )
 
     def upload_purpose_items(self):
-        simple_value = [True if item in self.bool_items else False for item in DUO_order_list]
+        simple_value = [True if item in self.bool_items else False for item in DUO]
 
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
@@ -1141,32 +1161,14 @@ class Provider(Person):
                 result_set.add(duo_item)
         return result_set
 
-
-# p = Person("test", "test", contract, address=w3.eth.accounts[1])
-
-
-# recipe = p.update_area_group_code()
-
-
-# assert recipe["status"] == 1
-
-# %% [markdown]
-# ## Requester
-#
-
-# %%
-# import dis
-
-
-# area_error_code = 1
-# disease_error_code = 2
-# date_error_code = 4
-# simple_error_code = 8
-
-# area_error = "area_error"
-# disease_error = "disease_error"
-# date_error = "date_error"
-# purpose_error = "_error"
+    def upload(self):
+        super().upload()
+        if DUO.GeographicSpecificRestriction in self.bool_items:
+            self.upload_area_affordable()
+        if DUO.OpenToDiseaseSpecific in self.bool_items:
+            self.upload_disease_affordable()
+        if DUO.TimeLimitOnUse in self.bool_items:
+            self.upload_date()
 
 
 class AccessError(Enum):
@@ -1233,7 +1235,7 @@ class Requester(Person):
             raise Exception("requestAccess: requester is not a Requester")
 
     def upload_purpose_items(self):
-        simple_value = [True if item in self.bool_items else False for item in ADAM_order_list]
+        simple_value = [True if item in self.bool_items else False for item in ADAM]
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
         # )
@@ -1267,10 +1269,12 @@ class Requester(Person):
         func = self.contract.functions.AccessData(provider.address, self.address)
 
         result = self.send_transaction(func, True).result 
+        # logger.info(f"request_access result {result}")
         result_set = set()
-        for error in AccessError:
-            if result & error.code:
-                result_set.add(error.message)
+        for error in RESULT_CODE:
+            if result & error.value > 0:
+                result_set.add(error)
+        logger.debug(f"request_access provider {provider.name}, provider bools {provider.bool_items}, requester {self.name}, requester bools {self.bool_items}, result_set {result_set}")
         return result_set
 
     def access_disease(self, provider: Provider):
@@ -1347,6 +1351,17 @@ class Requester(Person):
 
         # func.call(block_identifier="latest")
         return result
+
+    def upload(self):
+        super().upload()
+        if ADAM.UseBySpecifiedCountries in self.bool_items:
+            self.upload_area_affordable()
+            
+        if ADAM.UseForSpecificDiseaseResearch in self.bool_items:
+            self.upload_disease_affordable()
+            
+        if ADAM.TimelineRestrictions in self.bool_items:
+            self.upload_date()
 
 def record_used_address(address):
     with open("data/used_address.txt", "a") as f:
@@ -2152,6 +2167,43 @@ def generate_country_index():
     json.dump(country_index, open(country_index_file, "w"), indent=4)
 
 
+PROFILES_DICT = {
+    profile_strict: {
+        "simple_items": DUO.OpenToDiseaseSpecific,
+        "group_code": 0,
+        "country_code": 1,
+        "disease_items": 1,
+        "disease_groups": 0.2,
+        "months": 6,
+    },
+    profile_medium: {
+        "simple_items": DUO.OpenToDiseaseSpecific,
+        "group_code": 3,
+        "country_code": 28,
+        "disease_items": "A**",
+        "disease_groups": 0.5,
+        "months": 12,
+    },
+    profile_open: {
+        "simple_items":  DUO.OpenToHMBResearch,
+        "group_code": 1.0,
+        "country_code": 1.0,
+        "disease_items": 1.0,
+        "disease_groups": 0.8,
+        "months": 2**8 - 1,
+    },
+}
+
+class Experiment_Performance:
+    def __init__(self, env):
+        self.env = env 
+    
+
+    def start(self):
+        test_area(self.env)
+        test_disease(self.env)
+
+
 class Scenarios:
     def __init__(self, env, proportion: list, size, requesters: list) -> None:
         self.proportion = proportion
@@ -2176,7 +2228,7 @@ class Scenarios:
                 env = self.env,
                 # address=accounts.pop(),
                 level = level,
-                profile=profiles_dict[level],
+                profile=PROFILES_DICT[level],
                 random_init=True,
             )
             provider.upload()
@@ -2309,7 +2361,7 @@ class Experiment_Simulation:
         ax.set_ylabel("Success Rate")
         # ax.set_title('Success Rate by Category')
         ax.set_xticks(x)
-        ax.set_ylim(0, 0.175)
+        # ax.set_ylim(0, 0.175)
         ax.set_xticklabels(profile_list)
         ax.legend()
 
@@ -2369,7 +2421,7 @@ class Experiment_Simulation:
         ax.set_ylabel("Success Rate")
         # ax.set_title("Success Rate by Scenarios")
         ax.set_xticks(x)
-        ax.set_ylim(0, 0.175)
+        # ax.set_ylim(0, 0.175)
         ax.set_xticklabels(scenarios)
         ax.legend()
 
@@ -2397,11 +2449,12 @@ class Experiment_Case_Study:
         self.env = env
         self.init_person()
         self.result_map = {
-            AccessError.AREA_ERROR.message: r"\faFlag[regular]",
-            AccessError.DISEASE_ERROR.message: r"\faCapsules",
-            AccessError.DATE_ERROR.message: r"\faCalendar*[regular]",
-            AccessError.PURPOSE_ERROR.message: r"\circletfillhl",
+            RESULT_CODE.GeographicSpecificRestriction: r"\faFlag[regular]",
+            RESULT_CODE.OpenToDiseaseSpecific: r"\faCapsules",
+            RESULT_CODE.TimeLimitOnUse: r"\faCalendar*[regular]",
+            # RESULT_CODE.GeographicSpecificRestriction: r"\circletfillhl",
         }
+        self.error_other = r"\circletfillhl"
 
     def init_person(self):
         provider1 = Provider(
@@ -2409,15 +2462,15 @@ class Experiment_Case_Study:
             env = self.env,
             description=r"Provider.\ref{provider:a}",
             bool_items={DUO.Allow_All},
-            country_names=["*"],
-            disease_items=["*"],
+            # country_names=["*"],
+            # disease_items=["*"],
         )
         provider2 = Provider(
             name="Provider 2",
             env=self.env,
             description=r"Provider.\ref{provider:b}",
-            bool_items={DUO.Allow_All},
-            country_names=["*"],
+            bool_items={DUO.OpenToDiseaseSpecific},
+            # country_names=["*"],
             disease_items=["A**", "B01"],
         )
 
@@ -2425,111 +2478,109 @@ class Experiment_Case_Study:
             name="Provider 3",
             env=self.env,
             description=r"Provider.\ref{provider:c}",
-            bool_items={DUO.Allow_All},
+            bool_items={DUO.GeographicSpecificRestriction},
             country_names=["USA"],
             group_names=["EUROPEAN_UNION"],
-            disease_items=["*"],
+            # disease_items=["*"],
         )
 
         provider4 = Provider(
             name="Provider 4",
             env=self.env,
             description=r"Provider.\ref{provider:d}",
-            bool_items={DUO.Allow_All},
-            country_names=["*"],
+            bool_items={DUO.TimeLimitOnUse},
+            # country_names=["*"],
             start_year=2024,
             start_month=6,
             start_day=1,
             months=6,
-            disease_items=["*"],
+            # disease_items=["*"],
         )
         provider5 = Provider(
             name="Provider 5",
             env=self.env,
             description=r"Provider.\ref{provider:e}",
-            bool_items={DUO.OpenToGeneralResearchAndClinicalCare},
-            country_names=["*"],
-            disease_items=["*"],
+            bool_items={DUO.OpenToPopulationAndAncestryResearch},
+            # country_names=["*"],
+            # disease_items=["*"],
         )
         requester1 = Requester(
             name="Requester 1",
             env=self.env,
             description="Requester1",
-            bool_items={item for item in ADAM},
+            bool_items={ADAM.TimelineRestrictions},
             start_year=2024,
             start_month=6,
             start_day=1,
-            months=6,
-            country_names=["*"],
-            disease_items=["*"],
+            months=6
         )
 
         requester2 = Requester(
             name="Requester 2",
             env=self.env,
             description="Requester2",
-            bool_items={item for item in ADAM},
+            bool_items={ADAM.UseForSpecificDiseaseResearch},
             disease_items=["A01"],
-            country_names=["*"],
+            # country_names=["*"],
         )
 
         requester3 = Requester(
             name="Requester 3",
             env=self.env,
             description="Requester3",
-            bool_items={item for item in ADAM},
+            bool_items={ADAM.UseForSpecificDiseaseResearch},
             disease_items=["B02"],
-            country_names=["*"],
+            # country_names=["*"],
         )
 
         requester4 = Requester(
             name="Requester 4",
             env=self.env,
             description="Requester4",
-            bool_items={item for item in ADAM},
+            bool_items={ADAM.UseBySpecifiedCountries},
             country_names=["USA"],
-            disease_items=["*"],
+            # disease_items=["*"],
         )
 
         requester5 = Requester(
             name="Requester 5",
             env=self.env,
             description="Requester5",
-            bool_items={item for item in ADAM},
+            bool_items={ADAM.UseBySpecifiedCountries},
             country_names=["NLD"],
-            disease_items=["*"],
+            # disease_items=["*"],
         )
 
         requester6 = Requester(
             name="Requester 6",
             env=self.env,
             description="Requester6",
-            bool_items={item for item in ADAM},
+            bool_items={ADAM.UseBySpecifiedCountries},
             country_names=["USA", "THA"],
-            disease_items=["*"],
+            # disease_items=["*"],
         )
 
         requester7 = Requester(
             name="Requester 7",
             env=self.env,
             description="Requester7",
-            bool_items={item for item in ADAM},
-            country_names = [],
+            bool_items={ADAM.UseBySpecifiedCountries},
+            # country_names = [],
             group_names=["EUROPEAN_UNION"],
-            disease_items=["*"],
+            # disease_items=["*"],
         )
 
         requester8 = Requester(
             name="Requester 8",
             env=self.env,
             description="Requester8",
-            bool_items=set(),
+            bool_items={ADAM.TimelineRestrictions},
             start_year=2024,
             start_month=1,
             start_day=1,
             months=6,
-            country_names=["*"],
-            disease_items=["*"],
+            # country_names=["*"],
+            # disease_items=["*"],
         )
 
         requester9 = Requester(
@@ -2537,14 +2588,14 @@ class Experiment_Case_Study:
             env=self.env,
             description="Requester9",
             bool_items={ADAM.UseByAcademicProfessionals},
-            country_names=["*"],
-            disease_items=["*"],
+            # country_names=["*"],
+            # disease_items=["*"],
         )
 
         r = provider1.update_area_group_relation()
         # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
         print("update_area_group_code ", r)
-   
+
         self.provider_list = [provider1, provider2, provider3, provider4, provider5]
         self.requester_list = [
             requester1,
@@ -2589,7 +2640,7 @@ class Experiment_Case_Study:
                 access_result = requester.request_access(provider)
                 access_str = []
                 for error in access_result:
-                    access_str.append(self.result_map[error])
+                    access_str.append(self.result_map.get(error,self.error_other))
 
                 if len(access_str) == 0:
                     access_result = "\cmark"
@@ -2615,12 +2666,12 @@ if __name__ == "__main__":
     # plot_simulation_scenario()
     # date_format = "%S:%M:%H %d-%m-%Y"
 
-    # Experiment_Case_Study(local_env).start()
+    Experiment_Case_Study(local_env).start()
     
-    experiment_simulation =  Experiment_Simulation(local_env,provider_number=100,requester_number = 200)
+    # experiment_simulation =  Experiment_Simulation(local_env,provider_number=30,requester_number = 60)
     # experiment_simulation.start()
-    experiment_simulation.plot_simulation_category()
-    experiment_simulation.plot_simulation_scenario()
+    # experiment_simulation.plot_simulation_category()
+    # experiment_simulation.plot_simulation_scenario()
 
     # logger.info(f"area start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
     # # test_area(env=local_env, label="_zero")

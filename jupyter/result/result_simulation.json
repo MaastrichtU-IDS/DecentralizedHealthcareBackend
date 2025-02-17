@@ -1,74 +1,62 @@
 {
     "scenario_1": {
         "open": {
-            "total": 20000,
-            "success": 2588,
-            "error": {
-                "disease_error": 12192,
-                "area_error": 12017,
-                "purpose_error": 4800
-            }
+            "total": 1800,
+            "success": 1800,
+            "error": {}
         }
     },
     "scenario_2": {
-        "consevative": {
-            "total": 5000,
-            "success": 76,
+        "conservative": {
+            "total": 420,
+            "success": 0,
             "error": {
-                "area_error": 4422,
-                "purpose_error": 3000,
-                "disease_error": 3089,
-                "date_error": 1176
+                "purpose_error": 420,
+                "area_error": 378,
+                "disease_error": 238,
+                "date_error": 149
             }
         },
         "moderate": {
-            "total": 5000,
-            "success": 141,
+            "total": 420,
+            "success": 0,
             "error": {
-                "disease_error": 3078,
-                "area_error": 4124,
-                "purpose_error": 2400,
-                "date_error": 1605
+                "purpose_error": 420,
+                "area_error": 375,
+                "disease_error": 238,
+                "date_error": 72
             }
         },
         "open": {
-            "total": 10000,
-            "success": 1314,
-            "error": {
-                "area_error": 6045,
-                "disease_error": 6091,
-                "purpose_error": 2400
-            }
+            "total": 900,
+            "success": 900,
+            "error": {}
         }
     },
     "scenario_3": {
-        "moderate": {
-            "total": 8000,
-            "success": 211,
+        "conservative": {
+            "total": 720,
+            "success": 0,
             "error": {
-                "purpose_error": 4200,
-                "disease_error": 4913,
-                "area_error": 6571,
-                "date_error": 3146
+                "purpose_error": 720,
+                "area_error": 648,
+                "disease_error": 408,
+                "date_error": 236
             }
         },
         "open": {
-            "total": 4000,
-            "success": 508,
-            "error": {
-                "purpose_error": 1000,
-                "disease_error": 2430,
-                "area_error": 2430
-            }
+            "total": 360,
+            "success": 360,
+            "error": {}
         },
-        "consevative": {
-            "total": 8000,
-            "success": 79,
+        "moderate": {
+            "total": 720,
+            "success": 0,
             "error": {
-                "area_error": 7077,
-                "disease_error": 4950,
-                "date_error": 2383,
-                "purpose_error": 6000
+                "purpose_error": 720,
+                "date_error": 345,
+                "area_error": 637,
+                "disease_error": 408
             }
         }
     }

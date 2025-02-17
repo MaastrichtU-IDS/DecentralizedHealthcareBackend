@@ -35,7 +35,7 @@ contract ConsentCode {
         // affordable
         uint16 Area_Group_Affordable;
         uint256 Area_Country_Affordable;
-        bool Allow_all_area;
+        // bool Allow_all_area;
         uint32 Disease_Group_Affordable;
         uint128[26] Disease_Category_Affordable;
   
@@ -46,9 +46,31 @@ contract ConsentCode {
         mapping(uint8 => bool) Area_Group_Map_Baseline;
         
         mapping(uint16 => bool) Disease_Map_Baseline;
-        bool allow_all_disease;
+        // bool allow_all_disease;
         uint16[] Disease_Array_Baseline;
 
+    }
+
+    enum RESULT_CODE {
+        // Success,
+        FirstCategory,
+        OpenToGeneralResearchAndClinicalCare,
+        OpenToHMBResearch,
+        OpenToPopulationAndAncestryResearch,
+        OpenToDiseaseSpecific,
+        OpenToGeneticStudiesOnly,
+        ResearchSpecificRestrictions,
+        OpenToResearchUseOnly,
+        GeneralMethodResearch,
+        GeographicSpecificRestriction,
+        OpenToNonProfitUseOnly,
+        PublicationRequired,
+        CollaborationRequired,
+        EthicsApprovalrequired,
+        TimeLimitOnUse,
+        CostOnUse,
+        DataSecurityMeasuresRequired
+        // DiseaseSpecificResearch
     }
 
 
@@ -91,6 +113,7 @@ contract ConsentCode {
         bool TimeLimitOnUse;
         bool CostOnUse;
         bool DataSecurityMeasuresRequired;
+        // bool DiseaseSpecificResearch;
     }
 
     struct PurposeRequester {
@@ -102,7 +125,7 @@ contract ConsentCode {
         bool UseForFundamentalBioResearch;
         bool UseForGeneticsResearch;
         bool UseForDrugDevelopmentResearch;
-        bool UseForAnyDiseaseResearch;
+        bool UseForSpecificDiseaseResearch;
         bool UseForAgeCategoriesResearch;
         bool UseForGenderCategoriesResearch;
         bool UseForDecisionSupport;
@@ -113,7 +136,7 @@ contract ConsentCode {
         bool UseByNonProfessionals;
         bool UseBySpecifiedCountries;
         bool UseForProfitPurpose;
-        // bool UseForNonProfitPurpose;
+        bool UseForNonProfitPurpose;
         bool TimelineRestrictions;
         bool FormalApprovalRequired;
         bool CollaborationRequired;
@@ -182,110 +205,7 @@ contract ConsentCode {
     function GetPurposeItemsRequester(address _address) view public returns (PurposeRequester memory) {
         return purpose_requesters_mapping[_address];
     }
-    function CheckBoolItems(address provider_address, address requester_address) view public returns (bool) {
-
-        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
-        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
-
-        if (provider.Allow_All == true) {
-            return true;
-        }
-
-
-
-// DUO (Provider) mapping to AdA-M (Requester)
-// OpenToGeneralResearchAndClinicalCare,  UseByAcademicProfessionals and (  UseForMethodsDevelopment or UseForReferenceOrControlMaterial or Not UseForHMBResearch or UseForPopulationsResearch or UseForAncestryResearch )
-
-        bool generalResearchAndClinicalCare = provider.OpenToGeneralResearchAndClinicalCare ? 
-            (requester.UseForMethodsDevelopment ||
-            requester.UseForReferenceOrControlMaterial ||
-            (!requester.UseForHMBResearch) ||
-            requester.UseForPopulationsResearch ||
-            requester.UseForAncestryResearch ||
-            requester.UseByAcademicProfessionals ) : false;
-
-// OpenToHMBResearch, UseByClinicalProfessionals and (  UseForFundamentalBioResearch or UseForGeneticsResearch or UseForDrugDevelopmentResearch or Not UseForAnyDiseaseResearch or UseForAgeCategoriesResearch or UseForGenderCategoriesResearch )
-
-        bool hmbResearch = provider.OpenToHMBResearch ? 
-            (requester.UseForFundamentalBioResearch ||
-            requester.UseForGeneticsResearch ||
-            requester.UseForDrugDevelopmentResearch ||
-            (!requester.UseForAnyDiseaseResearch) ||
-            requester.UseForAgeCategoriesResearch ||
-            requester.UseForGenderCategoriesResearch) ||
-            requester.UseByClinicalProfessionals : false;
-// OpenToPopulationAndAncestryResearch, UseByAcademicProfessionals and (  UseForPopulationsResearch or UseForAncestryResearch )
-
-        bool populationAndAncestryResearch = provider.OpenToPopulationAndAncestryResearch ? (requester.UseForPopulationsResearch ||
-            requester.UseForAncestryResearch ||
-            requester.UseByAcademicProfessionals):false;
-
-        // bool first_category_bool = generalMethodResearch || populationAndAncestryResearch || hmbResearch;
-
-        // bool diseaseSpecificResearch = provider.OpenToDiseaseSpecific ? 
-        //     requester.UseForAnyDiseaseResearch &&
-            // requester.UseByClinicalProfessionals: true;
-
-
-// ResearchSpecificRestrictions, Not UseForReferenceOrControlMaterial
-        bool researchSpecificRestrictions = provider.ResearchSpecificRestrictions?  (!requester.UseForReferenceOrControlMaterial) : true;
-
-// OpenToResearchUseOnly, Not UseForHMBResearch
-        bool openToResearchUseOnly = provider.OpenToResearchUseOnly ? (!requester.UseForHMBResearch):true;
-                // OpenToGeneticStudiesOnly, UseForGeneticsResearch
-
-        bool openToGeneticStudiesOnly = provider.OpenToGeneticStudiesOnly ? requester.UseForGeneticsResearch:true;
-
-        // NoGeneralMethodResearch, Not UseForMethodsDevelopment
-
-        bool generalMethodResearch = provider.GeneralMethodResearch ? true: requester.UseForMethodsDevelopment==false;
-
-        // OpenToNonProfitUseOnly, Not UseForProfitPurpose and Not UseByProfitMakingProfessionals
-
-        bool openToNonProfitUseOnly = provider.OpenToNonProfitUseOnly ?
-            (!requester.UseForProfitPurpose && !requester.UseByProfitMakingProfessionals):true;
-
-            // PublicationRequired, PublicationRequired
-        bool publicationRequired = provider.PublicationRequired ? requester.PublicationRequired:true;
-
-        // bool geographicSpecificRestriction = provider.GeographicSpecificRestriction && !requester.UseBySpecifiedCountries;
-        // bool timeLimitOnUse = provider.TimeLimitOnUse && requester.TimelineRestrictions;
-
-                // CollaborationRequired, CollaborationRequired
-        bool collaborationRequired = provider.CollaborationRequired ? requester.CollaborationRequired:true;
-        // EthicsApprovalrequired, FormalApprovalRequired
-        bool ethicsApprovalrequired = provider.EthicsApprovalrequired ? requester.FormalApprovalRequired:true;
-
-        bool dataSecurityMeasuresRequired = provider.DataSecurityMeasuresRequired? 
-            (requester.DataSecurityMeasures &&
-            requester.DataDestructionRequired &&
-            requester.LinkingOfAccessedRecords &&
-            requester.RecontactingDataSubjects &&
-            requester.IntellectualPropertyClaims &&
-            requester.UseOfAccessedResources) : true;
-        // CostOnUse, FeesForAccess
-        bool costOnUse = provider.CostOnUse ? requester.FeesForAccess: true;
-
-        // bool second_cartegory_bool = collaborationRequired && ethicsApprovalrequired && dataSecurityMeasuresRequired && costOnUse;
-        return 
-            (generalResearchAndClinicalCare ||
-            hmbResearch ||
-            populationAndAncestryResearch ) &&
-            // diseaseSpecificResearch &&
-            researchSpecificRestrictions &&
-            openToResearchUseOnly &&
-            openToGeneticStudiesOnly &&
-            generalMethodResearch &&
-            openToNonProfitUseOnly &&
-            publicationRequired &&
-            // geographicSpecificRestriction &&
-            // timeLimitOnUse &&
-            collaborationRequired &&
-            ethicsApprovalrequired &&
-            dataSecurityMeasuresRequired &&
-            costOnUse;
-    }
-
+  
     //MARK - UpdateAreaSimple
     function UpdateCountryGroupRelation(
         uint256[] memory _Group_Countries,
@@ -394,13 +314,12 @@ contract ConsentCode {
     function DisplayAreaAffordable(
         uint8 role,
         address _address
-    ) public view returns (uint16, uint256, bool) {
+    ) public view returns (uint16, uint256) {
         Terms storage terms = TermsByRole(role, _address);
-        return (
-            terms.Area_Group_Affordable,
-            terms.Area_Country_Affordable,
-            // terms.Area_Simple_Version,
-            terms.Allow_all_area
+        return (terms.Area_Group_Affordable,
+            terms.Area_Country_Affordable
+            // terms.Area_Simple_Version,    
+            // terms.Allow_all_area     
         );
     }
 
@@ -408,18 +327,18 @@ contract ConsentCode {
     function UploadAreaAffordable(
         uint8 role,
         address _address,
-        bool allow_all,
+        // bool allow_all,
         uint16 Group_Code,
         uint256 Country_Code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        if (allow_all) {
-            terms.Allow_all_area = true;
-        } else {
+        // if (allow_all) {
+        //     terms.Allow_all_area = true;
+        // } else {
             terms.Area_Group_Affordable = Group_Code;
             terms.Area_Country_Affordable = Country_Code;
             // terms.Area_Simple_Version = Area_Simple_Version;
-        }
+        // }
     }
 
 
@@ -499,15 +418,15 @@ contract ConsentCode {
     function UploadDiseaseAffordable(
         uint8 role,
         address _address,
-        bool allow_all,
+        // bool allow_all,
         uint32 Disease_Group_Affordable,
         uint128[] memory Disease_Category_Affordable
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        if (allow_all) {
-            terms.allow_all_disease = true;
-            return;
-        }
+        // if (allow_all) {
+        //     terms.allow_all_disease = true;
+        //     return;
+        // }
         terms.Disease_Group_Affordable = Disease_Group_Affordable;
         //  terms.Disease_Category_Affordable; = Disease_Category_Affordable;;
         for (uint8 i = 0; i < Disease_Category_Affordable.length; i++) {
@@ -646,12 +565,12 @@ contract ConsentCode {
         }
         Terms storage requester_terms = requesterMapping[_requester_address];
         Terms storage provider_terms = providerMapping[_provider_address];
-        if (provider_terms.Allow_all_area == true) {
-            return true;
-        }
-        if (requester_terms.Allow_all_area == true) {
-            return false;
-        }
+        // if (provider_terms.Allow_all_area == true) {
+        //     return true;
+        // }
+        // if (requester_terms.Allow_all_area == true) {
+        //     return false;
+        // }
 
         uint64 provider_group = provider_terms.Area_Group_Affordable;
         uint64 requester_group = requester_terms.Area_Group_Affordable;
@@ -772,16 +691,8 @@ contract ConsentCode {
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
-        if (providerMapping[_provider_address].allow_all_disease == true) {
-            return true;
-        }
-
-        if (requesterMapping[_requester_address].allow_all_disease == true) {
-            return false;
-        }
-
-        uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group_Affordable;
-        uint32 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;
+        // uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group_Affordable;
+        // uint32 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;
         // if ((requester_group_code & provider_group_code) != requester_group_code) {
         //     return false;
         // }
@@ -816,16 +727,6 @@ contract ConsentCode {
                 return false;
             }
         }
-        //     uint128 provider_category_code = providerMapping[_provider_address]
-        //         .Disease_Map_Affordable[requester_group_code];
-                
-        //     if (
-        //         !(provider_category_code & requester_category_code ==
-        //             requester_category_code)
-        //     ) {
-        //         return false;
-        //     }
-        // }
         return true;
     }
 
@@ -879,8 +780,132 @@ contract ConsentCode {
         return true;
     }
 
+    function AccessData(address provider_address, address requester_address) view public returns (uint32) {
+
+        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
+        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
+        
+        if (provider.Allow_All == true) {
+            return 0;
+        }
+       
+        uint32 result = 0;
+        uint32 u1=1;
+
+        bool generalResearchAndClinicalCare = provider.OpenToGeneralResearchAndClinicalCare ? 
+            (requester.UseForMethodsDevelopment ||
+            requester.UseForReferenceOrControlMaterial ||
+            (!requester.UseForHMBResearch) ||
+            requester.UseForPopulationsResearch ||
+            requester.UseForAncestryResearch ||
+            requester.UseByAcademicProfessionals ) : false;
+
+        bool hmbResearch = provider.OpenToHMBResearch ? 
+            (requester.UseForFundamentalBioResearch ||
+            requester.UseForGeneticsResearch ||
+            requester.UseForDrugDevelopmentResearch ||
+            requester.UseForSpecificDiseaseResearch ||
+            requester.UseForAgeCategoriesResearch ||
+            requester.UseForGenderCategoriesResearch) ||
+            requester.UseByClinicalProfessionals : false;
+
+        bool populationAndAncestryResearch = provider.OpenToPopulationAndAncestryResearch ? 
+            (requester.UseForPopulationsResearch ||
+            requester.UseForAncestryResearch ||
+            requester.UseByAcademicProfessionals) : false;
+
+        if (!(generalResearchAndClinicalCare || hmbResearch || populationAndAncestryResearch)) {
+            return  result += u1 << uint32(RESULT_CODE.FirstCategory);
+        }
+
+        if (provider.GeographicSpecificRestriction) {
+            if (!requester.UseBySpecifiedCountries || !CheckAreaAffordable(provider_address, requester_address)) {
+                result += u1 << uint32(RESULT_CODE.GeographicSpecificRestriction);
+            }
+        }
+
+        if (provider.OpenToDiseaseSpecific) {
+            if (!requester.UseForSpecificDiseaseResearch || !CheckDiseaseAffordable(provider_address, requester_address)) {
+                result += u1 << uint32(RESULT_CODE.OpenToDiseaseSpecific);
+            }
+        }
+
+        if (provider.TimeLimitOnUse) {
+            if (!requester.TimelineRestrictions || !CheckDate(provider_address, requester_address)) {
+                result += u1 << uint32(RESULT_CODE.TimeLimitOnUse);
+            }
+        }
+
+        bool researchSpecificRestrictions = provider.ResearchSpecificRestrictions ? (!requester.UseForReferenceOrControlMaterial) : true;
+        if (!researchSpecificRestrictions) {
+            result += u1 << uint32(RESULT_CODE.ResearchSpecificRestrictions);
+        }
+
+        bool openToResearchUseOnly = provider.OpenToResearchUseOnly ? (!requester.UseForHMBResearch) : true;
+        if (!openToResearchUseOnly) {
+            result += u1 << uint32(RESULT_CODE.OpenToResearchUseOnly);
+        }
+
+        bool openToGeneticStudiesOnly = provider.OpenToGeneticStudiesOnly ? requester.UseForGeneticsResearch : true;
+        if (openToGeneticStudiesOnly == false) {
+            result += u1 << uint32(RESULT_CODE.OpenToGeneticStudiesOnly);
+        }
+
+        bool generalMethodResearch = provider.GeneralMethodResearch ? true : requester.UseForMethodsDevelopment == false;
+        if (!generalMethodResearch) {
+            result += u1 << uint32(RESULT_CODE.GeneralMethodResearch);
+        }
+
+        bool openToNonProfitUseOnly = provider.OpenToNonProfitUseOnly ? 
+            (!requester.UseForProfitPurpose && !requester.UseByProfitMakingProfessionals) : true;
+        if (!openToNonProfitUseOnly) {
+            result += u1 << uint32(RESULT_CODE.OpenToNonProfitUseOnly);
+        }
+
+        bool publicationRequired = provider.PublicationRequired ? requester.PublicationRequired : true;
+        if (!publicationRequired) {
+            result += u1 << uint32(RESULT_CODE.PublicationRequired);
+        }
+
+        bool collaborationRequired = provider.CollaborationRequired ? requester.CollaborationRequired : true;
+        if (!collaborationRequired) {
+            result += u1 << uint32(RESULT_CODE.CollaborationRequired);
+        }
+
+        // bool ethicsApprovalrequired = 
+        if (!(provider.EthicsApprovalrequired ? requester.FormalApprovalRequired : true)) {
+            result += u1 << uint32(RESULT_CODE.EthicsApprovalrequired);
+        }
+
+        bool dataSecurityMeasuresRequired = provider.DataSecurityMeasuresRequired ? 
+            (requester.DataSecurityMeasures &&
+            requester.DataDestructionRequired &&
+            requester.LinkingOfAccessedRecords &&
+            requester.RecontactingDataSubjects &&
+            requester.IntellectualPropertyClaims &&
+            requester.UseOfAccessedResources) : true;
+        if (!dataSecurityMeasuresRequired) {
+            result += u1 << uint8(RESULT_CODE.DataSecurityMeasuresRequired);
+        }
+
+        // bool costOnUse = 
+        if (!(provider.CostOnUse ? requester.FeesForAccess : true)) {
+            result += u1 << uint8(RESULT_CODE.CostOnUse);
+        }
+
+        // if (result == 0) {
+        //     result |= 1 << uint32(RESULT_CODE.Success);
+        // }
+
+        return result;
+    }
+        // bool second_cartegory_bool = collaborationRequired && ethicsApprovalrequired && dataSecurityMeasuresRequired && costOnUse;
+    
+
+
+
     // MARK: - AccessData
-    function AccessData(
+    function AccessData_old(
         address _provider_address,
         address _requester_address
     ) public view returns (uint8) {
@@ -904,9 +929,9 @@ contract ConsentCode {
         //     result += 8;
         // }
         
-        if (CheckBoolItems(_provider_address, _requester_address) == false) {
-            result += 8;
-        }
+        // if (CheckBoolItems(_provider_address, _requester_address) == false) {
+        //     result += 8;
+        // }
         return result;
     }
 }
