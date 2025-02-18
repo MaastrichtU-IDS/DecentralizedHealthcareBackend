@@ -634,7 +634,8 @@ class Person:
                 )
         elif isinstance(disease_setting, str):
             self.disease_items = [disease_setting]
-            
+        elif isinstance(disease_setting, list):
+            self.disease_items = disease_setting
         else:
             self.disease_items = random.choices(
                 disease_list,
@@ -959,7 +960,7 @@ class Person:
                     f"code {code} larger than 2**128 disease_dict {disease_dict}, self.disease_items {self.disease_items}"
                 )
             # print(f"code {code} disease_code {int2DiseaseCode(code)}")
-        logger.info(f"{self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
+        # logger.info(f"{self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
         func = self.contract.functions.UploadDiseaseAffordable(
             self.role,
             self.address,
@@ -1120,7 +1121,12 @@ class Provider(Person):
 
             self.bool_items = set()
             purpose_setting = profile_dict["simple_items"]
-            self.bool_items.add(purpose_setting)
+            if isinstance(purpose_setting, list):
+                self.bool_items = set(purpose_setting)
+            elif isinstance(purpose_setting, DUO):
+                self.bool_items.add(purpose_setting)
+            else:
+                raise Exception("purpose_setting is not a list or DUO")
             # for item in DUO:
             #     if self.level != profile_open and item == DUO.Allow_All:
             #         continue
@@ -1171,24 +1177,6 @@ class Provider(Person):
             self.upload_date()
 
 
-class AccessError(Enum):
-    AREA_ERROR = (1, "area_error")
-    DISEASE_ERROR = (2, "disease_error")
-    DATE_ERROR = (4, "date_error")
-    PURPOSE_ERROR = (8, "purpose_error")
-
-    @property
-    def code(self):
-        return self.value[0]
-
-    @property
-    def message(self):
-        return self.value[1]
-
-    def __str__(self):
-        return self.message
-
-
 class Requester(Person):
 
     def __init__(self, *args, **kwargs):
@@ -1199,10 +1187,10 @@ class Requester(Person):
   
             # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
             profile_dict = {
-                "simple_items": random.uniform(0, 0.2),
+                "simple_items": random.uniform(0.0, 0.5),
                 "group_code": random.uniform(0, 0.05),
                 "country_code": random.uniform(0, 0.05),
-                "disease_items": random.uniform(0, 0.03),
+                "disease_items": random.uniform(0, 0.05),
                 "disease_groups": random.uniform(0, 0.05),
                 "months": random.randint(1, 24),
             }
@@ -1211,9 +1199,13 @@ class Requester(Person):
             self.random_init(profile_dict)
 
             self.bool_items = set()
-            for item in DUO:
+            for item in ADAM:
                 if random.random() < profile_dict['simple_items']:
                     self.bool_items.add(item)
+            if profile_dict["group_code"] > 0 or profile_dict["country_code"] > 0:
+                self.bool_items.add(ADAM.UseBySpecifiedCountries)
+            if profile_dict["disease_items"] > 0:
+                self.bool_items.add(ADAM.UseForSpecificDiseaseResearch)
 
             self.start_year = random.randint(2024, 2025)
             self.start_month = random.randint(1, 12)
@@ -1274,7 +1266,7 @@ class Requester(Person):
         for error in RESULT_CODE:
             if result & error.value > 0:
                 result_set.add(error)
-        logger.debug(f"request_access provider {provider.name}, provider bools {provider.bool_items}, requester {self.name}, requester bools {self.bool_items}, result_set {result_set}")
+        # logger.debug(f"request_access provider {provider.name}, provider bools {provider.bool_items}, requester {self.name}, requester bools {self.bool_items}, result_set {result_set}")
         return result_set
 
     def access_disease(self, provider: Provider):
@@ -2169,18 +2161,18 @@ def generate_country_index():
 
 PROFILES_DICT = {
     profile_strict: {
-        "simple_items": DUO.OpenToDiseaseSpecific,
-        "group_code": 0,
-        "country_code": 1,
-        "disease_items": 1,
+        "simple_items": [DUO.OpenToHMBResearch, DUO.OpenToDiseaseSpecific,DUO.GeographicSpecificRestriction],
+        "group_code": 2,
+        "country_code": 20,
+        "disease_items": ["A**","B**"],
         "disease_groups": 0.2,
         "months": 6,
     },
     profile_medium: {
-        "simple_items": DUO.OpenToDiseaseSpecific,
-        "group_code": 3,
-        "country_code": 28,
-        "disease_items": "A**",
+        "simple_items": [DUO.OpenToHMBResearch, DUO.GeographicSpecificRestriction],
+        "group_code": 2,
+        "country_code": 20,
+        "disease_items": ["A**","B**"],
         "disease_groups": 0.5,
         "months": 12,
     },
@@ -2250,7 +2242,8 @@ class Scenarios:
                 if not access_result:
                     result_map[provider.level]["success"] += 1
                 else:
-                    for error_str in access_result:
+                    for error_code in access_result:
+                        error_str = error_code.name
                         if error_str in result_map[provider.level]["error"]:
                             result_map[provider.level]["error"][error_str] += 1
                         else:
@@ -2361,7 +2354,7 @@ class Experiment_Simulation:
         ax.set_ylabel("Success Rate")
         # ax.set_title('Success Rate by Category')
         ax.set_xticks(x)
-        # ax.set_ylim(0, 0.175)
+        ax.set_ylim(0, max(success_rates) + 0.1)
         ax.set_xticklabels(profile_list)
         ax.legend()
 
@@ -2422,6 +2415,7 @@ class Experiment_Simulation:
         # ax.set_title("Success Rate by Scenarios")
         ax.set_xticks(x)
         # ax.set_ylim(0, 0.175)
+        ax.set_ylim(0, max(success_rates) + 0.1)
         ax.set_xticklabels(scenarios)
         ax.legend()
 
@@ -2500,7 +2494,7 @@ class Experiment_Case_Study:
             name="Provider 5",
             env=self.env,
             description=r"Provider.\ref{provider:e}",
-            bool_items={DUO.OpenToPopulationAndAncestryResearch},
+            bool_items={DUO.OpenToGeneticStudiesOnly},
             # country_names=["*"],
             # disease_items=["*"],
         )
@@ -2508,7 +2502,7 @@ class Experiment_Case_Study:
             name="Requester 1",
             env=self.env,
             description="Requester1",
-            bool_items={ADAM.TimelineRestrictions},
+            bool_items={ADAM.TimelineRestrictions,ADAM.UseByAcademicProfessionals},
             start_year=2024,
             start_month=6,
             start_day=1,
@@ -2519,7 +2513,7 @@ class Experiment_Case_Study:
             name="Requester 2",
             env=self.env,
             description="Requester2",
-            bool_items={ADAM.UseForSpecificDiseaseResearch},
+            bool_items={ADAM.UseForSpecificDiseaseResearch,ADAM.UseByAcademicProfessionals},
             disease_items=["A01"],
             # country_names=["*"],
         )
@@ -2528,7 +2522,7 @@ class Experiment_Case_Study:
             name="Requester 3",
             env=self.env,
             description="Requester3",
-            bool_items={ADAM.UseForSpecificDiseaseResearch},
+            bool_items={ADAM.UseForSpecificDiseaseResearch,ADAM.UseByAcademicProfessionals},
             disease_items=["B02"],
             # country_names=["*"],
         )
@@ -2537,7 +2531,7 @@ class Experiment_Case_Study:
             name="Requester 4",
             env=self.env,
             description="Requester4",
-            bool_items={ADAM.UseBySpecifiedCountries},
+            bool_items={ADAM.UseBySpecifiedCountries,ADAM.UseByAcademicProfessionals},
             country_names=["USA"],
             # disease_items=["*"],
         )
@@ -2546,7 +2540,7 @@ class Experiment_Case_Study:
             name="Requester 5",
             env=self.env,
             description="Requester5",
-            bool_items={ADAM.UseBySpecifiedCountries},
+            bool_items={ADAM.UseBySpecifiedCountries,ADAM.UseByAcademicProfessionals},
             country_names=["NLD"],
             # disease_items=["*"],
         )
@@ -2555,7 +2549,7 @@ class Experiment_Case_Study:
             name="Requester 6",
             env=self.env,
             description="Requester6",
-            bool_items={ADAM.UseBySpecifiedCountries},
+            bool_items={ADAM.UseBySpecifiedCountries,ADAM.UseByAcademicProfessionals},
             country_names=["USA", "THA"],
             # disease_items=["*"],
         )
@@ -2564,7 +2558,7 @@ class Experiment_Case_Study:
             name="Requester 7",
             env=self.env,
             description="Requester7",
-            bool_items={ADAM.UseBySpecifiedCountries},
+            bool_items={ADAM.UseBySpecifiedCountries, ADAM.UseByAcademicProfessionals},
             # country_names = [],
             group_names=["EUROPEAN_UNION"],
             # disease_items=["*"],
@@ -2574,7 +2568,7 @@ class Experiment_Case_Study:
             name="Requester 8",
             env=self.env,
             description="Requester8",
-            bool_items={ADAM.TimelineRestrictions},
+            bool_items={ADAM.TimelineRestrictions, ADAM.UseByAcademicProfessionals},
             start_year=2024,
             start_month=1,
             start_day=1,
@@ -2587,7 +2581,7 @@ class Experiment_Case_Study:
             name="Requester 9",
             env=self.env,
             description="Requester9",
-            bool_items={ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.UseForGeneticsResearch, ADAM.UseByAcademicProfessionals},
             # country_names=["*"],
             # disease_items=["*"],
         )
@@ -2666,12 +2660,12 @@ if __name__ == "__main__":
     # plot_simulation_scenario()
     # date_format = "%S:%M:%H %d-%m-%Y"
 
-    Experiment_Case_Study(local_env).start()
+    # Experiment_Case_Study(local_env).start()
     
-    # experiment_simulation =  Experiment_Simulation(local_env,provider_number=30,requester_number = 60)
+    experiment_simulation =  Experiment_Simulation(local_env,provider_number=30,requester_number = 60)
     # experiment_simulation.start()
-    # experiment_simulation.plot_simulation_category()
-    # experiment_simulation.plot_simulation_scenario()
+    experiment_simulation.plot_simulation_category()
+    experiment_simulation.plot_simulation_scenario()
 
     # logger.info(f"area start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
     # # test_area(env=local_env, label="_zero")

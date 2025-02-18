@@ -792,27 +792,24 @@ contract ConsentCode {
         uint32 result = 0;
         uint32 u1=1;
 
-        bool generalResearchAndClinicalCare = provider.OpenToGeneralResearchAndClinicalCare ? 
-            (requester.UseForMethodsDevelopment ||
-            requester.UseForReferenceOrControlMaterial ||
-            (!requester.UseForHMBResearch) ||
-            requester.UseForPopulationsResearch ||
-            requester.UseForAncestryResearch ||
-            requester.UseByAcademicProfessionals ) : false;
+        bool generalResearchAndClinicalCare = (provider.OpenToGeneralResearchAndClinicalCare == true && 
+            (requester.UseForMethodsDevelopment== true || 
+            requester.UseForReferenceOrControlMaterial == true || 
+            requester.UseForHMBResearch == false ||
+            requester.UseForPopulationsResearch == true ||
+            requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
 
-        bool hmbResearch = provider.OpenToHMBResearch ? 
-            (requester.UseForFundamentalBioResearch ||
-            requester.UseForGeneticsResearch ||
-            requester.UseForDrugDevelopmentResearch ||
-            requester.UseForSpecificDiseaseResearch ||
-            requester.UseForAgeCategoriesResearch ||
-            requester.UseForGenderCategoriesResearch) ||
-            requester.UseByClinicalProfessionals : false;
+        bool hmbResearch =  (provider.OpenToHMBResearch == true && 
+            (requester.UseForFundamentalBioResearch == true || 
+            requester.UseForGeneticsResearch == true || 
+            requester.UseForDrugDevelopmentResearch == true || 
+            requester.UseForSpecificDiseaseResearch == true || 
+            requester.UseForAgeCategoriesResearch == true || 
+           requester.UseForGenderCategoriesResearch == true) ||requester.UseByClinicalProfessionals==true);
 
-        bool populationAndAncestryResearch = provider.OpenToPopulationAndAncestryResearch ? 
-            (requester.UseForPopulationsResearch ||
-            requester.UseForAncestryResearch ||
-            requester.UseByAcademicProfessionals) : false;
+        bool populationAndAncestryResearch = (provider.OpenToPopulationAndAncestryResearch == true &&
+            (requester.UseForPopulationsResearch == true || 
+            requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
 
         if (!(generalResearchAndClinicalCare || hmbResearch || populationAndAncestryResearch)) {
             return  result += u1 << uint32(RESULT_CODE.FirstCategory);
@@ -836,33 +833,46 @@ contract ConsentCode {
             }
         }
 
-        bool researchSpecificRestrictions = provider.ResearchSpecificRestrictions ? (!requester.UseForReferenceOrControlMaterial) : true;
+        bool researchSpecificRestrictions =((provider.ResearchSpecificRestrictions == true && requester.UseForReferenceOrControlMaterial== false) || provider.ResearchSpecificRestrictions == false);
         if (!researchSpecificRestrictions) {
             result += u1 << uint32(RESULT_CODE.ResearchSpecificRestrictions);
         }
 
-        bool openToResearchUseOnly = provider.OpenToResearchUseOnly ? (!requester.UseForHMBResearch) : true;
+        bool openToResearchUseOnly = (provider.OpenToResearchUseOnly == true && requester.UseForHMBResearch == false) ||
+            provider.OpenToResearchUseOnly == false;
+
         if (!openToResearchUseOnly) {
             result += u1 << uint32(RESULT_CODE.OpenToResearchUseOnly);
         }
 
-        bool openToGeneticStudiesOnly = provider.OpenToGeneticStudiesOnly ? requester.UseForGeneticsResearch : true;
+        bool openToGeneticStudiesOnly = ((provider.OpenToGeneticStudiesOnly==true && requester.UseForGeneticsResearch == true) || provider.OpenToGeneticStudiesOnly==false);
         if (openToGeneticStudiesOnly == false) {
             result += u1 << uint32(RESULT_CODE.OpenToGeneticStudiesOnly);
         }
 
-        bool generalMethodResearch = provider.GeneralMethodResearch ? true : requester.UseForMethodsDevelopment == false;
+        // bool generalMethodResearch = provider.GeneralMethodResearch ? true : requester.UseForMethodsDevelopment == false;
+
+        bool generalMethodResearch =  (provider.GeneralMethodResearch==false && requester.UseForMethodsDevelopment == false) || provider.GeneralMethodResearch==true;
+
         if (!generalMethodResearch) {
             result += u1 << uint32(RESULT_CODE.GeneralMethodResearch);
         }
 
-        bool openToNonProfitUseOnly = provider.OpenToNonProfitUseOnly ? 
-            (!requester.UseForProfitPurpose && !requester.UseByProfitMakingProfessionals) : true;
+        bool openToNonProfitUseOnly = (provider.OpenToNonProfitUseOnly == true && (requester.UseForNonProfitPurpose == true && requester.UseForProfitPurpose == false &&
+           requester.UseByProfitMakingProfessionals == false)) || 
+            provider.OpenToNonProfitUseOnly == false;
+
+
         if (!openToNonProfitUseOnly) {
             result += u1 << uint32(RESULT_CODE.OpenToNonProfitUseOnly);
         }
 
-        bool publicationRequired = provider.PublicationRequired ? requester.PublicationRequired : true;
+        // bool publicationRequired = provider.PublicationRequired ? requester.PublicationRequired : true;
+
+        bool publicationRequired =  (provider.PublicationRequired == true && requester.PublicationRequired == true) ||
+            provider.PublicationRequired == false;
+
+
         if (!publicationRequired) {
             result += u1 << uint32(RESULT_CODE.PublicationRequired);
         }
@@ -877,19 +887,13 @@ contract ConsentCode {
             result += u1 << uint32(RESULT_CODE.EthicsApprovalrequired);
         }
 
-        bool dataSecurityMeasuresRequired = provider.DataSecurityMeasuresRequired ? 
-            (requester.DataSecurityMeasures &&
-            requester.DataDestructionRequired &&
-            requester.LinkingOfAccessedRecords &&
-            requester.RecontactingDataSubjects &&
-            requester.IntellectualPropertyClaims &&
-            requester.UseOfAccessedResources) : true;
+       bool dataSecurityMeasuresRequired =   (provider.DataSecurityMeasuresRequired == true && requester.DataSecurityMeasures == true  && requester.DataDestructionRequired == true && requester.LinkingOfAccessedRecords == true && requester.RecontactingDataSubjects == true && requester.IntellectualPropertyClaims == true && requester.UseOfAccessedResources == true) ||provider.DataSecurityMeasuresRequired == false;
         if (!dataSecurityMeasuresRequired) {
             result += u1 << uint8(RESULT_CODE.DataSecurityMeasuresRequired);
         }
 
         // bool costOnUse = 
-        if (!(provider.CostOnUse ? requester.FeesForAccess : true)) {
+        if (!((provider.CostOnUse == true && requester.FeesForAccess ==  true) ||provider.CostOnUse == false) ) {
             result += u1 << uint8(RESULT_CODE.CostOnUse);
         }
 

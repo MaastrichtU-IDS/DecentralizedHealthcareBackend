@@ -2,61 +2,61 @@
     "scenario_1": {
         "open": {
             "total": 1800,
-            "success": 1800,
-            "error": {}
+            "success": 1320,
+            "error": {
+                "GeneralMethodResearch": 480
+            }
         }
     },
     "scenario_2": {
         "conservative": {
             "total": 420,
-            "success": 0,
+            "success": 7,
             "error": {
-                "purpose_error": 420,
-                "area_error": 378,
-                "disease_error": 238,
-                "date_error": 149
-            }
-        },
-        "moderate": {
-            "total": 420,
-            "success": 0,
-            "error": {
-                "purpose_error": 420,
-                "area_error": 375,
-                "disease_error": 238,
-                "date_error": 72
+                "OpenToDiseaseSpecific": 329,
+                "GeographicSpecificRestriction": 381,
+                "GeneralMethodResearch": 112
             }
         },
         "open": {
             "total": 900,
-            "success": 900,
-            "error": {}
+            "success": 660,
+            "error": {
+                "GeneralMethodResearch": 240
+            }
+        },
+        "moderate": {
+            "total": 420,
+            "success": 30,
+            "error": {
+                "GeographicSpecificRestriction": 382,
+                "GeneralMethodResearch": 112
+            }
         }
     },
     "scenario_3": {
-        "conservative": {
-            "total": 720,
-            "success": 0,
-            "error": {
-                "purpose_error": 720,
-                "area_error": 648,
-                "disease_error": 408,
-                "date_error": 236
-            }
-        },
         "open": {
             "total": 360,
-            "success": 360,
-            "error": {}
+            "success": 264,
+            "error": {
+                "GeneralMethodResearch": 96
+            }
+        },
+        "conservative": {
+            "total": 720,
+            "success": 12,
+            "error": {
+                "OpenToDiseaseSpecific": 564,
+                "GeographicSpecificRestriction": 656,
+                "GeneralMethodResearch": 192
+            }
         },
         "moderate": {
             "total": 720,
-            "success": 0,
+            "success": 49,
             "error": {
-                "purpose_error": 720,
-                "date_error": 345,
-                "area_error": 637,
-                "disease_error": 408
+                "GeographicSpecificRestriction": 659,
+                "GeneralMethodResearch": 192
             }
         }
     }
