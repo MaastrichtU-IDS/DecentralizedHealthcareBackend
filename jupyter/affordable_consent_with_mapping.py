@@ -407,7 +407,8 @@ class ADAM(Enum):
     UseOfAccessedResources = 536870912
     FeesForAccess = 1073741824
 
-ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForSpecificDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, 
+ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForSpecificDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, 
+                   ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, 
                    ADAM.UseForNonProfitPurpose, 
                    ADAM.TimelineRestrictions, ADAM.FormalApprovalRequired, ADAM.CollaborationRequired, ADAM.PublicationRequired, ADAM.DataSecurityMeasures, ADAM.DataDestructionRequired, ADAM.LinkingOfAccessedRecords, ADAM.RecontactingDataSubjects, ADAM.IntellectualPropertyClaims, ADAM.UseOfAccessedResources, ADAM.FeesForAccess]
 
@@ -1554,7 +1555,7 @@ def plot_disease_all(key_index_name="time_used",factor = 1e3 ):
 
 
 def plot_disease_time(key_index_name="time_used", factor=1e6, y_label = "Time Usage (milliseconds)"):
-    task = f"{test_mode.name}_disease"
+    # task = f"{test_mode.name}_disease"
     # result_fp = f"result/{task}.json"
     result_one_local = json.load(
         open(f"result/{TestEnum.local.name}_disease_one.json", "r")
@@ -1855,9 +1856,9 @@ def plot_column(data, task, role,x_label,y_label,factor=1e3):
     import matplotlib.pyplot as plt
     patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
     data_frame = pd.DataFrame(data)
-    fig, ax1 = plt.subplots(figsize=(16, 4))
+    fig, ax1 = plt.subplots(figsize=(16, 4),dpi = 600)
     width = 4
-    alpha = 0.5
+    alpha = 0.9
     data_font_size = None
     baseline_local_x = data_frame["interval"] - 1.5*width
     affordable_local_x = data_frame["interval"] - 0.5*width
@@ -1965,7 +1966,7 @@ def plot_column(data, task, role,x_label,y_label,factor=1e3):
         ha = "center"
 
         ax1.text(x_loc, y_loc, int(yval), ha=ha, va="bottom", fontsize=data_font_size)
-    plt.savefig(f"figs/column_{task}_{role}.pdf")
+    plt.savefig(f"figs/column_{task}_{role}.svg")
 
 def plot_line(data, task, role,x_label,y_label):
     data_frame = pd.DataFrame(data)
@@ -2336,9 +2337,8 @@ class Experiment_Simulation:
                         category_dict[category]["error"][k] = 0
                     category_dict[category]["error"][k] += v
 
-
         success_rates = [
-            category_dict[category]["success"] / category_dict[category]["total"]
+            category_dict[category]["success"]*100 / category_dict[category]["total"]
             for category in profile_list
         ]
 
@@ -2354,16 +2354,16 @@ class Experiment_Simulation:
         ax.set_ylabel("Success Rate")
         # ax.set_title('Success Rate by Category')
         ax.set_xticks(x)
-        ax.set_ylim(0, max(success_rates) + 0.1)
+        ax.set_ylim(0, max(success_rates) + 10)
         ax.set_xticklabels(profile_list)
-        ax.legend()
+        # ax.legend()
 
         # Add labels to the bars
         def add_labels(bars):
             for bar in bars:
                 height = bar.get_height()
                 ax.annotate(
-                    f"{height:.2%}",
+                    f"{height:.2f}%",
                     xy=(bar.get_x() + bar.get_width() / 2, height),
                     xytext=(0, 3),  # 3 points vertical offset
                     textcoords="offset points",
@@ -2375,8 +2375,6 @@ class Experiment_Simulation:
 
         # Display the chart
         plt.savefig("figs/simulation_category.pdf")
-
-
 
     def plot_simulation_scenario(self):
         import matplotlib.pyplot as plt
@@ -2399,7 +2397,7 @@ class Experiment_Simulation:
         # Extract data points
         scenarios = list(scenario_dict.keys())
         success_rates = [
-            scenario_dict[cat]["success"] / scenario_dict[cat]["total"] for cat in scenarios
+            scenario_dict[cat]["success"]*100 / scenario_dict[cat]["total"] for cat in scenarios
         ]
 
         # Create a bar chart
@@ -2415,16 +2413,16 @@ class Experiment_Simulation:
         # ax.set_title("Success Rate by Scenarios")
         ax.set_xticks(x)
         # ax.set_ylim(0, 0.175)
-        ax.set_ylim(0, max(success_rates) + 0.1)
+        ax.set_ylim(0, max(success_rates) + 10)
         ax.set_xticklabels(scenarios)
-        ax.legend()
+        # ax.legend()
 
         # Add labels to the bars
         def add_labels(bars):
             for bar in bars:
                 height = bar.get_height()
                 ax.annotate(
-                    f"{height:.2%}",
+                    f"{height:.2f}%",
                     xy=(bar.get_x() + bar.get_width() / 2, height),
                     xytext=(0, 3),  # 3 points vertical offset
                     textcoords="offset points",
@@ -2663,7 +2661,7 @@ if __name__ == "__main__":
     # Experiment_Case_Study(local_env).start()
     
     experiment_simulation =  Experiment_Simulation(local_env,provider_number=30,requester_number = 60)
-    # experiment_simulation.start()
+    # # experiment_simulation.start()
     experiment_simulation.plot_simulation_category()
     experiment_simulation.plot_simulation_scenario()
 
@@ -2672,7 +2670,7 @@ if __name__ == "__main__":
     # test_area(env=polygon_env, label="_zero")
     # logger.info(f"area end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
     # time.sleep(10)
-    # # plot_area(env=test_mode, label="_zero",key_index_name="gas_used",factor = 1e3)
+    # plot_area(env=local_env, label="_zero",key_index_name="gas_used",factor = 1e3)
     # # plot_area_time(label="_zero")
     # # plot_area_time(label="_zero", key_index_name="gas_used",factor=1e3,y_label="Gas usage ($10^{3}$)")
     # logger.info(f"disease whole group start date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
@@ -2686,7 +2684,7 @@ if __name__ == "__main__":
     # test_disease(polygon_env, one_group=True)
     # logger.info(f"disease one group end date (second:minute:hour day-month-year): {datetime.now().strftime(date_format)}")
 
-    # plot_disease_time()
+    # plot_disease_time(key_index_name="time_used",factor=1e6, y_label="Time usage ($millisecond$)")
     # plot_disease_time(key_index_name="gas_used",factor=1e3, y_label="Gas usage ($10^{3}$)")
 
     # plot_time()
