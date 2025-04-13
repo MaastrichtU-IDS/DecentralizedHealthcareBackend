@@ -64,5 +64,5 @@ js/node_modules/
 .conda/
 
 jupyter/data/**
-jupyter/results/** 
+jupyter/result/** 
 jupyter/figs/**

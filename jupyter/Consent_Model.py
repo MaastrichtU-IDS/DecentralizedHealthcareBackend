@@ -146,6 +146,31 @@ class RESULT_CODE(Enum):
     #     return self.value
 
 
+class TransactionResult:
+    def __init__(self, status=0, gas_used = 0, transaction_hash="", time_used=0,result=None, gas_price=0):
+        self.status = status
+        self.gas_used = gas_used
+        self.transaction_hash = transaction_hash
+        self.time_used = time_used
+        self.result = result
+        self.gas_price = gas_price
+
+    def to_dict(self):
+        return {
+            "status": self.status,
+            "gas_used": self.gas_used,
+            "transaction_hash": self.transaction_hash,
+            "time_used": self.time_used,
+            "result": self.result
+        }
+
+    # @property
+    def __json__(self):
+        return json.dumps(self.__dict__())
+
+    def __str__(self):
+        return f"status {self.status}, gas_used {self.gas_used}, transaction_hash {self.transaction_hash}, time_used {self.time_used}, result {self.result}"
+
 class TestEnum(Enum):
     local = (1, "Local")
     polygon = (2, "Polygon")
@@ -169,6 +194,621 @@ class Env:
         self.w3 = w3
         self.contract = deployed_contract
         self.accounts = accounts
+
+
+class Person:
+
+    def __init__(
+        self,
+        env,
+        name="",
+        description="",
+        address=None,
+        bool_items=set(),
+        country_names=list(),
+        group_names=list(),
+        disease_items=list(),
+        start_year=2021,
+        start_month=1,
+        start_day=1,
+        months=12,
+        level=profile_open,
+        **kwargs,
+    ):
+
+        self.name = name
+        self.estimate_gas = False
+        self.print_time = False
+        self.w3 = env.w3
+        self.env = env 
+        self.level = level
+
+        if address is not None:
+
+            self.address = address
+
+            # balance = w3.eth.get_balance(address)
+        else:
+            self.address = env.accounts.pop()
+
+            # print(f"balance of {address} is {balance}")
+
+        self.bool_items = bool_items
+
+        self.description = description
+
+        self.contract = env.contract
+
+        # 'gasPrice': w3.eth.gas_price*0.1,
+
+        # print(f"person_dict {self.person_dict}")
+        self.debug = False
+        self.disease_items = disease_items
+        self.disease_groups= []
+        self.country_names = country_names
+        self.group_names = group_names
+        self.start_year = start_year
+        self.start_month = start_month
+        self.start_day = start_day
+        self.months = months
+        self.role = kwargs.get("role", 0)
+
+    def random_init(self, profile_dict):
+        # if risk_level is not None:
+        self.months = profile_dict["months"]
+
+        # while True:
+        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+        #     if len(disease_list) > 0:
+        #         break
+        disease_setting = profile_dict["disease_items"]
+        while True:
+            disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+            if len(disease_list) > 0:
+                break
+   
+            
+        if isinstance(disease_setting, float):
+            if disease_setting == 1.0:
+                self.disease_items = ["*"]
+            else:
+                self.disease_items = random.choices(
+                    disease_list,
+                    k=int(disease_setting * len(disease_list)),
+                )
+                self.disease_groups = random.choices(
+                    string.ascii_uppercase, k=int(disease_setting * 26)
+                )
+        elif isinstance(disease_setting, str):
+            self.disease_items = [disease_setting]
+        elif isinstance(disease_setting, list):
+            self.disease_items = disease_setting
+        else:
+            self.disease_items = random.choices(
+                disease_list,
+                k=disease_setting,
+            )
+
+        country_setting = profile_dict["country_code"]
+        if isinstance(country_setting, float):
+            self.country_names = random.sample(
+                all_countries_name,
+                k=int(country_setting * len(all_countries_name)),
+            )
+        else:
+            self.country_names = random.sample(
+                all_countries_name,
+                k=country_setting,
+            )
+
+        country_group_setting = profile_dict["group_code"]
+        if isinstance(country_group_setting, float):
+            self.group_names = random.sample(
+                all_group_names,
+                k=int(country_group_setting * len(all_group_names)),
+            )
+        else:
+            self.group_names = random.sample(
+                all_group_names,
+                k=country_group_setting,
+            )
+
+
+    def delete_area(self):
+        country_codes = [country_name_code_dict[c]["index"] for c in self.country_names]
+
+        # print("UploadCountryItems", country_codes)
+        if hasattr(self, "group_names"):
+            group_codes = [group_index_dict[g] for g in self.group_names]
+        else:
+            group_codes = []
+
+        func = self.contract.functions.delete_area_baseline(
+            self.role,
+            self.address,
+            group_codes,
+            country_codes,
+        )
+        # self.send_transaction(func)
+
+        return self.send_transaction(func)
+
+ 
+
+    def update_area_group_relation(self):
+
+        country_group_dict = {}
+
+        for country_name, country_dict in country_name_code_dict.items():
+
+            groups = country_dict["groups"]
+
+            if len(groups) == 0:
+
+                continue
+
+            for g in groups:
+
+                if g not in group_index_dict:
+                    continue
+
+                g_index = group_index_dict[g]
+
+                if g_index not in country_group_dict:
+
+                    country_group_dict[g_index] = 0
+
+                country_group_dict[g_index] |= country_dict["index"]
+
+        country_group_data = list(country_group_dict.values())
+
+        country_group_index = list(country_group_dict.keys())
+
+        # print("country_group_dict", country_group_dict)
+
+        func = self.contract.functions.UpdateCountryGroupRelation(
+            country_group_data, country_group_index
+        )
+
+        # func.transact(self.person_dict)
+
+        return self.send_transaction(func, label="update_area_group_relation")
+
+    def update_area_group_code_baseline(self, part_number=20):
+
+        def split(a, n):
+
+            k, m = divmod(len(a), n)
+
+            return tuple(
+                a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n)
+            )
+
+        country_group_dict = {}
+
+        for c in self.country_names:
+
+            if c not in self.country_name_code_dict:
+
+                print(f"{c} not in country_dict")
+
+                return
+
+            country_dict = self.country_name_code_dict[c]
+
+            country_group_dict[country_dict["index"]] = [
+                self.group_order_index_dict[g] for g in country_dict["groups"]
+            ]
+
+        country_code_list = list(country_group_dict.keys())
+
+        country_group_index_list = list(country_group_dict.values())
+
+        country_number = len(country_code_list)
+
+        # print("country_group_dict", country_group_dict)
+
+        country_code_list_part = split(country_code_list, part_number)
+
+        country_group_index_list_part = split(country_group_index_list, part_number)
+
+        gas = 0
+
+        for i in range(part_number):
+
+            func = self.contract.functions.UpdateAreaBaseline(
+                country_code_list_part[i], country_group_index_list_part[i]
+            )
+
+            func_gas = func.estimate_gas()
+
+            gas += func_gas
+        return gas
+
+
+    def display_area_codes(self):
+        (
+            Group_Code,
+            Country_Codes,
+            Country_Group_Codes,
+        ) = self.contract.functions.DisplayAreaCode(self.role, self.address).call()
+
+        # groupp_code is a int of the sum of the value of group_index_dict, decode it according to the group_index_dict
+
+        group_names = []
+
+        for k, v in self.group_index_dict.items():
+
+            if v & Group_Code:
+
+                group_names.append(k)
+
+        # print("displayAreaCodes", Country_Codes)
+
+        # print("Country_Group_Codes", Country_Group_Codes)
+
+        country_names = [self.country_code_name_dict[c] for c in Country_Codes]
+
+        result = {"group_names": group_names, "country_codes": country_names}
+
+        logging.info(f"displayAreaCodes is {result}")
+
+        
+
+ 
+
+    def delete_disease(self):
+        func = self.contract.functions.delete_disease_baseline(
+            self.role, self.address, [diseaseCode2Int(d) for d in self.disease_items]
+        )
+        return self.send_transaction(func)
+
+
+
+
+    def refresh_state(self):
+        func = self.contract.functions.RefreshState(self.address)
+        return self.send_transaction(func)
+
+    def display_disease_items(self):
+
+        disease_codes = self.contract.functions.DisplayDiseaseCode(
+            self.role, self.address
+        ).call()
+
+        disease_names = []
+
+        for d in disease_codes:
+
+            disease_names.append(int2DiseaseCode(d))
+
+        result = {"disease_names": disease_names}
+
+        logging.info(f"displayDiseaseItems is {result}")
+
+
+        # return self.forward(func)
+
+    def display_date(self):
+
+        (
+            Start_Year,
+            Start_Month,
+            Start_Day,
+            Months,
+        ) = self.contract.functions.DisplayDate(self.role, self.address).call()
+
+        print(
+            f"displayDate: Start_Year is {Start_Year}, Start_Month is {Start_Month}, Start_Day is {Start_Day}, Months {Months}"
+        )
+
+        return Start_Year, Start_Month, Start_Day, Months
+
+    def display_disease_herarchical(self):
+        categories, codes, allow_all = (
+            self.contract.functions.DisplayDiseaseCodeHierarchy(
+                self.role, self.address
+            ).call()
+        )
+        return categories, codes, allow_all
+
+
+    def __str__(self):
+        return f"Person: {self.name},  {self.description}, {self.role}"
+
+
+class Base_Contract:
+    def __init__(self, env, contract_address=None):
+        self.env = env
+        self.w3 = env.w3
+        self.contract = env.contract
+        if contract_address is not None:
+            self.contract_address = contract_address
+        else:
+            self.contract_address = env.contract.address
+
+    def get_contract(self):
+        return self.contract
+
+    def upload_area(self):
+        raise NotImplementedError("upload_area")
+
+    def upload_disease(self, person: Person) -> TransactionResult:
+
+        disease_codes = [diseaseCode2Int(d) for d in person.disease_items]
+
+        func = self.contract.functions.UploadDiseaseBaseline(
+            person.role, person.address, disease_codes
+        )
+
+        return self.send_transaction(func)
+
+    def upload_date(self, person: Person) -> TransactionResult:
+
+        try:
+
+            func = self.contract.functions.UploadDate(
+                person.role,
+                person.address,
+                person.start_year,
+                person.start_month,
+                person.start_day,
+                person.months,
+            )
+
+        except Exception as e:
+            print(f"error in upload_date {e}")
+            logger.error(
+                f"error in upload_date, role {person.role}, address {person.address}, start_year {person.start_year}, start_month {person.start_month}, start_day {person.start_day}, months {person.months}"
+            )
+
+        return self.send_transaction(func)
+
+    def delete_area(self):
+        raise NotImplementedError("delete_area")
+
+    def delete_disease(self):
+        raise NotImplementedError("delete_disease")
+    def delete_purpose_items(self):
+        raise NotImplementedError("delete_purpose_items")
+    def delete_date(self):
+        raise NotImplementedError("delete_date")
+
+    def send_transaction(self, func, call=False, label=""):
+        # if self.estimate_gas:
+        #     gas = func.estimate_gas()
+        #     return TransactionResult(gas_used=gas)
+        # else:
+        person_dict = {
+            "from": self.address,
+            # "nonce": w3.eth.get_transaction_count(self.address) + 1,
+            "to": self.contract.address,
+            # "value": w3.to_wei(0.1, "ether"),
+            # "gas": w3.eth.gas_price,
+            # "gas": w3.to_wei(10, "gwei"),
+            # "gas": 1000000,
+            # "chainId": 80002,
+            "gasPrice": self.w3.to_wei(10, "gwei"),
+        }
+        dynamic_fee_transaction = {
+            "from": self.address,
+            "type": 2,  # Explicitly specify EIP-1559 transaction type
+            "gas": 25_000_000,  # Ensure gas limit is reasonable
+            "maxFeePerGas": self.w3.to_wei(40, "gwei"),  # Reasonable max fee per gas
+            "maxPriorityFeePerGas": self.w3.to_wei(
+                30, "gwei"
+            ),  # Reasonable max priority fee per gas
+            "nonce": self.w3.eth.get_transaction_count(
+                self.address
+            ),  # Correct nonce calculation
+            "chainId": 80002,
+        }
+        receipt = None
+        if call:
+            start_time = time.time_ns()
+            receipt = func.call()
+            end_time = time.time_ns()
+            time_diff = end_time - start_time
+            return TransactionResult(time_used=time_diff, result=receipt)
+        elif self.env.name == TestEnum.polygon.name:
+            start_time = time.time_ns()
+            build_transaction = func.build_transaction(dynamic_fee_transaction)
+            signed_txn = self.w3.eth.account.sign_transaction(
+                build_transaction, private_key=private_key
+            )
+            start_time = time.time_ns()
+            # logger.info(f"signed_txn {signed_txn}")
+            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+            end_time = time.time_ns()
+
+        elif self.env.name == TestEnum.local.name:
+            start_time = time.time_ns()
+            tx_hash = func.transact(person_dict)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+            end_time = time.time_ns()
+
+        # logger.info(f"receipt {receipt}")
+        gas_used = receipt["gasUsed"]
+        gas_price = receipt["effectiveGasPrice"]
+        time_diff = (end_time - start_time)
+        return TransactionResult(gas_used=gas_used, time_used=time_diff, gas_price=gas_price, transaction_hash=receipt["transactionHash"].hex(), status=receipt["status"])
+
+    def access(self):
+        raise NotImplementedError("access")
+
+class Contract_Affordable(Base_Contract):
+    def __init__(self, env, contract_address=None):
+        super().__init__(env, contract_address)
+
+    def upload_area(self, person:Person) -> TransactionResult:
+
+        # if "*" in self.country_names:
+
+        # #     func = self.contract.functions.UploadAreaAffordable(
+        # #         self.role, self.address, True, 0, 0
+        # #     )
+        # #     # logger.debug("allow all countries")
+
+        # #     return self.send_transaction(func)
+
+        country_codes = [
+            country_index_dict[c] for c in person.country_names
+        ]
+        if person.group_names is not None and len(person.group_names) > 0:
+            group_codes = [group_index_dict[g] for g in person.group_names]
+            group_code = sum(group_codes)
+        else:
+            # logger.debug(f"do not have group_names")
+            group_code = 0
+        country_code = sum(country_codes)
+
+        # decoded_countries = decode_country_code(country_code)
+        # missed_countries = set(self.country_names) - set(decoded_countries)
+        # if len(missed_countries) > 0:
+        #     logger.error(f"missed_countries {missed_countries}")
+        # print("country_group_data length", len(country_group_data))
+
+        # logger.info(
+        #     f"upload_area_affordable name {self.name}, group_code {group_code}, country_code {country_code}"
+        # )
+        # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
+
+        func = self.contract.functions.UploadAreaAffordable(
+            self.role, self.address, group_code, country_code
+        )
+
+        # print("UploadAreaCode role", self.role)
+
+        return self.send_transaction(func)
+
+    def display_area(self):
+        group_code, country_code = (
+            self.contract.functions.DisplayAreaAffordable(self.role, self.address).call()
+        )
+        countries = decode_country_code(country_code)
+        groups = decode_group_code(group_code)
+
+        return groups, countries
+
+    def upload_disease(self,person: Person) -> TransactionResult:
+
+        # if "*" in self.disease_items:
+
+        #     func = self.contract.functions.UploadDiseaseAffordable(
+        #         self.role, self.address, True, 0, []
+        #     )
+        #     # logger.debug("allow all disease")
+
+        #     return self.send_transaction(func)
+
+        disease_codes = [diseaseCode2IntHierarchy(d) for d in person.disease_items]
+        # print(f"name {self.name}  disease_codes {disease_codes} ")
+        disease_dict = {}
+
+        for group_code, chapter_code in disease_codes:
+            if group_code not in disease_dict:
+                disease_dict[group_code] = 0
+
+            disease_dict[group_code] |= chapter_code
+
+        # disease_group_codes, disease_chapter_codes = (
+        #     list(self.disease_dict.keys()),
+        #     list(self.disease_dict.values()),
+        # )
+        disease_group_codes = [
+            1 << (ord(d) - ord("A") + 1) for d in person.disease_groups
+        ]
+        disease_group_code = sum(disease_group_codes)
+
+        disease_combined_codes = [
+            (1 << (group_code + 100)) + chapter_code
+            for group_code, chapter_code in disease_dict.items()
+        ]
+        # print(f"name {self.name} disease_dict {disease_dict}")
+        # print(f"name {self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
+        max_code = 1 << 128
+        for code in disease_combined_codes:
+            if code > max_code:
+                print(
+                    f"code {code} larger than 2**128 disease_dict {disease_dict}, self.disease_items {person.disease_items}"
+                )
+            # print(f"code {code} disease_code {int2DiseaseCode(code)}")
+        # logger.info(f"{self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
+        func = self.contract.functions.UploadDiseaseAffordable(
+            person.role,
+            person.address,
+            # False,
+            disease_group_code,
+            disease_combined_codes,
+        )
+
+        return self.send_transaction(func)
+
+    def upload_purpose_items(self):
+        return self.upload_purpose_items()
+
+    def delete_area(self):
+        return self.delete_area()
+
+    def delete_disease(self):
+        return self.delete_disease()
+
+    def delete_purpose_items(self):
+        return self.delete_purpose_items()
+
+    def access(self):
+        return self.access()
+
+
+class Contract_Baseline(Base_Contract):
+    def __init__(self, env, contract_address=None):
+        super().__init__(env, contract_address)
+
+    def upload_area(self, peroson: Person) -> TransactionResult:
+
+        country_codes = [
+                country_name_code_dict[c]["index"] for c in peroson.country_names
+            ]
+
+        # print("UploadCountryItems", country_codes)
+        if hasattr(peroson, "group_names"):
+            group_codes = [group_index_dict[g] for g in peroson.group_names]
+        else:
+            group_codes = []
+        # group_codes = [group_order_index_dict[g] for g in self.group_names]
+        # logger.info(f"country_codes {country_codes} group_codes {group_codes}")
+        # if test_mode == TestEnum.polygon:
+
+        func = self.contract.functions.UploadAreaBaseline(
+            peroson.role,
+            peroson.address,
+            group_codes,
+            country_codes,
+        )
+
+        # print("UploadAreaCode role", self.role)
+
+        return self.send_transaction(func)
+
+    def upload_disease(self):
+        return self.upload_disease_baseline()
+
+    def upload_purpose_items(self):
+        return self.upload_purpose_items()
+
+    def delete_area(self):
+        return self.delete_area()
+
+    def delete_disease(self):
+        return self.delete_disease()
+
+    def delete_purpose_items(self):
+        return self.delete_purpose_items()
+
+    def access(self):
+        return self.access()
+
 
 def deploy_contract_local():
     startTime = datetime.now()
@@ -525,581 +1165,6 @@ def decode_group_code(group_code: int):
         if v & group_code:
             groups.append(k)
     return groups
-
-class TransactionResult:
-    def __init__(self, status=0, gas_used = 0, transaction_hash="", time_used=0,result=None, gas_price=0):
-        self.status = status
-        self.gas_used = gas_used
-        self.transaction_hash = transaction_hash
-        self.time_used = time_used
-        self.result = result
-        self.gas_price = gas_price
-
-    def to_dict(self):
-        return {
-            "status": self.status,
-            "gas_used": self.gas_used,
-            "transaction_hash": self.transaction_hash,
-            "time_used": self.time_used,
-            "result": self.result
-        }
-
-    # @property
-    def __json__(self):
-        return json.dumps(self.__dict__())
-
-    def __str__(self):
-        return f"status {self.status}, gas_used {self.gas_used}, transaction_hash {self.transaction_hash}, time_used {self.time_used}, result {self.result}"
-
-class Person:
-
-    def __init__(
-        self,
-        env,
-        name="",
-        description="",
-        address=None,
-        bool_items=set(),
-        country_names=list(),
-        group_names=list(),
-        disease_items=list(),
-        start_year=2021,
-        start_month=1,
-        start_day=1,
-        months=12,
-        level=profile_open,
-        **kwargs,
-    ):
-
-        self.name = name
-        self.estimate_gas = False
-        self.print_time = False
-        self.w3 = env.w3
-        self.env = env 
-        self.level = level
-
-        if address is not None:
-
-            self.address = address
-
-            # balance = w3.eth.get_balance(address)
-        else:
-            self.address = env.accounts.pop()
-
-            # print(f"balance of {address} is {balance}")
-
-        self.bool_items = bool_items
-
-        self.description = description
-
-        self.contract = env.contract
-
-        # 'gasPrice': w3.eth.gas_price*0.1,
-
-        # print(f"person_dict {self.person_dict}")
-        self.debug = False
-        self.disease_items = disease_items
-        self.disease_groups= []
-        self.country_names = country_names
-        self.group_names = group_names
-        self.start_year = start_year
-        self.start_month = start_month
-        self.start_day = start_day
-        self.months = months
-
-    def random_init(self, profile_dict):
-        # if risk_level is not None:
-        self.months = profile_dict["months"]
-
-        # while True:
-        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-        #     if len(disease_list) > 0:
-        #         break
-        disease_setting = profile_dict["disease_items"]
-        while True:
-            disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-            if len(disease_list) > 0:
-                break
-   
-            
-        if isinstance(disease_setting, float):
-            if disease_setting == 1.0:
-                self.disease_items = ["*"]
-            else:
-                self.disease_items = random.choices(
-                    disease_list,
-                    k=int(disease_setting * len(disease_list)),
-                )
-                self.disease_groups = random.choices(
-                    string.ascii_uppercase, k=int(disease_setting * 26)
-                )
-        elif isinstance(disease_setting, str):
-            self.disease_items = [disease_setting]
-        elif isinstance(disease_setting, list):
-            self.disease_items = disease_setting
-        else:
-            self.disease_items = random.choices(
-                disease_list,
-                k=disease_setting,
-            )
-
-        country_setting = profile_dict["country_code"]
-        if isinstance(country_setting, float):
-            self.country_names = random.sample(
-                all_countries_name,
-                k=int(country_setting * len(all_countries_name)),
-            )
-        else:
-            self.country_names = random.sample(
-                all_countries_name,
-                k=country_setting,
-            )
-
-        country_group_setting = profile_dict["group_code"]
-        if isinstance(country_group_setting, float):
-            self.group_names = random.sample(
-                all_group_names,
-                k=int(country_group_setting * len(all_group_names)),
-            )
-        else:
-            self.group_names = random.sample(
-                all_group_names,
-                k=country_group_setting,
-            )
-
-    # display_simple_items
-    def display_simple_items(self):
-
-        func = self.contract.functions.DisplaySimpleItems(self.role, self.address)
-
-        if self.estimate_gas:
-
-            gas = func.estimate_gas()
-
-            logging.info(f"Estimated gas cost for displaySimpleItems: {gas}")
-
-        result = func.call()
-
-        boolItems = PurposeItems()
-
-        boolItems.decode_from_int(result)
-
-        print(f"{self.name} displaySimpleItems is {boolItems.show_true_items()}")
-
-    def delete_area(self):
-        country_codes = [country_name_code_dict[c]["index"] for c in self.country_names]
-
-        # print("UploadCountryItems", country_codes)
-        if hasattr(self, "group_names"):
-            group_codes = [group_index_dict[g] for g in self.group_names]
-        else:
-            group_codes = []
-
-        func = self.contract.functions.delete_area_baseline(
-            self.role,
-            self.address,
-            group_codes,
-            country_codes,
-        )
-        # self.send_transaction(func)
-
-        return self.send_transaction(func)
-
-    def upload_area_baseline(self):
-
-        country_codes = [
-            country_name_code_dict[c]["index"] for c in self.country_names
-        ]
-
-        # print("UploadCountryItems", country_codes)
-        if hasattr(self, "group_names"):
-            group_codes = [group_index_dict[g] for g in self.group_names]
-        else:
-            group_codes = []
-        # group_codes = [group_order_index_dict[g] for g in self.group_names]
-        # logger.info(f"country_codes {country_codes} group_codes {group_codes}")
-        # if test_mode == TestEnum.polygon:
-
-        func = self.contract.functions.UploadAreaBaseline(
-            self.role,
-            self.address,
-            group_codes,
-            country_codes,
-        )
-
-        # print("UploadAreaCode role", self.role)
-
-        return self.send_transaction(func)
-
-    def update_area_group_relation(self):
-
-        country_group_dict = {}
-
-        for country_name, country_dict in country_name_code_dict.items():
-
-            groups = country_dict["groups"]
-
-            if len(groups) == 0:
-
-                continue
-
-            for g in groups:
-
-                if g not in group_index_dict:
-                    continue
-
-                g_index = group_index_dict[g]
-
-                if g_index not in country_group_dict:
-
-                    country_group_dict[g_index] = 0
-
-                country_group_dict[g_index] |= country_dict["index"]
-
-        country_group_data = list(country_group_dict.values())
-
-        country_group_index = list(country_group_dict.keys())
-
-        # print("country_group_dict", country_group_dict)
-
-        func = self.contract.functions.UpdateCountryGroupRelation(
-            country_group_data, country_group_index
-        )
-
-        # func.transact(self.person_dict)
-
-        return self.send_transaction(func, label="update_area_group_relation")
-
-    def update_area_group_code_baseline(self, part_number=20):
-
-        def split(a, n):
-
-            k, m = divmod(len(a), n)
-
-            return tuple(
-                a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n)
-            )
-
-        country_group_dict = {}
-
-        for c in self.country_names:
-
-            if c not in self.country_name_code_dict:
-
-                print(f"{c} not in country_dict")
-
-                return
-
-            country_dict = self.country_name_code_dict[c]
-
-            country_group_dict[country_dict["index"]] = [
-                self.group_order_index_dict[g] for g in country_dict["groups"]
-            ]
-
-        country_code_list = list(country_group_dict.keys())
-
-        country_group_index_list = list(country_group_dict.values())
-
-        country_number = len(country_code_list)
-
-        # print("country_group_dict", country_group_dict)
-
-        country_code_list_part = split(country_code_list, part_number)
-
-        country_group_index_list_part = split(country_group_index_list, part_number)
-
-        gas = 0
-
-        for i in range(part_number):
-
-            func = self.contract.functions.UpdateAreaBaseline(
-                country_code_list_part[i], country_group_index_list_part[i]
-            )
-
-            func_gas = func.estimate_gas()
-
-            gas += func_gas
-        return gas
-
-    def upload_area_affordable(self) -> TransactionResult:
-
-        # if "*" in self.country_names:
-
-        # #     func = self.contract.functions.UploadAreaAffordable(
-        # #         self.role, self.address, True, 0, 0
-        # #     )
-        # #     # logger.debug("allow all countries")
-
-        # #     return self.send_transaction(func)
-
-        country_codes = [
-            country_index_dict[c] for c in self.country_names
-        ]
-        if  self.group_names is not None and len(self.group_names) > 0:
-            group_codes = [group_index_dict[g] for g in self.group_names]
-            group_code = sum(group_codes)
-        else:
-            # logger.debug(f"do not have group_names")
-            group_code = 0
-        country_code = sum(country_codes)
-
-        # decoded_countries = decode_country_code(country_code)
-        # missed_countries = set(self.country_names) - set(decoded_countries)
-        # if len(missed_countries) > 0:
-        #     logger.error(f"missed_countries {missed_countries}")
-        # print("country_group_data length", len(country_group_data))
-
-        # logger.info(
-        #     f"upload_area_affordable name {self.name}, group_code {group_code}, country_code {country_code}"
-        # )
-        # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
-
-        func = self.contract.functions.UploadAreaAffordable(
-            self.role, self.address, group_code, country_code
-        )
-
-        # print("UploadAreaCode role", self.role)
-
-        return self.send_transaction(func)
-
-    def display_area_affordable(self):
-        group_code, country_code = (
-            self.contract.functions.DisplayAreaAffordable(self.role, self.address).call()
-        )
-        countries = decode_country_code(country_code)
-        groups = decode_group_code(group_code)
-
-        return groups, countries
-
-    def display_area_codes(self):
-        (
-            Group_Code,
-            Country_Codes,
-            Country_Group_Codes,
-        ) = self.contract.functions.DisplayAreaCode(self.role, self.address).call()
-
-        # groupp_code is a int of the sum of the value of group_index_dict, decode it according to the group_index_dict
-
-        group_names = []
-
-        for k, v in self.group_index_dict.items():
-
-            if v & Group_Code:
-
-                group_names.append(k)
-
-        # print("displayAreaCodes", Country_Codes)
-
-        # print("Country_Group_Codes", Country_Group_Codes)
-
-        country_names = [self.country_code_name_dict[c] for c in Country_Codes]
-
-        result = {"group_names": group_names, "country_codes": country_names}
-
-        logging.info(f"displayAreaCodes is {result}")
-
-    def upload_purpose_items(self):
-        raise NotImplementedError("upload_purpose_items")
-
-    def upload(self):
-        self.upload_purpose_items()
-        
-
- 
-
-    def delete_disease(self):
-        func = self.contract.functions.delete_disease_baseline(
-            self.role, self.address, [diseaseCode2Int(d) for d in self.disease_items]
-        )
-        return self.send_transaction(func)
-
-    def upload_disease_baseline(self):
-
-        disease_codes = [diseaseCode2Int(d) for d in self.disease_items]
-
-        func = self.contract.functions.UploadDiseaseBaseline(
-            self.role, self.address, disease_codes
-        )
-
-        return self.send_transaction(func)
-
-    def upload_disease_affordable(self):
-
-        # if "*" in self.disease_items:
-
-        #     func = self.contract.functions.UploadDiseaseAffordable(
-        #         self.role, self.address, True, 0, []
-        #     )
-        #     # logger.debug("allow all disease")
-
-        #     return self.send_transaction(func)
-
-        disease_codes = [diseaseCode2IntHierarchy(d) for d in self.disease_items]
-        # print(f"name {self.name}  disease_codes {disease_codes} ")
-        disease_dict = {}
-
-        for group_code, chapter_code in disease_codes:
-            if group_code not in disease_dict:
-                disease_dict[group_code] = 0
-
-            disease_dict[group_code] |= chapter_code
-
-        # disease_group_codes, disease_chapter_codes = (
-        #     list(self.disease_dict.keys()),
-        #     list(self.disease_dict.values()),
-        # )
-        disease_group_codes = [1 << (ord(d) - ord("A") + 1) for d in self.disease_groups]
-        disease_group_code = sum(disease_group_codes)
-
-        disease_combined_codes = [(1<< (group_code+100)) + chapter_code for group_code,chapter_code in disease_dict.items()]
-        # print(f"name {self.name} disease_dict {disease_dict}")
-        # print(f"name {self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
-        max_code = 1<<128
-        for code in disease_combined_codes:
-            if code > max_code:
-                print(
-                    f"code {code} larger than 2**128 disease_dict {disease_dict}, self.disease_items {self.disease_items}"
-                )
-            # print(f"code {code} disease_code {int2DiseaseCode(code)}")
-        # logger.info(f"{self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
-        func = self.contract.functions.UploadDiseaseAffordable(
-            self.role,
-            self.address,
-            # False,
-            disease_group_code,
-            disease_combined_codes
-        )
-
-        return self.send_transaction(func)
-
-    def refresh_state(self):
-        func = self.contract.functions.RefreshState(self.address)
-        return self.send_transaction(func)
-
-    def display_disease_items(self):
-
-        disease_codes = self.contract.functions.DisplayDiseaseCode(
-            self.role, self.address
-        ).call()
-
-        disease_names = []
-
-        for d in disease_codes:
-
-            disease_names.append(int2DiseaseCode(d))
-
-        result = {"disease_names": disease_names}
-
-        logging.info(f"displayDiseaseItems is {result}")
-
-    def upload_date(self):
-
-        try:
-
-            func = self.contract.functions.UploadDate(
-                self.role,
-                self.address,
-                self.start_year,
-                self.start_month,
-                self.start_day,
-                self.months,
-            )
-
-        except Exception as e:
-            print(f"error in upload_date {e}")
-            logger.error(
-                f"error in upload_date, role {self.role}, address {self.address}, start_year {self.start_year}, start_month {self.start_month}, start_day {self.start_day}, months {self.months}"
-            )
-
-        return self.send_transaction(func)
-
-        # return self.forward(func)
-
-    def display_date(self):
-
-        (
-            Start_Year,
-            Start_Month,
-            Start_Day,
-            Months,
-        ) = self.contract.functions.DisplayDate(self.role, self.address).call()
-
-        print(
-            f"displayDate: Start_Year is {Start_Year}, Start_Month is {Start_Month}, Start_Day is {Start_Day}, Months {Months}"
-        )
-
-        return Start_Year, Start_Month, Start_Day, Months
-
-    def display_disease_herarchical(self):
-        categories, codes, allow_all = (
-            self.contract.functions.DisplayDiseaseCodeHierarchy(
-                self.role, self.address
-            ).call()
-        )
-        return categories, codes, allow_all
-
-    def send_transaction(self, func, call=False, label=""):
-        # if self.estimate_gas:
-        #     gas = func.estimate_gas()
-        #     return TransactionResult(gas_used=gas)
-        # else:
-        person_dict = {
-            "from": self.address,
-            # "nonce": w3.eth.get_transaction_count(self.address) + 1,
-            "to": self.contract.address,
-            # "value": w3.to_wei(0.1, "ether"),
-            # "gas": w3.eth.gas_price,
-            # "gas": w3.to_wei(10, "gwei"),
-            # "gas": 1000000,
-            # "chainId": 80002,
-            "gasPrice": self.w3.to_wei(10, "gwei"),
-        }
-        dynamic_fee_transaction = {
-            "from": self.address,
-            "type": 2,  # Explicitly specify EIP-1559 transaction type
-            "gas": 25_000_000,  # Ensure gas limit is reasonable
-            "maxFeePerGas": self.w3.to_wei(40, "gwei"),  # Reasonable max fee per gas
-            "maxPriorityFeePerGas": self.w3.to_wei(
-                30, "gwei"
-            ),  # Reasonable max priority fee per gas
-            "nonce": self.w3.eth.get_transaction_count(
-                self.address
-            ),  # Correct nonce calculation
-            "chainId": 80002,
-        }
-        receipt = None
-        if call:
-            start_time = time.time_ns()
-            receipt = func.call()
-            end_time = time.time_ns()
-            time_diff = end_time - start_time
-            return TransactionResult(time_used=time_diff, result=receipt)
-        elif self.env.name == TestEnum.polygon.name:
-            start_time = time.time_ns()
-            build_transaction = func.build_transaction(dynamic_fee_transaction)
-            signed_txn = self.w3.eth.account.sign_transaction(
-                build_transaction, private_key=private_key
-            )
-            start_time = time.time_ns()
-            # logger.info(f"signed_txn {signed_txn}")
-            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
-            end_time = time.time_ns()
-
-        elif self.env.name == TestEnum.local.name:
-            start_time = time.time_ns()
-            tx_hash = func.transact(person_dict)
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
-            end_time = time.time_ns()
-
-        # logger.info(f"receipt {receipt}")
-        gas_used = receipt["gasUsed"]
-        gas_price = receipt["effectiveGasPrice"]
-        time_diff = (end_time - start_time)
-        return TransactionResult(gas_used=gas_used, time_used=time_diff, gas_price=gas_price, transaction_hash=receipt["transactionHash"].hex(), status=receipt["status"])
-
-    def __str__(self):
-        return f"Person: {self.name},  {self.description}, {self.role}"
 
 
 import string
