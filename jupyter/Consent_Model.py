@@ -27,8 +27,12 @@ from tqdm import tqdm
 from zmq import Enum
 import re
 
+import yaml
+
 from web3.middleware import geth_poa_middleware
 
+private_config = yaml.safe_load(open("data/private.yaml", "r"))
+private_key = private_config.get("private_key", None)
 
 CURRENT_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path("data")
@@ -314,65 +318,9 @@ class Person:
             )
 
 
-    def delete_area(self):
-        country_codes = [country_name_code_dict[c]["index"] for c in self.country_names]
-
-        # print("UploadCountryItems", country_codes)
-        if hasattr(self, "group_names"):
-            group_codes = [group_index_dict[g] for g in self.group_names]
-        else:
-            group_codes = []
-
-        func = self.contract.functions.delete_area_baseline(
-            self.role,
-            self.address,
-            group_codes,
-            country_codes,
-        )
-        # self.send_transaction(func)
-
-        return self.send_transaction(func)
 
  
 
-    def update_area_group_relation(self):
-
-        country_group_dict = {}
-
-        for country_name, country_dict in country_name_code_dict.items():
-
-            groups = country_dict["groups"]
-
-            if len(groups) == 0:
-
-                continue
-
-            for g in groups:
-
-                if g not in group_index_dict:
-                    continue
-
-                g_index = group_index_dict[g]
-
-                if g_index not in country_group_dict:
-
-                    country_group_dict[g_index] = 0
-
-                country_group_dict[g_index] |= country_dict["index"]
-
-        country_group_data = list(country_group_dict.values())
-
-        country_group_index = list(country_group_dict.keys())
-
-        # print("country_group_dict", country_group_dict)
-
-        func = self.contract.functions.UpdateCountryGroupRelation(
-            country_group_data, country_group_index
-        )
-
-        # func.transact(self.person_dict)
-
-        return self.send_transaction(func, label="update_area_group_relation")
 
     def update_area_group_code_baseline(self, part_number=20):
 
@@ -457,11 +405,7 @@ class Person:
 
  
 
-    def delete_disease(self):
-        func = self.contract.functions.delete_disease_baseline(
-            self.role, self.address, [diseaseCode2Int(d) for d in self.disease_items]
-        )
-        return self.send_transaction(func)
+
 
 
 
@@ -641,6 +585,46 @@ class Contract_Affordable(Base_Contract):
     def __init__(self, env, contract_address=None):
         super().__init__(env, contract_address)
 
+
+    def update_area_group_relation(self):
+
+        country_group_dict = {}
+
+        for country_name, country_dict in country_name_code_dict.items():
+
+            groups = country_dict["groups"]
+
+            if len(groups) == 0:
+
+                continue
+
+            for g in groups:
+
+                if g not in group_index_dict:
+                    continue
+
+                g_index = group_index_dict[g]
+
+                if g_index not in country_group_dict:
+
+                    country_group_dict[g_index] = 0
+
+                country_group_dict[g_index] |= country_dict["index"]
+
+        country_group_data = list(country_group_dict.values())
+
+        country_group_index = list(country_group_dict.keys())
+
+        # print("country_group_dict", country_group_dict)
+
+        func = self.contract.functions.UpdateCountryGroupRelation(
+            country_group_data, country_group_index
+        )
+
+        # func.transact(self.person_dict)
+
+        return self.send_transaction(func, label="update_area_group_relation")
+
     def upload_area(self, person:Person) -> TransactionResult:
 
         # if "*" in self.country_names:
@@ -798,10 +782,29 @@ class Contract_Baseline(Base_Contract):
         return self.upload_purpose_items()
 
     def delete_area(self):
-        return self.delete_area()
+        country_codes = [country_name_code_dict[c]["index"] for c in self.country_names]
+
+        # print("UploadCountryItems", country_codes)
+        if hasattr(self, "group_names"):
+            group_codes = [group_index_dict[g] for g in self.group_names]
+        else:
+            group_codes = []
+
+        func = self.contract.functions.delete_area_baseline(
+            self.role,
+            self.address,
+            group_codes,
+            country_codes,
+        )
+        # self.send_transaction(func)
+
+        return self.send_transaction(func)
 
     def delete_disease(self):
-        return self.delete_disease()
+        func = self.contract.functions.delete_disease_baseline(
+            self.role, self.address, [diseaseCode2Int(d) for d in self.disease_items]
+        )
+        return self.send_transaction(func)
 
     def delete_purpose_items(self):
         return self.delete_purpose_items()
@@ -873,8 +876,6 @@ def deploy_contract_local():
     # print(f" actural {accounts.pop()}, used {used_accounts.pop()}")
     env = Env(TestEnum.local.name, w3, deployed_contract, w3.eth.accounts)
     return env
-
-private_key = "cef3155c18c010de238f98470f9a092159405cb6cd5ab25261e3fcdff23cd810"
 
 def deploy_contract_polygon(force_deploy=False):
 
