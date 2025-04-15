@@ -7,7 +7,7 @@ contract ConsentBase {
     //     dataProvider = msg.sender;
     // }
     // MARK: - Terms
-    struct Terms {
+    struct Date {
      
         uint16 Start_Year;
         uint8 Start_Month;
@@ -41,8 +41,8 @@ contract ConsentBase {
 
     
 
-    mapping(address => Terms) providerMapping; // data subject
-    mapping(address => Terms) requesterMapping; // data subject
+    mapping(address => Date) providerDateMapping; // data subject
+    mapping(address => Date) requesterDateMapping; // data subject
 
     uint8 constant role_provider = 1;
     uint8 constant role_requester = 2;
@@ -166,15 +166,15 @@ contract ConsentBase {
 
 
     // MARK: - UploadTerms
-    function TermsByRole(
+    function DateByRole(
         uint8 role,
         address _address
-    ) private view returns (Terms storage) {
+    ) private view returns (Date storage) {
         if (role == role_provider) {
             // require(msg.sender == dataProvider, "TermsByRole: Invalid sender");
-            return providerMapping[_address];
+            return providerDateMapping[_address];
         } else if (role == role_requester) {
-            return requesterMapping[_address];
+            return requesterDateMapping[_address];
         } else {
             revert("TermsByRole: Invalid role specified");
         }
@@ -191,7 +191,7 @@ contract ConsentBase {
         uint16 Start_Day,
         uint8 Months
     ) public {
-        Terms storage terms = TermsByRole(role, _address);
+        Date storage terms = DateByRole(role, _address);
         terms.Start_Year = Start_Year;
         terms.Start_Month = Start_Month;
         terms.Start_Day = Start_Day;
@@ -203,7 +203,7 @@ contract ConsentBase {
         uint8 role,
         address _address
     ) public view returns (uint16, uint16, uint16, uint16) {
-        Terms storage terms = TermsByRole(role, _address);
+        Date storage terms = DateByRole(role, _address);
         return (
             terms.Start_Year,
             terms.Start_Month,
@@ -218,42 +218,42 @@ contract ConsentBase {
         address _requester_address
     ) public view returns (bool) {
         if (
-            requesterMapping[_requester_address].Start_Year >
-            providerMapping[_provider_address].Start_Year
+            requesterDateMapping[_requester_address].Start_Year >
+            providerDateMapping[_provider_address].Start_Year
         ) {
             return true;
         }
         if (
-            requesterMapping[_requester_address].Start_Year <
-            providerMapping[_provider_address].Start_Year
+            requesterDateMapping[_requester_address].Start_Year <
+            providerDateMapping[_provider_address].Start_Year
         ) {
             return false;
         }
 
         // year now equal
         if (
-            requesterMapping[_requester_address].Start_Month >
-            providerMapping[_provider_address].Start_Month
+            requesterDateMapping[_requester_address].Start_Month >
+            providerDateMapping[_provider_address].Start_Month
         ) {
             return true;
         }
         if (
-            requesterMapping[_requester_address].Start_Month <
-            providerMapping[_provider_address].Start_Month
+            requesterDateMapping[_requester_address].Start_Month <
+            providerDateMapping[_provider_address].Start_Month
         ) {
             return false;
         }
 
         // month now equal
         if (
-            requesterMapping[_requester_address].Start_Day >=
-            providerMapping[_provider_address].Start_Day
+            requesterDateMapping[_requester_address].Start_Day >=
+            providerDateMapping[_provider_address].Start_Day
         ) {
             return true;
         }
         if (
-            requesterMapping[_requester_address].Start_Day <
-            providerMapping[_provider_address].Start_Day
+            requesterDateMapping[_requester_address].Start_Day <
+            providerDateMapping[_provider_address].Start_Day
         ) {
             return false;
         }

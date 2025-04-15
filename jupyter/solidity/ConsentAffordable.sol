@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8;
-import "./BaseContract.sol";
+import "./ConsentBase.sol";
 
-contract ConsentCode is BaseContract {
+contract ConsentCode is ConsentBase {
  
     //  constructor() {
     //     dataProvider = msg.sender;
@@ -24,33 +24,33 @@ contract ConsentCode is BaseContract {
 
     // uint8[] Country_Code_8;
     // uint32[] Country_Group_Code_32;
-    mapping(uint8 => uint32) Country_Code_Mapping;
-    mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
-    mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
+    // mapping(uint8 => uint32) Country_Code_Mapping;
+    // mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
+    // mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
 
 
   
-    //MARK - UpdateAreaSimple
-    function UpdateCountryGroupRelation(
-        uint256[] memory _Group_Countries,
-        uint16[] memory _Country_Group_Code_Index
-    ) public {
-        Group_Countries = _Group_Countries;
-        Group_Index = _Country_Group_Code_Index;
-        Area_Simple_Version += 1;
-    }
+    // //MARK - UpdateAreaSimple
+    // function UpdateCountryGroupRelation(
+    //     uint256[] memory _Group_Countries,
+    //     uint16[] memory _Country_Group_Code_Index
+    // ) public {
+    //     Group_Countries = _Group_Countries;
+    //     Group_Index = _Country_Group_Code_Index;
+    //     Area_Simple_Version += 1;
+    // }
 
-    // MARK: - DisplayCountryGroupRelation
-    function DisplayCountryGroupRelation()
-        public
-        view
-        returns (uint256[] memory, uint16[] memory, uint16)
-    {
-        return (Group_Countries,
-            Group_Index,
-            Area_Simple_Version
-        );
-    }
+    // // MARK: - DisplayCountryGroupRelation
+    // function DisplayCountryGroupRelation()
+    //     public
+    //     view
+    //     returns (uint256[] memory, uint16[] memory, uint16)
+    // {
+    //     return (Group_Countries,
+    //         Group_Index,
+    //         Area_Simple_Version
+    //     );
+    // }
 
 
     // MARK: - UploadTerms
@@ -69,37 +69,6 @@ contract ConsentCode is BaseContract {
     }
 
  
-
-    // MARK: - UploadDate
-    function UploadDate(
-        uint8 role,
-        address _address,
-        uint16 Start_Year,
-        uint8 Start_Month,
-        uint16 Start_Day,
-        uint8 Months
-    ) public {
-        Terms storage terms = TermsByRole(role, _address);
-        terms.Start_Year = Start_Year;
-        terms.Start_Month = Start_Month;
-        terms.Start_Day = Start_Day;
-        terms.Months = Months;
-    }
-
-    // MARK: - DisplayDate
-    function DisplayDate(
-        uint8 role,
-        address _address
-    ) public view returns (uint16, uint16, uint16, uint16) {
-        Terms storage terms = TermsByRole(role, _address);
-        return (
-            terms.Start_Year,
-            terms.Start_Month,
-            terms.Start_Day,
-            terms.Months
-        );
-    }
-  
     // MARK: - DisplayAreaSmarter
     function DisplayArea(
         uint8 role,
@@ -132,6 +101,34 @@ contract ConsentCode is BaseContract {
     }
 
 
+    function delete_area(
+        uint8 role,
+        address _address,
+        uint8[] memory Group_Code,
+        uint8[] memory Country_Code
+    ) public {
+        Terms storage terms = TermsByRole(role, _address);
+
+        if (role == role_provider) {
+            // require(msg.sender == dataProvider, "Invalid sender");
+       
+            delete terms.Area_Group_Affordable;
+            delete terms.Area_Country_Affordable;
+            // provider_areaMapping[_address].Area_Country_List_Baseline = Country_Code;
+            // provider_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
+        }
+
+        if (role == role_requester) {
+            // require(msg.sender == dataProvider, "Invalid sender");
+            delete terms.Area_Group_Affordable;
+            delete terms.Area_Country_Affordable;
+            // requester_areaMapping[_address].Area_Country_List_Baseline = Country_Code;
+            // requester_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
+        }
+    }
+
+
+
     // MARK: - UploadDiseaseAffordable
     function UploadDisease(
         uint8 role,
@@ -145,21 +142,47 @@ contract ConsentCode is BaseContract {
         //     terms.allow_all_disease = true;
         //     return;
         // }
-        terms.Disease_Group_Affordable = Disease_Group_Affordable;
+        // terms.Disease_Group_Affordable = Disease_Group_Affordable;
         //  terms.Disease_Category_Affordable; = Disease_Category_Affordable;;
         for (uint8 i = 0; i < Disease_Category_Affordable.length; i++) {
             terms.Disease_Category_Affordable[i] = Disease_Category_Affordable[i];
         }
     }
 
+
+    // MARK: UploadDiseaseBaseline
+    function delete_disease(
+        uint8 role,
+        address _address,
+        uint16[] memory Disease_Array_Baseline
+    ) public {
+        Terms storage terms = TermsByRole(role, _address);
+         
+        if (role == role_provider) {
+        
+            delete terms.Disease_Category_Affordable;
+            delete terms.Disease_Group_Affordable;
+        }
+
+        if (role == role_requester) {
+            // for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
+            //     terms.Disease_Array_Baseline.push(Disease_Array_Baseline[i]);
+            // }
+   
+            delete terms.Disease_Category_Affordable;
+            delete terms.Disease_Group_Affordable;
+        }
+    }
+
+
     
     // MARK: - DisplayDiseaseCode
     function DisplayDiseaseCode(
         uint8 role,
         address _address
-    ) public view returns (uint16[] memory) {
-        Terms storage terms = TermsByRole(role, _address);
-        return terms.Disease_Array_Baseline;
+    ) public view returns (Terms memory) {
+        Terms memory terms = TermsByRole(role, _address);
+        return terms;
     }
 
     // function DisplayDiseaseCodeAffordable(
@@ -269,57 +292,8 @@ contract ConsentCode is BaseContract {
         return true;
     }
 
-    // MARK: - CheckDate
-    function CheckDate(
-        address _provider_address,
-        address _requester_address
-    ) public view returns (bool) {
-        if (
-            requesterMapping[_requester_address].Start_Year >
-            providerMapping[_provider_address].Start_Year
-        ) {
-            return true;
-        }
-        if (
-            requesterMapping[_requester_address].Start_Year <
-            providerMapping[_provider_address].Start_Year
-        ) {
-            return false;
-        }
 
-        // year now equal
-        if (
-            requesterMapping[_requester_address].Start_Month >
-            providerMapping[_provider_address].Start_Month
-        ) {
-            return true;
-        }
-        if (
-            requesterMapping[_requester_address].Start_Month <
-            providerMapping[_provider_address].Start_Month
-        ) {
-            return false;
-        }
-
-        // month now equal
-        if (
-            requesterMapping[_requester_address].Start_Day >=
-            providerMapping[_provider_address].Start_Day
-        ) {
-            return true;
-        }
-        if (
-            requesterMapping[_requester_address].Start_Day <
-            providerMapping[_provider_address].Start_Day
-        ) {
-            return false;
-        }
-
-        //  year, month, day now equal
-        return true;
-    }
-
-    function AccessData(address provider_address, address requester_address) view public returns (uint32) {
+    function access_data(address provider_address, address requester_address) view public returns (uint32) {
 
         PurposeProvider memory provider = purpose_providers_mapping[provider_address];
         PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
@@ -340,7 +314,7 @@ contract ConsentCode is BaseContract {
             }
         }
 
-        if (provider.OpenToGeneralResearchAndClinicalCare & provider.OpenToHMBResearch & provider.OpenToDiseaseSpecific) {
+        if (provider.OpenToGeneralResearchAndClinicalCare && provider.OpenToHMBResearch && provider.OpenToDiseaseSpecific) {
             if (!requester.UseForSpecificDiseaseResearch || !CheckDisease(provider_address, requester_address)) {
                 result += u1 << uint32(RESULT_CODE.OpenToDiseaseSpecific);
             }

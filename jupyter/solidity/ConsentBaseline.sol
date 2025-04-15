@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8;
+import "./ConsentBase.sol";
 
-contract ConsentCode {
+contract ConsentCode is ConsentBase {
  
     //  constructor() {
     //     dataProvider = msg.sender;
@@ -10,13 +11,7 @@ contract ConsentCode {
    
     // MARK: - Terms
     struct Terms {
-        uint32 Purpose;
-        uint16 Start_Year;
-        uint8 Start_Month;
-        uint16 Start_Day;
-        uint8 Months;
-  
-  
+     
         // baseline
         uint8[] Area_Country_List_Baseline;
         uint8[] Area_Group_List_Baseline;
@@ -28,154 +23,47 @@ contract ConsentCode {
         uint16[] Disease_Array_Baseline;
 
     }
-
-    enum RESULT_CODE {
-        // Success,
-        FirstCategory,
-        OpenToGeneralResearchAndClinicalCare,
-        OpenToHMBResearch,
-        OpenToPopulationAndAncestryResearch,
-        OpenToDiseaseSpecific,
-        OpenToGeneticStudiesOnly,
-        ResearchSpecificRestrictions,
-        OpenToResearchUseOnly,
-        GeneralMethodResearch,
-        GeographicSpecificRestriction,
-        OpenToNonProfitUseOnly,
-        PublicationRequired,
-        CollaborationRequired,
-        EthicsApprovalrequired,
-        TimeLimitOnUse,
-        CostOnUse,
-        DataSecurityMeasuresRequired
-        // DiseaseSpecificResearch
-    }
-
-
     
 
     mapping(address => Terms) providerMapping; // data subject
     mapping(address => Terms) requesterMapping; // data subject
 
-    uint8 constant role_provider = 1;
-    uint8 constant role_requester = 2;
-    uint256[] Group_Countries;
-    uint16[] Group_Index;
-    // uint8[][] Country_Group_baseline;
+    // uint8 constant role_provider = 1;
+    // uint8 constant role_requester = 2;
+    // uint256[] Group_Countries;
+    // uint16[] Group_Index;
+    // // uint8[][] Country_Group_baseline;
 
-    uint16 Area_Simple_Version = 0;
+    // uint16 Area_Simple_Version = 0;
 
     // uint8[] Country_Code_8;
     // uint32[] Country_Group_Code_32;
-    mapping(uint8 => uint32) Country_Code_Mapping;
-    mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
-    mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
+    // mapping(uint8 => uint32) Country_Code_Mapping;
+    // mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
+    // mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
 
 
-
-    struct PurposeProvider {
-        bool Allow_All;
-        bool OpenToGeneralResearchAndClinicalCare;
-        bool OpenToHMBResearch;
-        bool OpenToPopulationAndAncestryResearch;
-        bool OpenToDiseaseSpecific;
-        bool OpenToGeneticStudiesOnly;
-        bool ResearchSpecificRestrictions;
-        bool OpenToResearchUseOnly;
-        bool GeneralMethodResearch;
-        bool GeographicSpecificRestriction;
-        bool OpenToNonProfitUseOnly;
-        bool PublicationRequired;
-        bool CollaborationRequired;
-        bool EthicsApprovalrequired;
-        bool TimeLimitOnUse;
-        bool CostOnUse;
-        bool DataSecurityMeasuresRequired;
-        // bool DiseaseSpecificResearch;
-    }
-
-    struct PurposeRequester {
-        bool UseForMethodsDevelopment;
-        bool UseForReferenceOrControlMaterial;
-        bool UseForPopulationsResearch;
-        bool UseForAncestryResearch;
-        bool UseForHMBResearch;
-        bool UseForFundamentalBioResearch;
-        bool UseForGeneticsResearch;
-        bool UseForDrugDevelopmentResearch;
-        bool UseForSpecificDiseaseResearch;
-        bool UseForAgeCategoriesResearch;
-        bool UseForGenderCategoriesResearch;
-        bool UseForDecisionSupport;
-        bool UseForDiseaseSupport;
-        bool UseByAcademicProfessionals;
-        bool UseByClinicalProfessionals;
-        bool UseByProfitMakingProfessionals;
-        bool UseByNonProfessionals;
-        bool UseBySpecifiedCountries;
-        bool UseForProfitPurpose;
-        bool UseForNonProfitPurpose;
-        bool TimelineRestrictions;
-        bool FormalApprovalRequired;
-        bool CollaborationRequired;
-        bool PublicationRequired;
-        bool DataSecurityMeasures;
-        bool DataDestructionRequired;
-        bool LinkingOfAccessedRecords;
-        bool RecontactingDataSubjects;
-        bool IntellectualPropertyClaims;
-        bool UseOfAccessedResources;
-        bool FeesForAccess;
-    }
-
-    mapping(address => PurposeProvider) purpose_providers_mapping;
-    mapping(address => PurposeRequester) purpose_requesters_mapping;
-
-     function uploadPurposeProvider(
-        address _address1,
-        PurposeProvider memory purpose
-    ) public {
-        purpose_providers_mapping[_address1] = purpose;
-        // DataSubjectAcc.push(_address1);
-    }
-
-    function uploadPurposeRequester(
-        address _address2,
-        PurposeRequester memory purpose
-    ) public {
-        purpose_requesters_mapping[_address2] = purpose;
-        // DataRequesterAcc.push(_address2);
-    }
-
-    function GetPurposeItemsProvider(address _address) view public returns (PurposeProvider memory) {
-              return purpose_providers_mapping[_address];
-    }
-
-    function GetPurposeItemsRequester(address _address) view public returns (PurposeRequester memory) {
-        return purpose_requesters_mapping[_address];
-    }
-  
     //MARK - UpdateAreaSimple
-    function UpdateCountryGroupRelation(
-        uint256[] memory _Group_Countries,
-        uint16[] memory _Country_Group_Code_Index
-    ) public {
-        Group_Countries = _Group_Countries;
-        Group_Index = _Country_Group_Code_Index;
-        Area_Simple_Version += 1;
-    }
+    // function UpdateCountryGroupRelation(
+    //     uint256[] memory _Group_Countries,
+    //     uint16[] memory _Country_Group_Code_Index
+    // ) public {
+    //     Group_Countries = _Group_Countries;
+    //     Group_Index = _Country_Group_Code_Index;
+    //     Area_Simple_Version += 1;
+    // }
 
-    // MARK: - DisplayCountryGroupRelation
-    function DisplayCountryGroupRelation()
-        public
-        view
-        returns (uint256[] memory, uint16[] memory, uint16)
-    {
-        return (Group_Countries,
-            Group_Index,
-            Area_Simple_Version
-        );
-    }
+    // // MARK: - DisplayCountryGroupRelation
+    // function DisplayCountryGroupRelation()
+    //     public
+    //     view
+    //     returns (uint256[] memory, uint16[] memory, uint16)
+    // {
+    //     return (Group_Countries,
+    //         Group_Index,
+    //         Area_Simple_Version
+    //     );
+    // }
 
     // MARK: - UpdateAreaBaseline
     function UpdateArea(
@@ -209,36 +97,7 @@ contract ConsentCode {
             revert("TermsByRole: Invalid role specified");
         }
     }
-    // MARK: - UploadDate
-    function UploadDate(
-        uint8 role,
-        address _address,
-        uint16 Start_Year,
-        uint8 Start_Month,
-        uint16 Start_Day,
-        uint8 Months
-    ) public {
-        Terms storage terms = TermsByRole(role, _address);
-        terms.Start_Year = Start_Year;
-        terms.Start_Month = Start_Month;
-        terms.Start_Day = Start_Day;
-        terms.Months = Months;
-    }
-
-    // MARK: - DisplayDate
-    function DisplayDate(
-        uint8 role,
-        address _address
-    ) public view returns (uint16, uint16, uint16, uint16) {
-        Terms storage terms = TermsByRole(role, _address);
-        return (
-            terms.Start_Year,
-            terms.Start_Month,
-            terms.Start_Day,
-            terms.Months
-        );
-    }
-  
+    
 
     // MARK: - UploadAreaBaseline
     function UploadArea(
@@ -283,8 +142,7 @@ contract ConsentCode {
             for (uint8 i = 0; i < Group_Code.length; i++) {
                 delete terms.Area_Group_Map_Baseline[Group_Code[i]];
             }
-            delete terms.Area_Group_Affordable;
-            delete terms.Area_Country_Affordable;
+
             // provider_areaMapping[_address].Area_Country_List_Baseline = Country_Code;
             // provider_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
         }
@@ -292,9 +150,7 @@ contract ConsentCode {
         if (role == role_requester) {
             delete terms.Area_Country_List_Baseline ;
             delete terms.Area_Group_List_Baseline ;
-            
-            delete terms.Area_Group_Affordable;
-            delete terms.Area_Country_Affordable;
+  
         }
     }
 
@@ -333,8 +189,7 @@ contract ConsentCode {
             for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
                delete terms.Disease_Map_Baseline[Disease_Array_Baseline[i]];
             }
-            delete terms.Disease_Category_Affordable;
-            delete terms.Disease_Group_Affordable;
+    
         }
 
         if (role == role_requester) {
@@ -342,8 +197,7 @@ contract ConsentCode {
             //     terms.Disease_Array_Baseline.push(Disease_Array_Baseline[i]);
             // }
             delete terms.Disease_Array_Baseline;
-            delete terms.Disease_Category_Affordable;
-            delete terms.Disease_Group_Affordable;
+       
         }
     }
 
@@ -367,20 +221,6 @@ contract ConsentCode {
         
     // }
 
-
-    // MARK: - CheckPurpose
-    function CheckPurpose(
-        address _provider_address,
-        address _requester_address
-    ) public view returns (bool) {
-        uint32 providerData = providerMapping[_provider_address].Purpose;
-        uint32 requesterData = requesterMapping[_requester_address]
-            .Purpose;
-        if ((requesterData & providerData) == requesterData) {
-            return true;
-        }
-        return false;
-    }
 
     // MARK: - CheckAreaBaseline
     function CheckArea(
@@ -466,57 +306,7 @@ contract ConsentCode {
         return true;
     }
 
-    // MARK: - CheckDate
-    function CheckDate(
-        address _provider_address,
-        address _requester_address
-    ) public view returns (bool) {
-        if (
-            requesterMapping[_requester_address].Start_Year >
-            providerMapping[_provider_address].Start_Year
-        ) {
-            return true;
-        }
-        if (
-            requesterMapping[_requester_address].Start_Year <
-            providerMapping[_provider_address].Start_Year
-        ) {
-            return false;
-        }
-
-        // year now equal
-        if (
-            requesterMapping[_requester_address].Start_Month >
-            providerMapping[_provider_address].Start_Month
-        ) {
-            return true;
-        }
-        if (
-            requesterMapping[_requester_address].Start_Month <
-            providerMapping[_provider_address].Start_Month
-        ) {
-            return false;
-        }
-
-        // month now equal
-        if (
-            requesterMapping[_requester_address].Start_Day >=
-            providerMapping[_provider_address].Start_Day
-        ) {
-            return true;
-        }
-        if (
-            requesterMapping[_requester_address].Start_Day <
-            providerMapping[_provider_address].Start_Day
-        ) {
-            return false;
-        }
-
-        //  year, month, day now equal
-        return true;
-    }
-
-    function AccessData(address provider_address, address requester_address) view public returns (uint32) {
+    function access_data(address provider_address, address requester_address) view public returns (uint32) {
 
         PurposeProvider memory provider = purpose_providers_mapping[provider_address];
         PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
