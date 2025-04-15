@@ -612,7 +612,8 @@ class Base_Contract:
         self.contract = env.contract
         self.functions= env.contract.functions
 
-
+    def update_area_group_relation(self, person):
+        pass 
 
     def upload_area(self):
         raise NotImplementedError("upload_area")
@@ -639,28 +640,26 @@ class Base_Contract:
                 f"error in upload_date, role {person.role}, address {person.address}, start_year {person.start_year}, start_month {person.start_month}, start_day {person.start_day}, months {person.months}"
             )
 
-        return self.send_transaction(func)
+        return self.send_transaction(func, person)
 
     def _upload_purpose_provider(self,person: Person) -> TransactionResult:
-        simple_value = [True if item in self.bool_items else False for item in DUO]
+        simple_value = [True if item in person.bool_items else False for item in DUO]
 
-        upload_func = self.functions.uploadPurposeProvider(
-            self.address, simple_value
-        )
+        upload_func = self.functions.uploadPurposeProvider(person.address, simple_value)
 
-        return self.send_transaction(upload_func)
+        return self.send_transaction(upload_func, person)
 
     def _upload_purpose_requester(self, person: Person) -> TransactionResult:
-        simple_value = [True if item in self.bool_items else False for item in ADAM]
+        simple_value = [True if item in person.bool_items else False for item in ADAM]
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
         # )
 
         upload_func = self.contract.functions.uploadPurposeRequester(
-            self.address, simple_value
+            person.address, simple_value
         )
 
-        return self.send_transaction(upload_func)
+        return self.send_transaction(upload_func, person)
 
     def upload_purpose(self, person: Person) -> TransactionResult:
         if person.role == ROLE_PROVIDER:
@@ -676,13 +675,13 @@ class Base_Contract:
     def delete_disease(self):
         raise NotImplementedError("delete_disease")
 
-    def send_transaction(self, func, call=False, label=""):
+    def send_transaction(self, func, person:Person, call=False, label=""):
         # if self.estimate_gas:
         #     gas = func.estimate_gas()
         #     return TransactionResult(gas_used=gas)
         # else:
         person_dict = {
-            "from": self.address,
+            "from": person.address,
             # "nonce": w3.eth.get_transaction_count(self.address) + 1,
             "to": self.contract.address,
             # "value": w3.to_wei(0.1, "ether"),
@@ -693,7 +692,7 @@ class Base_Contract:
             "gasPrice": self.w3.to_wei(10, "gwei"),
         }
         dynamic_fee_transaction = {
-            "from": self.address,
+            "from": person.address,
             "type": 2,  # Explicitly specify EIP-1559 transaction type
             "gas": 25_000_000,  # Ensure gas limit is reasonable
             "maxFeePerGas": self.w3.to_wei(40, "gwei"),  # Reasonable max fee per gas
@@ -701,7 +700,7 @@ class Base_Contract:
                 30, "gwei"
             ),  # Reasonable max priority fee per gas
             "nonce": self.w3.eth.get_transaction_count(
-                self.address
+                person.address
             ),  # Correct nonce calculation
             "chainId": 80002,
         }
@@ -737,21 +736,21 @@ class Base_Contract:
         return TransactionResult(gas_used=gas_used, time_used=time_diff, gas_price=gas_price, transaction_hash=receipt["transactionHash"].hex(), status=receipt["status"])
 
     def _upload_requester(self, person: Person):
-        if ADAM.UseBySpecifiedCountries in self.bool_items:
+        if ADAM.UseBySpecifiedCountries in person.bool_items:
             self.upload_area(person)
 
-        if ADAM.UseForSpecificDiseaseResearch in self.bool_items:
+        if ADAM.UseForSpecificDiseaseResearch in person.bool_items:
             self.upload_disease(person)
 
-        if ADAM.TimelineRestrictions in self.bool_items:
+        if ADAM.TimelineRestrictions in person.bool_items:
             self.upload_date(person)
 
     def _upload_provider(self,person: Person) -> TransactionResult:
-        if DUO.GeographicSpecificRestriction in self.bool_items:
+        if DUO.GeographicSpecificRestriction in person.bool_items:
             self.upload_area(person)
-        if DUO.OpenToDiseaseSpecific in self.bool_items:
+        if DUO.OpenToDiseaseSpecific in person.bool_items:
             self.upload_disease(person)
-        if DUO.TimeLimitOnUse in self.bool_items:
+        if DUO.TimeLimitOnUse in person.bool_items:
             self.upload_date(person)
 
     def upload(self, person: Person) -> TransactionResult:
@@ -763,21 +762,27 @@ class Base_Contract:
         else:
             raise ValueError(f"Invalid role: {person.role}")
 
-    def access(self, provider: Person, requester: Person) -> TransactionResult:
+    def access(self, provider: Person, requester: Person):
         if provider.role == ROLE_PROVIDER and requester.role == ROLE_REQUESTER:
             func = self.functions.access_data(
-                provider.role, provider.address, requester.role, requester.address
+               provider.address, requester.address
             )
         else:
             raise ValueError(f"Invalid role: {provider.role} {requester.role}")
-        return self.send_transaction(func, call=True, label="access")
+
+        result =  self.send_transaction(func, provider, call=True, label="access").result
+        result_set = set()
+        for r in RESULT_CODE:
+            if r.value & result:
+                result_set.add(r.name)
+        return result_set
 
 
 class Contract_Affordable(Base_Contract):
     def __init__(self, env):
         super().__init__(env)
 
-    def update_area_group_relation(self):
+    def update_area_group_relation(self, person: Person) -> TransactionResult:
 
         country_group_dict = {}
 
@@ -814,7 +819,7 @@ class Contract_Affordable(Base_Contract):
 
         # func.transact(self.person_dict)
 
-        return self.send_transaction(func, label="update_area_group_relation")
+        return self.send_transaction(func,person, label="update_area_group_relation")
 
     def upload_area(self, person:Person) -> TransactionResult:
 
@@ -855,7 +860,7 @@ class Contract_Affordable(Base_Contract):
 
         # print("UploadAreaCode role", self.role)
 
-        return self.send_transaction(func)
+        return self.send_transaction(func, person, label="upload_area")
 
     def display_area(self):
         group_code, country_code = (
@@ -918,11 +923,10 @@ class Contract_Affordable(Base_Contract):
             disease_combined_codes,
         )
 
-        return self.send_transaction(func)
+        return self.send_transaction(func, person)
 
     def upload_purpose_items(self):
         return self.upload_purpose_items()
-
 
     def delete_area(self, person: Person) -> TransactionResult:
         return self.delete_area()
@@ -938,43 +942,42 @@ class Contract_Baseline(Base_Contract):
     def __init__(self, env):
         super().__init__(env)
 
-    def upload_area(self, peroson: Person) -> TransactionResult:
+    def upload_area(self, person: Person) -> TransactionResult:
 
         country_codes = [
-                country_name_code_dict[c]["index"] for c in peroson.country_names
+                country_name_code_dict[c]["index"] for c in person.country_names
             ]
 
         # print("UploadCountryItems", country_codes)
-        if hasattr(peroson, "group_names"):
-            group_codes = [group_index_dict[g] for g in peroson.group_names]
+        if hasattr(person, "group_names"):
+            group_codes = [group_index_dict[g] for g in person.group_names]
         else:
             group_codes = []
         # group_codes = [group_order_index_dict[g] for g in self.group_names]
         # logger.info(f"country_codes {country_codes} group_codes {group_codes}")
         # if test_mode == TestEnum.polygon:
 
-        func = self.contract.functions.UploadAreaBaseline(
-            peroson.role,
-            peroson.address,
+        func = self.contract.functions.UploadArea(
+            person.role,
+            person.address,
             group_codes,
             country_codes,
         )
 
         # print("UploadAreaCode role", self.role)
 
-        return self.send_transaction(func)
-
+        return self.send_transaction(func, person)
 
     def upload_disease(self,person: Person) -> TransactionResult:
         disease_codes = [diseaseCode2Int(d) for d in person.disease_items]
 
-        func = self.contract.functions.UploadDiseaseBaseline(
+        func = self.contract.functions.UploadDisease(
             person.role, person.address, disease_codes
         )
 
-        return self.send_transaction(func)
+        return self.send_transaction(func, person)
 
-    def delete_area(self):
+    def delete_area(self,person: Person) -> TransactionResult:
         country_codes = [country_name_code_dict[c]["index"] for c in self.country_names]
 
         # print("UploadCountryItems", country_codes)
@@ -983,7 +986,7 @@ class Contract_Baseline(Base_Contract):
         else:
             group_codes = []
 
-        func = self.contract.functions.delete_area_baseline(
+        func = self.contract.functions.delete_area(
             self.role,
             self.address,
             group_codes,
@@ -991,19 +994,19 @@ class Contract_Baseline(Base_Contract):
         )
         # self.send_transaction(func)
 
-        return self.send_transaction(func)
+        return self.send_transaction(func, person)
 
-    def delete_disease(self):
-        func = self.contract.functions.delete_disease_baseline(
+    def delete_disease(self,person):
+        func = self.contract.functions.delete_disease(
             self.role, self.address, [diseaseCode2Int(d) for d in self.disease_items]
         )
-        return self.send_transaction(func)
+        return self.send_transaction(func, person)
 
     def delete_purpose_items(self):
         return self.delete_purpose_items()
 
-    def access(self):
-        return self.access()
+    # def access(self):
+    #     return self.access()
 
 
 pattern = r"^[A-Z][0-9\*]{2}$"

@@ -894,7 +894,7 @@ class Experiment_Case_Study:
             # disease_items=["*"],
         )
 
-        r = self.contract.update_area_group_relation()
+        r = self.contract.update_area_group_relation(provider1)
         # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
         print("update_area_group_code ", r)
 
