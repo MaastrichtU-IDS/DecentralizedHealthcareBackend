@@ -119,7 +119,7 @@ class Environment:
         bytecode_runtime = interface["bin-runtime"]
         # logger.info(f"consent keys {interface.keys()}")
         return interface
-
+    
     def deploy_contract_local(self, consent_interface:Dict, force_deploy=False):
         startTime = datetime.now()
         # Use Ganache for web3 instance
@@ -762,7 +762,7 @@ class Base_Contract:
         else:
             raise ValueError(f"Invalid role: {person.role}")
 
-    def access(self, provider: Person, requester: Person):
+    def access(self, provider: Person, requester: Person)-> set:
         if provider.role == ROLE_PROVIDER and requester.role == ROLE_REQUESTER:
             func = self.functions.access_data(
                provider.address, requester.address
@@ -772,6 +772,8 @@ class Base_Contract:
 
         result =  self.send_transaction(func, provider, call=True, label="access").result
         result_set = set()
+        if result == 0:
+            return result_set
         for r in RESULT_CODE:
             if r.value & result:
                 result_set.add(r.name)
@@ -854,8 +856,8 @@ class Contract_Affordable(Base_Contract):
         # )
         # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
 
-        func = self.contract.functions.UploadAreaAffordable(
-            self.role, self.address, group_code, country_code
+        func = self.contract.functions.UploadArea(
+            person.role, person.address, group_code, country_code
         )
 
         # print("UploadAreaCode role", self.role)
@@ -915,7 +917,7 @@ class Contract_Affordable(Base_Contract):
                 )
             # print(f"code {code} disease_code {int2DiseaseCode(code)}")
         # logger.info(f"{self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
-        func = self.contract.functions.UploadDiseaseAffordable(
+        func = self.contract.functions.UploadDisease(
             person.role,
             person.address,
             # False,
