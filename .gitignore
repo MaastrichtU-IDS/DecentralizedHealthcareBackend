@@ -67,3 +67,12 @@ jupyter/data/**
 jupyter/result/**
 jupyter/figs/**
 jupyter/figure/**
+jupyter/UnifiedConsentModel.ipynb
+jupyter/figs/simulation_category.pdf
+jupyter/figs/simulation_scenario.pdf
+jupyter/result/local_area_zero.json
+jupyter/result/local_area.json
+jupyter/result/local_disease_one.json
+jupyter/result/local_disease_whole.json
+jupyter/result/Polygon_area_zero.json
+jupyter/result/result_simulation.json
