@@ -710,7 +710,7 @@ class Experiment_Case_Study:
                 access_result = self.contract.access(provider,  requester)
                 access_str = []
                 for error in access_result:
-                    access_str.append(self.result_map.get(error,self.error_other))
+                    access_str.append(self.result_map.get(error,error.name))
 
                 if len(access_str) == 0:
                     access_result = "\cmark"
@@ -734,13 +734,13 @@ if __name__ == "__main__":
     # test_scenarios(provider_number=10, requester_number=10)
     # date_format = "%S:%M:%H %d-%m-%Y"
 
-    # Experiment_Case_Study(local_baseline).start()
+    Experiment_Case_Study(local_affordable).start()
 
     # experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=3,requester_number = 6)
     # experiment_simulation.start()
     # experiment_simulation.plot_simulation_category()
     # experiment_simulation.plot_simulation_scenario()
 
-    performance = Experiment_Performance(contract_affordable=local_affordable, contract_baseline=local_baseline)
+    # performance = Experiment_Performance(contract_affordable=local_affordable, contract_baseline=local_baseline)
     # performance.start()
-    performance.plot()
+    # performance.plot()

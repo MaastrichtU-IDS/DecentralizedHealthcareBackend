@@ -226,7 +226,7 @@ contract ConsentCode is ConsentBase {
     function CheckArea(
         address _provider,
         address _requester
-    ) public view returns (bool) {
+    ) public view override returns (bool) {
         //check countries, countries of requester must be a subset of countries of provider or the group of countries of requester must be a subset of countries of provider
         Terms storage requester_terms = requesterMapping[_requester];
         Terms storage provider_terms = providerMapping[_provider];
@@ -286,7 +286,7 @@ contract ConsentCode is ConsentBase {
     function CheckDisease(
         address _provider_address,
         address _requester_address
-    ) public view returns (bool) {
+    ) public view override returns (bool) {
         for (
             uint index_requester = 0;
             index_requester <
@@ -306,128 +306,34 @@ contract ConsentCode is ConsentBase {
         return true;
     }
 
-    function access_data(address provider_address, address requester_address) view public returns (uint32) {
+    // function access_data1(address provider_address, address requester_address) view public returns (uint32) {
 
-        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
-        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
+    //     PurposeProvider memory provider = purpose_providers_mapping[provider_address];
+    //     PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
         
-        if (provider.Allow_All == true) {
-            return 0;
-        }
+
+    //      if (provider.Allow_All == true) {
+    //         return 0;
+    //     }
        
-        uint32 result = 0;
-        uint32 u1=1;
+    //     uint32 result = super.AccessData(provider_address, requester_address);
+    //     if (result != 0) {
+    //         return result;
+    //     }
+    //     uint32 u1=1;
 
-        bool generalResearchAndClinicalCare = (provider.OpenToGeneralResearchAndClinicalCare == true && 
-            (requester.UseForMethodsDevelopment== true || 
-            requester.UseForReferenceOrControlMaterial == true || 
-            requester.UseForHMBResearch == false ||
-            requester.UseForPopulationsResearch == true ||
-            requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
+    //     if (provider.GeographicSpecificRestriction) {
+    //         if (!requester.UseBySpecifiedCountries || !CheckArea(provider_address, requester_address)) {
+    //             result += u1 << uint32(RESULT_CODE.GeographicSpecificRestriction);
+    //         }
+    //     }
 
-        bool hmbResearch =  (provider.OpenToHMBResearch == true && 
-            (requester.UseForFundamentalBioResearch == true || 
-            requester.UseForGeneticsResearch == true || 
-            requester.UseForDrugDevelopmentResearch == true || 
-            requester.UseForSpecificDiseaseResearch == true || 
-            requester.UseForAgeCategoriesResearch == true || 
-           requester.UseForGenderCategoriesResearch == true) ||requester.UseByClinicalProfessionals==true);
-
-        bool populationAndAncestryResearch = (provider.OpenToPopulationAndAncestryResearch == true &&
-            (requester.UseForPopulationsResearch == true || 
-            requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
-
-        if (!(generalResearchAndClinicalCare || hmbResearch || populationAndAncestryResearch)) {
-            return  result += u1 << uint32(RESULT_CODE.FirstCategory);
-        }
-
-        if (provider.GeographicSpecificRestriction) {
-            if (!requester.UseBySpecifiedCountries || !CheckArea(provider_address, requester_address)) {
-                result += u1 << uint32(RESULT_CODE.GeographicSpecificRestriction);
-            }
-        }
-
-        if (provider.OpenToDiseaseSpecific) {
-            if (!requester.UseForSpecificDiseaseResearch || !CheckDisease(provider_address, requester_address)) {
-                result += u1 << uint32(RESULT_CODE.OpenToDiseaseSpecific);
-            }
-        }
-
-        if (provider.TimeLimitOnUse) {
-            if (!requester.TimelineRestrictions || !CheckDate(provider_address, requester_address)) {
-                result += u1 << uint32(RESULT_CODE.TimeLimitOnUse);
-            }
-        }
-
-        bool researchSpecificRestrictions =((provider.ResearchSpecificRestrictions == true && requester.UseForReferenceOrControlMaterial== false) || provider.ResearchSpecificRestrictions == false);
-        if (!researchSpecificRestrictions) {
-            result += u1 << uint32(RESULT_CODE.ResearchSpecificRestrictions);
-        }
-
-        bool openToResearchUseOnly = (provider.OpenToResearchUseOnly == true && requester.UseForHMBResearch == false) ||
-            provider.OpenToResearchUseOnly == false;
-
-        if (!openToResearchUseOnly) {
-            result += u1 << uint32(RESULT_CODE.OpenToResearchUseOnly);
-        }
-
-        bool openToGeneticStudiesOnly = ((provider.OpenToGeneticStudiesOnly==true && requester.UseForGeneticsResearch == true) || provider.OpenToGeneticStudiesOnly==false);
-        if (openToGeneticStudiesOnly == false) {
-            result += u1 << uint32(RESULT_CODE.OpenToGeneticStudiesOnly);
-        }
-
-        // bool generalMethodResearch = provider.GeneralMethodResearch ? true : requester.UseForMethodsDevelopment == false;
-
-        bool generalMethodResearch =  (provider.GeneralMethodResearch==false && requester.UseForMethodsDevelopment == false) || provider.GeneralMethodResearch==true;
-
-        if (!generalMethodResearch) {
-            result += u1 << uint32(RESULT_CODE.GeneralMethodResearch);
-        }
-
-        bool openToNonProfitUseOnly = (provider.OpenToNonProfitUseOnly == true && (requester.UseForNonProfitPurpose == true && requester.UseForProfitPurpose == false &&
-           requester.UseByProfitMakingProfessionals == false)) || 
-            provider.OpenToNonProfitUseOnly == false;
-
-
-        if (!openToNonProfitUseOnly) {
-            result += u1 << uint32(RESULT_CODE.OpenToNonProfitUseOnly);
-        }
-
-        // bool publicationRequired = provider.PublicationRequired ? requester.PublicationRequired : true;
-
-        bool publicationRequired =  (provider.PublicationRequired == true && requester.PublicationRequired == true) ||
-            provider.PublicationRequired == false;
-
-
-        if (!publicationRequired) {
-            result += u1 << uint32(RESULT_CODE.PublicationRequired);
-        }
-
-        bool collaborationRequired = provider.CollaborationRequired ? requester.CollaborationRequired : true;
-        if (!collaborationRequired) {
-            result += u1 << uint32(RESULT_CODE.CollaborationRequired);
-        }
-
-        // bool ethicsApprovalrequired = 
-        if (!(provider.EthicsApprovalrequired ? requester.FormalApprovalRequired : true)) {
-            result += u1 << uint32(RESULT_CODE.EthicsApprovalrequired);
-        }
-
-       bool dataSecurityMeasuresRequired =   (provider.DataSecurityMeasuresRequired == true && requester.DataSecurityMeasures == true  && requester.DataDestructionRequired == true && requester.LinkingOfAccessedRecords == true && requester.RecontactingDataSubjects == true && requester.IntellectualPropertyClaims == true && requester.UseOfAccessedResources == true) ||provider.DataSecurityMeasuresRequired == false;
-        if (!dataSecurityMeasuresRequired) {
-            result += u1 << uint8(RESULT_CODE.DataSecurityMeasuresRequired);
-        }
-
-        // bool costOnUse = 
-        if (!((provider.CostOnUse == true && requester.FeesForAccess ==  true) ||provider.CostOnUse == false) ) {
-            result += u1 << uint8(RESULT_CODE.CostOnUse);
-        }
-
-        // if (result == 0) {
-        //     result |= 1 << uint32(RESULT_CODE.Success);
-        // }
-
-        return result;
-    }
+    //     if (provider.OpenToGeneralResearchAndClinicalCare && provider.OpenToHMBResearch && provider.OpenToDiseaseSpecific) {
+    //         if (!requester.UseForSpecificDiseaseResearch || !CheckDisease(provider_address, requester_address)) {
+    //             result += u1 << uint32(RESULT_CODE.OpenToDiseaseSpecific);
+    //         }
+    //     }
+    //     return result;
+    // }
        
 }

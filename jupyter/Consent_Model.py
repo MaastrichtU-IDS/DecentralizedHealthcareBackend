@@ -776,7 +776,7 @@ class Base_Contract:
             return result_set
         for r in RESULT_CODE:
             if r.value & result:
-                result_set.add(r.name)
+                result_set.add(r)
         return result_set
 
 

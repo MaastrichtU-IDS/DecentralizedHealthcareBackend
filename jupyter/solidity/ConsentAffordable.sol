@@ -200,7 +200,7 @@ contract ConsentCode is ConsentBase {
     function CheckArea(
         address _provider_address,
         address _requester_address
-    ) public view returns (bool) {
+    ) public view override returns (bool) {
         if (Group_Countries.length == 0) {
             revert("CheckAreaAffordable: Group_Countries is empty");
         }
@@ -252,7 +252,7 @@ contract ConsentCode is ConsentBase {
     function CheckDisease(
         address _provider_address,
         address _requester_address
-    ) public view returns (bool) {
+    ) public view override returns (bool) {
         // uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group_Affordable;
         // uint32 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;
         // if ((requester_group_code & provider_group_code) != requester_group_code) {
@@ -293,34 +293,34 @@ contract ConsentCode is ConsentBase {
     }
 
 
-    function access_data(address provider_address, address requester_address) view public returns (uint32) {
+    // function access_data1(address provider_address, address requester_address) view public returns (uint32) {
 
-        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
-        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
+    //     PurposeProvider memory provider = purpose_providers_mapping[provider_address];
+    //     PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
         
-        if (provider.Allow_All == true) {
-            return 0;
-        }
+    //     if (provider.Allow_All == true) {
+    //         return 0;
+    //     }
        
-        uint32 result = super.AccessData(provider_address, requester_address);
-        if (result != 0) {
-            return result;
-        }
-        uint32 u1=1;
+    //     uint32 result = super.AccessData(provider_address, requester_address);
+    //     if (result != 0) {
+    //         return result;
+    //     }
+    //     uint32 u1=1;
 
-        if (provider.GeographicSpecificRestriction) {
-            if (!requester.UseBySpecifiedCountries || !CheckArea(provider_address, requester_address)) {
-                result += u1 << uint32(RESULT_CODE.GeographicSpecificRestriction);
-            }
-        }
+    //     if (provider.GeographicSpecificRestriction) {
+    //         if (!requester.UseBySpecifiedCountries || !CheckArea(provider_address, requester_address)) {
+    //             result += u1 << uint32(RESULT_CODE.GeographicSpecificRestriction);
+    //         }
+    //     }
 
-        if (provider.OpenToGeneralResearchAndClinicalCare && provider.OpenToHMBResearch && provider.OpenToDiseaseSpecific) {
-            if (!requester.UseForSpecificDiseaseResearch || !CheckDisease(provider_address, requester_address)) {
-                result += u1 << uint32(RESULT_CODE.OpenToDiseaseSpecific);
-            }
-        }
-        return result;
-    }
+    //     if (provider.OpenToGeneralResearchAndClinicalCare && provider.OpenToHMBResearch && provider.OpenToDiseaseSpecific) {
+    //         if (!requester.UseForSpecificDiseaseResearch || !CheckDisease(provider_address, requester_address)) {
+    //             result += u1 << uint32(RESULT_CODE.OpenToDiseaseSpecific);
+    //         }
+    //     }
+    //     return result;
+    // }
      
 
 }

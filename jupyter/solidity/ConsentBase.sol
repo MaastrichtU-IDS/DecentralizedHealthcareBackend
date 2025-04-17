@@ -22,12 +22,12 @@ contract ConsentBase {
         OpenToGeneralResearchAndClinicalCare,
         OpenToHMBResearch,
         OpenToPopulationAndAncestryResearch,
-        OpenToDiseaseSpecific,
+        DiseaseSpecific,
         OpenToGeneticStudiesOnly,
         ResearchSpecificRestrictions,
         OpenToResearchUseOnly,
         GeneralMethodResearch,
-        GeographicSpecificRestriction,
+        GeographicSpecific,
         OpenToNonProfitUseOnly,
         PublicationRequired,
         CollaborationRequired,
@@ -65,12 +65,12 @@ contract ConsentBase {
         bool OpenToGeneralResearchAndClinicalCare;
         bool OpenToHMBResearch;
         bool OpenToPopulationAndAncestryResearch;
-        bool OpenToDiseaseSpecific;
+        bool DiseaseSpecific;
         bool OpenToGeneticStudiesOnly;
         bool ResearchSpecificRestrictions;
         bool OpenToResearchUseOnly;
         bool GeneralMethodResearch;
-        bool GeographicSpecificRestriction;
+        bool GeographicSpecific;
         bool OpenToNonProfitUseOnly;
         bool PublicationRequired;
         bool CollaborationRequired;
@@ -90,7 +90,7 @@ contract ConsentBase {
         bool UseForFundamentalBioResearch;
         bool UseForGeneticsResearch;
         bool UseForDrugDevelopmentResearch;
-        bool UseForSpecificDiseaseResearch;
+        bool SpecificDiseaseResearch;
         bool UseForAgeCategoriesResearch;
         bool UseForGenderCategoriesResearch;
         bool UseForDecisionSupport;
@@ -99,7 +99,7 @@ contract ConsentBase {
         bool UseByClinicalProfessionals;
         bool UseByProfitMakingProfessionals;
         bool UseByNonProfessionals;
-        bool UseBySpecifiedCountries;
+        bool SpecifiedCountries;
         bool UseForProfitPurpose;
         bool UseForNonProfitPurpose;
         bool TimelineRestrictions;
@@ -262,7 +262,22 @@ contract ConsentBase {
         return true;
     }
 
-    function AccessData(address provider_address, address requester_address) view public returns (uint32) {
+    
+    function CheckDisease(
+        address _provider_address,
+        address _requester_address
+    ) public view virtual returns (bool) {
+        revert("CheckDisease: Not implemented");
+    }
+
+     function CheckArea(
+        address _provider_address,
+        address _requester_address
+    ) public view virtual returns (bool) {
+        revert("CheckArea: Not implemented");
+    }
+
+    function AccessData(address provider_address, address requester_address) view internal  returns (uint32) {
 
         PurposeProvider memory provider = purpose_providers_mapping[provider_address];
         PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
@@ -285,7 +300,7 @@ contract ConsentBase {
             (requester.UseForFundamentalBioResearch == true || 
             requester.UseForGeneticsResearch == true || 
             requester.UseForDrugDevelopmentResearch == true || 
-            requester.UseForSpecificDiseaseResearch == true || 
+            requester.SpecificDiseaseResearch == true || 
             requester.UseForAgeCategoriesResearch == true || 
            requester.UseForGenderCategoriesResearch == true) ||requester.UseByClinicalProfessionals==true);
 
@@ -346,6 +361,8 @@ contract ConsentBase {
             result += u1 << uint32(RESULT_CODE.CollaborationRequired);
         }
 
+    
+
         // bool ethicsApprovalrequired = 
         if (!(provider.EthicsApprovalrequired ? requester.FormalApprovalRequired : true)) {
             result += u1 << uint32(RESULT_CODE.EthicsApprovalrequired);
@@ -367,6 +384,44 @@ contract ConsentBase {
 
         return result;
     }
+
+
+    
+    function access_data(address provider_address, address requester_address) view public returns (uint32) {
+
+        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
+        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
+        
+        if (provider.Allow_All == true) {
+            return 0;
+        }
+       
+        uint32 result = AccessData(provider_address, requester_address);
+        if (result != 0) {
+            return result;
+        }
+        uint32 u1=1;
+
+        if (provider.GeographicSpecific) {
+            if (!requester.SpecifiedCountries || !CheckArea(provider_address, requester_address)) {
+                result += u1 << uint32(RESULT_CODE.GeographicSpecific);
+            }
+        }
+
+        if (provider.DiseaseSpecific) {
+            if (!requester.SpecificDiseaseResearch || !CheckDisease(provider_address, requester_address)) {
+                result += u1 << uint32(RESULT_CODE.DiseaseSpecific);
+            }
+        }
+
+        if (provider.TimeLimitOnUse) {
+            if (!requester.TimelineRestrictions || !CheckDate(provider_address, requester_address)) {
+                result += u1 << uint32(RESULT_CODE.TimeLimitOnUse);
+            }
+        }
+        return result;
+    }
+
      
 
 }
