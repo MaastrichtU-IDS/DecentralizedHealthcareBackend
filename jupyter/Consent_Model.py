@@ -920,7 +920,6 @@ class Contract_Affordable(Base_Contract):
         func = self.contract.functions.UploadDisease(
             person.role,
             person.address,
-            # False,
             disease_group_code,
             disease_combined_codes,
         )
@@ -931,13 +930,18 @@ class Contract_Affordable(Base_Contract):
         return self.upload_purpose_items()
 
     def delete_area(self, person: Person) -> TransactionResult:
-        return self.delete_area()
+        function = self.contract.delete_area(
+            person.role, person.address
+        )
+        return self.send_transaction(function, person)
 
-    def delete_disease(self):
-        return self.delete_disease()
+    def delete_disease(self, person: Person):
+        function = self.contract.delete_disease(
+            person.role, person.address
+        )
+        return self.send_transaction(function, person)
 
-    def delete_purpose_items(self):
-        return self.delete_purpose_items()
+
 
 
 class Contract_Baseline(Base_Contract):
@@ -1004,8 +1008,7 @@ class Contract_Baseline(Base_Contract):
         )
         return self.send_transaction(func, person)
 
-    def delete_purpose_items(self):
-        return self.delete_purpose_items()
+
 
     # def access(self):
     #     return self.access()

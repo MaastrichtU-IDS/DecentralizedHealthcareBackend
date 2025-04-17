@@ -108,23 +108,8 @@ contract ConsentCode is ConsentBase {
         uint8[] memory Country_Code
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-
-        if (role == role_provider) {
-            // require(msg.sender == dataProvider, "Invalid sender");
-       
-            delete terms.Area_Group_Affordable;
-            delete terms.Area_Country_Affordable;
-            // provider_areaMapping[_address].Area_Country_List_Baseline = Country_Code;
-            // provider_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
-        }
-
-        if (role == role_requester) {
-            // require(msg.sender == dataProvider, "Invalid sender");
-            delete terms.Area_Group_Affordable;
-            delete terms.Area_Country_Affordable;
-            // requester_areaMapping[_address].Area_Country_List_Baseline = Country_Code;
-            // requester_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
-        }
+        delete terms.Area_Group_Affordable;
+        delete terms.Area_Country_Affordable;
     }
 
 
@@ -154,24 +139,11 @@ contract ConsentCode is ConsentBase {
     function delete_disease(
         uint8 role,
         address _address,
-        uint16[] memory Disease_Array_Baseline
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-         
-        if (role == role_provider) {
+        delete terms.Disease_Category_Affordable;
+        delete terms.Disease_Group_Affordable;
         
-            delete terms.Disease_Category_Affordable;
-            delete terms.Disease_Group_Affordable;
-        }
-
-        if (role == role_requester) {
-            // for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
-            //     terms.Disease_Array_Baseline.push(Disease_Array_Baseline[i]);
-            // }
-   
-            delete terms.Disease_Category_Affordable;
-            delete terms.Disease_Group_Affordable;
-        }
     }
 
 

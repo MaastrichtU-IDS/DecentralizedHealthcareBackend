@@ -277,7 +277,7 @@ contract ConsentBase {
         revert("CheckArea: Not implemented");
     }
 
-    function AccessData(address provider_address, address requester_address) view internal  returns (uint32) {
+    function AccessData(address provider_address, address requester_address) view private  returns (uint32) {
 
         PurposeProvider memory provider = purpose_providers_mapping[provider_address];
         PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
