@@ -375,7 +375,6 @@ class DUO(Enum):
     CostOnUse = (0, "Cost on Use")
 
 
-
 class Purpose(Enum):
     ClinicalProfessionals = (1, "Clinical Professionals", "CP")
     AcademicProfessionals = (2, "Academic Professionals", "AP")
@@ -2173,7 +2172,7 @@ class Scenarios:
             provider = Provider(
                 name=f"provider_{i}",
                 description=f"provider_{i}",
-                address=accounts.pop(),
+                # address=accounts.pop(),
                 profile=i,
                 random_init=True,
             )
@@ -2262,82 +2261,82 @@ def test_case_study():
         name="Provider 1",
         description=r"Provider.\ref{provider:a}",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
     provider2 = Provider(
         name="Provider 2",
         description=r"Provider.\ref{provider:b}",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     provider3 = Provider(
         name="Provider 3",
         description=r"Provider.\ref{provider:c}",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     provider4 = Provider(
         name="Provider 4",
         description=r"Provider.\ref{provider:d}",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
     provider5 = Provider(
         name="Provider 5",
         description=r"Provider.\ref{provider:e}",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester1 = Requester(
         name="Requester 1",
         description="1",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester2 = Requester(
         name="Requester 2",
         description="Requester2",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester3 = Requester(
         name="Requester 3",
         description="Requester3",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester4 = Requester(
         name="Requester 4",
         description="Requester4",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester5 = Requester(
         name="Requester 5",
         description="Requester5",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester6 = Requester(
         name="Requester 6",
         description="Requester6",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester7 = Requester(
         name="Requester 7",
         description="Requester7",
         # contract=deployed_contract,
-        address=accounts.pop(),
+        # address=accounts.pop(),
     )
 
     requester8 = Requester(
@@ -2352,7 +2351,7 @@ def test_case_study():
         # contract=deployed_contract,
         # address=accounts.pop(),
     )
-    
+
     r = provider1.update_area_group_relation()
     # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
     # print("update_area_group_code ", r)
@@ -2422,7 +2421,6 @@ def test_case_study():
     requester8.disease_items = ["*"]
     requester8.bool_items = PurposeItems(true_prob=1)
 
-
     requester9.bool_items =  PurposeItems(true_set={"ClinicalProfessionals"})
     requester9.country_names = ["*"]
     requester9.disease_items = ["*"]
@@ -2462,7 +2460,7 @@ def test_case_study():
             access_str = []
             for error in access_result:
                 access_str.append(result_map[error])
-                
+
             if len(access_str) == 0:
                 access_result = "\cmark"
             else:
@@ -2471,7 +2469,7 @@ def test_case_study():
             # requester.access_area_simple(provider)
             # requester.access_disease(provider)
         result_list.append("&".join(row_list) + r"\\")
-    
+
     print("\n".join(r))
 
 def test_time_area():

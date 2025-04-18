@@ -123,12 +123,6 @@ contract ConsentCode is ConsentBase {
         uint128[] memory Disease_Category_Affordable
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        // if (allow_all) {
-        //     terms.allow_all_disease = true;
-        //     return;
-        // }
-        // terms.Disease_Group_Affordable = Disease_Group_Affordable;
-        //  terms.Disease_Category_Affordable; = Disease_Category_Affordable;;
         for (uint8 i = 0; i < Disease_Category_Affordable.length; i++) {
             terms.Disease_Category_Affordable[i] = Disease_Category_Affordable[i];
         }
@@ -138,7 +132,7 @@ contract ConsentCode is ConsentBase {
     // MARK: UploadDiseaseBaseline
     function delete_disease(
         uint8 role,
-        address _address,
+        address _address
     ) public {
         Terms storage terms = TermsByRole(role, _address);
         delete terms.Disease_Category_Affordable;

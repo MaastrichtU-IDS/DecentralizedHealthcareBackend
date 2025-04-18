@@ -490,6 +490,10 @@ class Experiment_Simulation:
             title="Categories",
         )
 
+    def plot(self):
+        self.plot_simulation_category()
+        self.plot_simulation_scenario()
+
     def plot_simulation_scenario(self):
         data = json.load(open(self.result_fp, "r"))
         scenario_dict = dict()
@@ -507,7 +511,7 @@ class Experiment_Simulation:
             data=scenario_dict,
             x_labels=list(scenario_dict.keys()),
             y_label="Success Rate",
-            file_name="figs/simulation_scenario.pdf",
+            file_name="figure/simulation_scenario.pdf",
             title="Scenarios",
         )
 
@@ -518,9 +522,9 @@ class Experiment_Case_Study:
         self.contract = contract
         self.init_person()
         self.result_map = {
-            RESULT_CODE.GeographicSpecificRestriction: r"\faFlag[regular]",
-            RESULT_CODE.OpenToDiseaseSpecific: r"\faCapsules",
-            RESULT_CODE.TimeLimitOnUse: r"\faCalendar*[regular]",
+            RESULT_CODE.GeographicSpecificRestriction.name: r"\faFlag[regular]",
+            RESULT_CODE.OpenToDiseaseSpecific.name: r"\faCapsules",
+            RESULT_CODE.TimeLimitOnUse.name: r"\faCalendar*[regular]",
             # RESULT_CODE.GeographicSpecificRestriction: r"\circletfillhl",
         }
         self.error_other = r"\circletfillhl"
@@ -710,7 +714,7 @@ class Experiment_Case_Study:
                 access_result = self.contract.access(provider,  requester)
                 access_str = []
                 for error in access_result:
-                    access_str.append(self.result_map.get(error,error.name))
+                    access_str.append(self.result_map.get(error.name,error.name))
 
                 if len(access_str) == 0:
                     access_result = "\cmark"
@@ -729,17 +733,14 @@ if __name__ == "__main__":
     environment = Environment()
     local_baseline = Contract_Baseline(environment.deploy_contract_local(environment.interface_baseline))
     local_affordable =Contract_Affordable(environment.deploy_contract_local(environment.interface_affordable) )
-    # polygon_env = deploy_contract_polygon(force_deploy=False)
-    # print(f"accounts {accounts[0]}")
-    # test_scenarios(provider_number=10, requester_number=10)
-    # date_format = "%S:%M:%H %d-%m-%Y"
 
-    Experiment_Case_Study(local_affordable).start()
 
-    # experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=3,requester_number = 6)
-    # experiment_simulation.start()
-    # experiment_simulation.plot_simulation_category()
-    # experiment_simulation.plot_simulation_scenario()
+    # Experiment_Case_Study(local_affordable).start()
+
+    experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=100,requester_number = 300)
+    experiment_simulation.start()
+    experiment_simulation.plot()
+
 
     # performance = Experiment_Performance(contract_affordable=local_affordable, contract_baseline=local_baseline)
     # performance.start()
