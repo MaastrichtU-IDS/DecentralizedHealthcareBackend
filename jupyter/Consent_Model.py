@@ -728,6 +728,8 @@ class Base_Contract:
             tx_hash = func.transact(person_dict)
             receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
             end_time = time.time_ns()
+        else:
+            raise ValueError(f"Invalid env name: {self.env.name}")
 
         # logger.info(f"receipt {receipt}")
         gas_used = receipt["gasUsed"]
@@ -746,9 +748,9 @@ class Base_Contract:
             self.upload_date(person)
 
     def _upload_provider(self,person: Person) -> TransactionResult:
-        if DUO.GeographicSpecificRestriction in person.bool_items:
+        if DUO.GeographicSpecific in person.bool_items:
             self.upload_area(person)
-        if DUO.OpenToDiseaseSpecific in person.bool_items:
+        if DUO.DiseaseSpecific in person.bool_items:
             self.upload_disease(person)
         if DUO.TimeLimitOnUse in person.bool_items:
             self.upload_date(person)
@@ -1121,29 +1123,55 @@ ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlM
                    ADAM.TimelineRestrictions, ADAM.FormalApprovalRequired, ADAM.CollaborationRequired, ADAM.PublicationRequired, ADAM.DataSecurityMeasures, ADAM.DataDestructionRequired, ADAM.LinkingOfAccessedRecords, ADAM.RecontactingDataSubjects, ADAM.IntellectualPropertyClaims, ADAM.UseOfAccessedResources, ADAM.FeesForAccess]
 
 class DUO(Enum):
-    Allow_All = 1
-    OpenToGeneralResearchAndClinicalCare = 2
-    OpenToHMBResearch = 4
-    OpenToPopulationAndAncestryResearch = 8
-    OpenToDiseaseSpecific = 16
-    OpenToGeneticStudiesOnly = 32
-    ResearchSpecificRestrictions = 64
-    OpenToResearchUseOnly = 128
-    GeneralMethodResearch = 256
-    GeographicSpecificRestriction = 512
-    OpenToNonProfitUseOnly = 1024
-    PublicationRequired = 2048
-    CollaborationRequired = 4096
-    EthicsApprovalrequired = 8192
-    TimeLimitOnUse = 16384
-    CostOnUse = 32768
-    DataSecurityMeasuresRequired = 65536
+    NoRestriction = 1
+    # OpenToGeneralResearchAndClinicalCare = 2
+    # OpenToHMBResearch = 4
+    # OpenToPopulationAndAncestryResearch = 8
+    # OpenToDiseaseSpecific = 16
+    # OpenToGeneticStudiesOnly = 32
+    # ResearchSpecificRestrictions = 64
+    # OpenToResearchUseOnly = 128
+    # GeneralMethodResearch = 256
+    # GeographicSpecificRestriction = 512
+    # OpenToNonProfitUseOnly = 1024
+    # PublicationRequired = 2048
+    # CollaborationRequired = 4096
+    # EthicsApprovalrequired = 8192
+    # TimeLimitOnUse = 16384
+    # CostOnUse = 32768
+    # DataSecurityMeasuresRequired = 65536
     # DiseaseSpecificResearch = 131072
 
+    GeneralResearch = 2
+    ClinicalCare = 4
+    HMBResearch = 8
+    PopulationAndAncestryResearchOnly = 16
+    PopulationAndAncestryResearchNon = 32
+    DiseaseSpecific = 64
+    GeneticStudiesOnly = 128
+    GeneralMethodResearchNon = 256
+    GeographicSpecific = 512
+    NonProfitUseOnly = 1024
+    NonCommercialUseOnly = 2048
+    PublicationRequired = 4096
+    PublicationMoratorium = 8192
+    CollaborationRequired = 16384
+    EthicsApprovalrequired = 32768
+    TimeLimitOnUse = 65536
+    ProfitOrganisationNon = 131072
+    DataSecurityMeasuresRequired = 262144
+    ReturnToResource = 524288
+    UserSpecificRestriction = 1048576
+    ProjectSpecificRestriction = 2097152
+    InstitutionSpecificRestriction = 4194304
+    ResearchSpecificRestriction = 8388608
+    DataUsePermission = 16777216
+        
 
-DUO_order_list = [
-    DUO.Allow_All, 
-                  DUO.OpenToGeneralResearchAndClinicalCare, DUO.OpenToHMBResearch, DUO.OpenToPopulationAndAncestryResearch, DUO.OpenToDiseaseSpecific, DUO.OpenToGeneticStudiesOnly, DUO.ResearchSpecificRestrictions, DUO.OpenToResearchUseOnly, DUO.GeneralMethodResearch, DUO.GeographicSpecificRestriction, DUO.OpenToNonProfitUseOnly, DUO.PublicationRequired, DUO.CollaborationRequired, DUO.EthicsApprovalrequired, DUO.TimeLimitOnUse, DUO.CostOnUse, DUO.DataSecurityMeasuresRequired]
+
+# DUO_order_list = [
+#     DUO.Allow_All, 
+#                   DUO.OpenToGeneralResearchAndClinicalCare, DUO.OpenToHMBResearch, DUO.OpenToPopulationAndAncestryResearch, DUO.OpenToDiseaseSpecific, DUO.OpenToGeneticStudiesOnly, DUO.ResearchSpecificRestrictions, DUO.OpenToResearchUseOnly, DUO.GeneralMethodResearch, DUO.GeographicSpecificRestriction, DUO.OpenToNonProfitUseOnly, DUO.PublicationRequired, DUO.CollaborationRequired, DUO.EthicsApprovalrequired, DUO.TimeLimitOnUse, DUO.CostOnUse, DUO.DataSecurityMeasuresRequired]
 
 
 ROLE_PROVIDER = 1
@@ -1194,12 +1222,14 @@ disease_dict = {}
 for c in icd10.chapters:
     codes = expand_code_range(c[1])
     for code in codes:
+        # 
         letter = code[0]
         if letter not in disease_dict:
             disease_dict[letter] = []
         disease_dict[letter].append(code)
 
 disease_list = [item for sublist in disease_dict.values() for item in sublist]
+print(f"disease_list length {len(disease_list)}")
 
 country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
 
@@ -1287,7 +1317,7 @@ class Provider(Person):
     def get_purpose_items(self):
         duo_list = self.contract.functions.GetPurposeItemsProvider(self.address).call()
         result_set = set()
-        for result_item, duo_item in zip(duo_list, DUO_order_list):
+        for result_item, duo_item in zip(duo_list, DUO):
             if result_item:
                 result_set.add(duo_item)
         return result_set

@@ -324,7 +324,7 @@ class Experiment_Simulation:
             return result_map
     PROFILES_DICT = {
         profile_strict: {
-            "simple_items": [DUO.OpenToHMBResearch, DUO.OpenToDiseaseSpecific,DUO.GeographicSpecificRestriction],
+            "simple_items": [DUO.HMBResearch, DUO.DiseaseSpecific, DUO.GeographicSpecific],
             "group_code": 2,
             "country_code": 20,
             "disease_items": ["A**","B**"],
@@ -332,7 +332,7 @@ class Experiment_Simulation:
             "months": 6,
         },
         profile_medium: {
-            "simple_items": [DUO.OpenToHMBResearch, DUO.GeographicSpecificRestriction],
+            "simple_items": [DUO.HMBResearch, DUO.GeographicSpecific],
             "group_code": 2,
             "country_code": 20,
             "disease_items": ["A**","B**"],
@@ -340,7 +340,7 @@ class Experiment_Simulation:
             "months": 12,
         },
         profile_open: {
-            "simple_items":  DUO.OpenToHMBResearch,
+            "simple_items":  DUO.HMBResearch,
             "group_code": 1.0,
             "country_code": 1.0,
             "disease_items": 1.0,
@@ -737,7 +737,7 @@ if __name__ == "__main__":
 
     # Experiment_Case_Study(local_affordable).start()
 
-    experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=100,requester_number = 300)
+    experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=10,requester_number = 30)
     experiment_simulation.start()
     experiment_simulation.plot()
 
