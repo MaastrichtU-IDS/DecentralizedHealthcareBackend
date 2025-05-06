@@ -22,13 +22,11 @@ contract ConsentBase {
         GeneralResearch,
         ClinicalCare,
         HMBResearch,
-        PopulationAndAncestryResearchOnly,
-        PopulationAndAncestryResearchNon,
+        populationAndAncestryResearchOnly,
+        populationAndAncestryResearchNon,
         DiseaseSpecific,
         GeneticStudiesOnly,
-        ResearchSpecificRestriction,
-        ResearchUseOnly,
-        GeneralMethodResearchNon,
+        NonGeneralMethodResearch,
         GeographicSpecific,
         NonProfitUseOnly,
         NonCommercialUseOnly,
@@ -37,9 +35,14 @@ contract ConsentBase {
         CollaborationRequired,
         EthicsApprovalrequired,
         TimeLimitOnUse,
-        // CostOnUse,
-        DataSecurityMeasuresRequired
-        // DiseaseSpecificResearch
+        ProfitOrganisationNon,
+        DataSecurityMeasuresRequired,
+        ReturnToResource,
+        UserSpecificRestriction,
+        ProjectSpecificRestriction,
+        InstitutionSpecificRestriction,
+        ResearchSpecificRestriction,
+        DataUsePermission
     }
 
 
@@ -48,34 +51,28 @@ contract ConsentBase {
     mapping(address => Date) providerDateMapping; // data subject
     mapping(address => Date) requesterDateMapping; // data subject
 
-    uint8 constant role_provider = 1;
-    uint8 constant role_requester = 2;
-    uint256[] Group_Countries;
-    uint16[] Group_Index;
-    // uint8[][] Country_Group_baseline;
+    uint8 constant ROLE_PROVIDER = 1;
+    uint8 constant ROLE_REQUESTER = 2;
 
-    uint16 Area_Simple_Version = 0;
 
     // uint8[] Country_Code_8;
     // uint32[] Country_Group_Code_32;
-    mapping(uint8 => uint32) Country_Code_Mapping;
-    mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
-    mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
+    // mapping(uint8 => uint32) Country_Code_Mapping;
+    // mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
+    // mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
 
 
 
-    struct PurposeProvider {
+    struct DUO {
         bool NoRestriction;
         bool GeneralResearch;
         bool ClinicalCare;
         bool HMBResearch;
-        bool PopulationAndAncestryResearchOnly;
-        bool PopulationAndAncestryResearchNon;
+        bool populationAndAncestryResearchOnly;
+        bool populationAndAncestryResearchNon;
         bool DiseaseSpecific;
         bool GeneticStudiesOnly;
-     
-        // bool ResearchUseOnly;
-        bool GeneralMethodResearchNon;
+        bool NonGeneralMethodResearch;
         bool GeographicSpecific;
         bool NonProfitUseOnly;
         bool NonCommercialUseOnly;
@@ -84,19 +81,23 @@ contract ConsentBase {
         bool CollaborationRequired;
         bool EthicsApprovalrequired;
         bool TimeLimitOnUse;
-        bool ProfitOrganisationNon;
-        // bool CostOnUse;
-        bool DataSecurityMeasuresRequired;
+        // bool ProfitOrganisationNon;
+        // bool DataSecurityMeasuresRequired;
         bool ReturnToResource;
+ 
+        bool ResearchSpecificRestriction;
+        bool DataUsePermission;
 
         bool UserSpecificRestriction;
         bool ProjectSpecificRestriction;
         bool InstitutionSpecificRestriction;
-        bool ResearchSpecificRestriction;
-        bool DataUsePermission;
+
+        // bool ProjectSpecificRestriction;
     }
 
-    struct PurposeRequester {
+
+
+    struct ADAM {
         bool UseForMethodsDevelopment;
         bool UseForReferenceOrControlMaterial;
         bool UseForPopulationsResearch;
@@ -121,6 +122,7 @@ contract ConsentBase {
         bool FormalApprovalRequired;
         bool CollaborationRequired;
         bool PublicationRequired;
+        bool NonPublicationRequired;
         bool DataSecurityMeasures;
         bool DataDestructionRequired;
         bool LinkingOfAccessedRecords;
@@ -128,56 +130,188 @@ contract ConsentBase {
         bool IntellectualPropertyClaims;
         bool UseOfAccessedResources;
         bool FeesForAccess;
+
+        bool ReportUsage;
+        bool UniformConsent;
+
+        bool UsedByPersons;
+        bool UsedByProjects;
+        bool UsedByOrganisations;
+  
     }
 
-    mapping(address => PurposeProvider) purpose_providers_mapping;
-    mapping(address => PurposeRequester) purpose_requesters_mapping;
+    struct DUO_Extension{
+         uint32[] UserSpecificRestriction;
+         uint32[] ProjectSpecificRestriction;
+         uint32[] InstitutionSpecificRestriction;
+    }
+
+    struct ADAM_Extension{
+        uint32[] UsedByPersons;
+        uint32[] UsedByProjects;
+        uint32[] UsedByOrganisations;
+    }
+
+
+
+    mapping(address => DUO) duo_mapping;
+    mapping(address => ADAM) adam_maaping;
+
+    mapping(address => DUO_Extension) provider_extension_mapping;
+    mapping(address => ADAM_Extension) requester_extension_maaping;
+
 
      function uploadPurposeProvider(
         address _address1,
-        PurposeProvider memory purpose
+        DUO memory purpose
     ) public {
-        purpose_providers_mapping[_address1] = purpose;
+        duo_mapping[_address1] = purpose;
         // DataSubjectAcc.push(_address1);
     }
 
     function uploadPurposeRequester(
         address _address2,
-        PurposeRequester memory purpose
+        ADAM memory purpose
     ) public {
-        purpose_requesters_mapping[_address2] = purpose;
+        adam_maaping[_address2] = purpose;
         // DataRequesterAcc.push(_address2);
     }
 
-    function GetPurposeItemsProvider(address _address) view public returns (PurposeProvider memory) {
-              return purpose_providers_mapping[_address];
+    function GetPurposeItemsProvider(address _address) view public returns (DUO memory) {
+              return duo_mapping[_address];
     }
 
-    function GetPurposeItemsRequester(address _address) view public returns (PurposeRequester memory) {
-        return purpose_requesters_mapping[_address];
+    function GetPurposeItemsRequester(address _address) view public returns (ADAM memory) {
+        return adam_maaping[_address];
     }
+
+    function upload_extension_provider(
+        address _address1,
+        DUO_Extension memory extension
+    ) public {
+        provider_extension_mapping[_address1] = extension;
+    }
+
+    function upload_extension_requester(
+        address _address2,
+        ADAM_Extension memory extension
+    ) public {
+        requester_extension_maaping[_address2] = extension;
+    }
+
+    function check_users(
+        address provider_address,
+        address requester_address   
+    ) private view returns (bool) {
+        Extension memory provider_extension = provider_extension_mapping[provider_address];
+        Extension memory requester_extension = requester_extension_maaping[requester_address];
+
+        uint32 tmp_provider = 0;
+        uint32 tmp_requester = 0;
+        bool flag = false;
+
+        for (uint256 j = 0; j < requester_extension.UsedByPersons.length; j++) {
+            tmp_requester = requester_extension.UsedByPersons[j];
+            for (uint256 i = 0; i < provider_extension.UserSpecificRestriction.length; i++) {
+                tmp_provider = provider_extension.UserSpecificRestriction[i];
+                if (tmp_requester == tmp_provider) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag == false) {
+                return false; // Access denied
+            }
+        }
+
+        return false; // Access denied
+    }
+
+    function check_institution(
+        address provider_address,
+        address requester_address   
+    ) private view returns (bool) {
+        Extension memory provider_extension = provider_extension_mapping[provider_address];
+        Extension memory requester_extension = requester_extension_maaping[requester_address];
+
+        // Check if the provider's extension is empty
+        if (provider_extension.UserSpecificRestriction.length == 0 && 
+            provider_extension.InstitutionSpecificRestriction.length == 0 && 
+            provider_extension.ProjectSpecificRestriction.length == 0) {
+            return true; // No restrictions, access granted
+        }
+        uint32 tmp_provider = 0;
+        uint32 tmp_requester = 0;
+        bool flag = false;
+
+        for (uint256 j = 0; j < requester_extension.UsedByOrganisations.length; j++) {
+            tmp_requester = requester_extension.UsedByOrganisations[j];
+            for (uint256 i = 0; i < provider_extension.InstitutionSpecificRestriction.length; i++) {
+                tmp_provider = provider_extension.InstitutionSpecificRestriction[i];
+                if (tmp_requester == tmp_provider) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag == false) {
+                return false; // Access denied
+            }
+        }
+
+        return false; // Access denied
+    }
+
+    function check_project(
+        address provider_address,
+        address requester_address   
+    ) private view returns (bool) {
+        Extension memory provider_extension = provider_extension_mapping[provider_address];
+        Extension memory requester_extension = requester_extension_maaping[requester_address];
+
+     
+        uint32 tmp_provider = 0;
+        uint32 tmp_requester = 0;
+        bool flag = false;
+
+        for (uint256 j = 0; j < requester_extension.UsedByProjects.length; j++) {
+            tmp_requester = requester_extension.UsedByProjects[j];
+            for (uint256 i = 0; i < provider_extension.ProjectSpecificRestriction.length; i++) {
+                tmp_provider = provider_extension.ProjectSpecificRestriction[i];
+                if (tmp_requester == tmp_provider) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag == false) {
+                return false; // Access denied
+            }
+        }
+
+        return false; // Access denied
+    }
+
+    // function upload_provider_extension(
+    //     address _address1,
+    //     DUO_Extension memory purpose
+    // ) public {
+    //     duo_mapping[_address1] = purpose;
+    //     // DataSubjectAcc.push(_address1);
+    // }
   
     //MARK - UpdateAreaSimple
-    function UpdateCountryGroupRelation(
-        uint256[] memory _Group_Countries,
-        uint16[] memory _Country_Group_Code_Index
-    ) public {
-        Group_Countries = _Group_Countries;
-        Group_Index = _Country_Group_Code_Index;
-        Area_Simple_Version += 1;
-    }
+
 
     // MARK: - DisplayCountryGroupRelation
-    function DisplayCountryGroupRelation()
-        public
-        view
-        returns (uint256[] memory, uint16[] memory, uint16)
-    {
-        return (Group_Countries,
-            Group_Index,
-            Area_Simple_Version
-        );
-    }
+    // function DisplayCountryGroupRelation()
+    //     public
+    //     view
+    //     returns (uint256[] memory, uint16[] memory, uint16)
+    // {
+    //     return (Group_Countries,
+    //         Group_Index,
+    //         Area_Simple_Version
+    //     );
+    // }
 
 
     // MARK: - UploadTerms
@@ -185,10 +319,10 @@ contract ConsentBase {
         uint8 role,
         address _address
     ) private view returns (Date storage) {
-        if (role == role_provider) {
+        if (role == ROLE_PROVIDER) {
             // require(msg.sender == dataProvider, "TermsByRole: Invalid sender");
             return providerDateMapping[_address];
-        } else if (role == role_requester) {
+        } else if (role == ROLE_REQUESTER) {
             return requesterDateMapping[_address];
         } else {
             revert("TermsByRole: Invalid role specified");
@@ -296,10 +430,10 @@ contract ConsentBase {
         address _provider_address,
         address _requester_address
     ) public view returns (uint32) {
-        PurposeProvider memory provider = purpose_providers_mapping[
+        DUO memory provider = duo_mapping[
             _provider_address
         ];
-        PurposeRequester memory requester = purpose_requesters_mapping[
+        ADAM memory requester = adam_maaping[
             _requester_address
         ];
 
@@ -318,8 +452,8 @@ contract ConsentBase {
 
     function AccessData(address provider_address, address requester_address) view private  returns (uint32) {
 
-        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
-        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
+        DUO memory provider = duo_mapping[provider_address];
+        ADAM memory requester = adam_maaping[requester_address];
         
         if (provider.NoRestriction == true) {
             return 0;
@@ -341,35 +475,65 @@ contract ConsentBase {
             (requester.UseForFundamentalBioResearch == true || 
             requester.UseForGeneticsResearch == true || 
             requester.UseForDrugDevelopmentResearch == true || 
-            requester.SpecificDiseaseResearch == true || 
             requester.UseForAgeCategoriesResearch == true || 
            requester.UseForGenderCategoriesResearch == true) ||requester.UseByClinicalProfessionals==true);
 
-        bool populationAndAncestryResearch = (provider.PopulationAndAncestryResearchOnly == true &&
+        // bool populationAndAncestryResearch = (provider.populationAndAncestryResearchOnly == true &&
+        //     (requester.UseForPopulationsResearch == true || 
+            // requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
+        bool populationAndAncestryResearchOnly = (provider.populationAndAncestryResearchOnly == true &&
             (requester.UseForPopulationsResearch == true || 
             requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
+        bool populationAndAncestryResearchNon = (provider.populationAndAncestryResearchNon == true &&
+            (requester.UseForPopulationsResearch == false && 
+            requester.UseForAncestryResearch == false) || requester.UseByAcademicProfessionals==false);
+        
+        //  if (!(provider.populationAndAncestryResearchNon == true &&
+        //     (requester.UseForPopulationsResearch == false && 
+        //     requester.UseForAncestryResearch == false) || requester.UseByAcademicProfessionals==false)) {
+        //     result += u1 << uint32(RESULT_CODE.populationAndAncestryResearchNon);
+        // }
 
-        if (!(generalResearch || clinicalCare || hmbResearch || populationAndAncestryResearch)) {
+        // if (!(provider.populationAndAncestryResearchOnly == true &&
+        //     (requester.UseForPopulationsResearch == true || 
+        //     requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true)) {
+        //     result += u1 << uint32(RESULT_CODE.populationAndAncestryResearchOnly);
+        // }
+
+        if ((generalResearch || clinicalCare || hmbResearch || populationAndAncestryResearchOnly || populationAndAncestryResearchNon) == false) {
             return  result += u1 << uint32(RESULT_CODE.FirstCategory);
         }
 
-        bool tmp_result;
+
+
+        // bool tmp_result;
         
         
-        if (!(provider.PopulationAndAncestryResearchNon == true &&
-            (requester.UseForPopulationsResearch == false && 
-            requester.UseForAncestryResearch == false) || requester.UseByAcademicProfessionals==false)) {
-            result += u1 << uint32(RESULT_CODE.PopulationAndAncestryResearchNon);
+       
+        
+        if (provider.ResearchSpecificRestriction == true ){
+            if (requester.UseForReferenceOrControlMaterial== false) {
+                result += u1 << uint32(RESULT_CODE.ResearchSpecificRestriction);
+            }
+
         }
 
-           if (!(provider.PopulationAndAncestryResearchOnly == true &&
-            (requester.UseForPopulationsResearch == true || 
-            requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true)) {
-            result += u1 << uint32(RESULT_CODE.PopulationAndAncestryResearchOnly);
+        if (provider.UserSpecificRestriction == true ){
+            if (requester.UsedByPersons == false || check_users(provider_address, requester_address) == false) {
+                result += u1 << uint32(RESULT_CODE.UserSpecificRestriction);
+            }
         }
-        
-        if (!((provider.ResearchSpecificRestriction == true && requester.UseForReferenceOrControlMaterial== false) || provider.ResearchSpecificRestriction == false)) {
-            result += u1 << uint32(RESULT_CODE.ResearchSpecificRestriction);
+
+        if (provider.ProjectSpecificRestriction == true ){
+            if (requester.UsedByProjects == false || check_project(provider_address, requester_address) == false) {
+                result += u1 << uint32(RESULT_CODE.ProjectSpecificRestriction);
+            }
+        }
+
+        if (provider.InstitutionSpecificRestriction == true ){
+            if (requester.UsedByOrganisations == false || check_institution(provider_address, requester_address) == false) {
+                result += u1 << uint32(RESULT_CODE.InstitutionSpecificRestriction);
+            }
         }
 
    
@@ -379,65 +543,86 @@ contract ConsentBase {
         //     result += u1 << uint32(RESULT_CODE.OpenToResearchUseOnly);
         // }
 
-        tmp_result = ((provider.GeneticStudiesOnly==true && requester.UseForGeneticsResearch == true) || provider.GeneticStudiesOnly==false);
-        if (tmp_result == false) {
-            result += u1 << uint32(RESULT_CODE.GeneticStudiesOnly);
+  
+        if (provider.GeneticStudiesOnly==true) {
+            if (requester.UseForGeneticsResearch == false) {
+                result += u1 << uint32(RESULT_CODE.GeneticStudiesOnly);
+            }
+        
         }
 
         // bool generalMethodResearch = provider.GeneralMethodResearch ? true : requester.UseForMethodsDevelopment == false;
 
-        tmp_result =  (provider.GeneralMethodResearchNon==true && requester.UseForMethodsDevelopment == false) || provider.GeneralMethodResearchNon==false;
 
-        if (!tmp_result) {
-            result += u1 << uint32(RESULT_CODE.GeneralMethodResearchNon);
+
+        if (provider.NonGeneralMethodResearch==true) {
+            if (requester.UseForMethodsDevelopment == true) {
+                result += u1 << uint32(RESULT_CODE.NonGeneralMethodResearch);
+            }
+            
         }
-
-        tmp_result = (provider.NonProfitUseOnly == true && (requester.UseForNonProfitPurpose == true && requester.UseForProfitPurpose == false)) || 
-            provider.NonProfitUseOnly == false;
-        if (!tmp_result) {
-                    result += u1 << uint32(RESULT_CODE.NonProfitUseOnly);
-                }
-                
-        tmp_result = (provider.NonCommercialUseOnly == true && (requester.UseByProfitMakingProfessionals == false)) || 
-            provider.NonCommercialUseOnly == false;
-        if (!tmp_result) {
-                    result += u1 << uint32(RESULT_CODE.NonCommercialUseOnly);
-                }
 
        
+        if (provider.NonProfitUseOnly == true) {
+            if (requester.UseForNonProfitPurpose == false || requester.UseForProfitPurpose == true) {
+                    result += u1 << uint32(RESULT_CODE.NonProfitUseOnly);
+            }
+        }
+                
 
-        // bool publicationRequired = provider.PublicationRequired ? requester.PublicationRequired : true;
-
-     
-
-
-        if (!((provider.PublicationRequired == true && requester.PublicationRequired == true) ||
-            provider.PublicationRequired == false)) {
-            result += u1 << uint32(RESULT_CODE.PublicationRequired);
+        if (provider.NonCommercialUseOnly == true ){
+            if (requester.UseByProfitMakingProfessionals == true) {
+                result += u1 << uint32(RESULT_CODE.NonCommercialUseOnly);
+            }
         }
 
-         if (!((provider.PublicationMoratorium == true && requester.PublicationRequired == false) ||
-            provider.PublicationMoratorium == false)) {
-            result += u1 << uint32(RESULT_CODE.PublicationMoratorium);
+        if (provider.PublicationRequired == true ){
+            if(requester.PublicationRequired == false){
+                result += u1 << uint32(RESULT_CODE.PublicationRequired);
+            }
         }
+
+        if (provider.PublicationMoratorium == true){
+            if (requester.NonPublicationRequired == false) {
+                result += u1 << uint32(RESULT_CODE.PublicationMoratorium);
+            }
+         }
 
         // tmp_result = provider.CollaborationRequired ? requester.CollaborationRequired : true;
-        if (!( (provider.CollaborationRequired == true && requester.CollaborationRequired == true) ||  provider.CollaborationRequired == false)) {
-            result += u1 << uint32(RESULT_CODE.CollaborationRequired);
+        if (provider.CollaborationRequired == true) { 
+            if(requester.CollaborationRequired == false) {
+                result += u1 << uint32(RESULT_CODE.CollaborationRequired);
+            }
         }
 
     
 
         // bool ethicsApprovalrequired = 
-        if (!((provider.EthicsApprovalrequired  == true && requester.FormalApprovalRequired == true) ||  provider.EthicsApprovalrequired  == false)) {
-            result += u1 << uint32(RESULT_CODE.EthicsApprovalrequired);
+        if (provider.EthicsApprovalrequired  == true){
+            if(requester.FormalApprovalRequired == false){
+                result += u1 << uint32(RESULT_CODE.EthicsApprovalrequired);
+            }
         }
 
-       bool dataSecurityMeasuresRequired =   (provider.DataSecurityMeasuresRequired == true && requester.DataSecurityMeasures == true  && requester.DataDestructionRequired == true && requester.LinkingOfAccessedRecords == true && requester.RecontactingDataSubjects == true && requester.IntellectualPropertyClaims == true && requester.UseOfAccessedResources == true) ||provider.DataSecurityMeasuresRequired == false;
-
-        if (!dataSecurityMeasuresRequired) {
-            result += u1 << uint8(RESULT_CODE.DataSecurityMeasuresRequired);
+        if (provider.ReturnToResource == true ){
+            if(requester.ReportUsage == false){
+                result += u1 << uint32(RESULT_CODE.ReturnToResource);
+            }
         }
+
+        if (provider.DataUsePermission == true ){
+            if(requester.UniformConsent == false){
+                result += u1 << uint32(RESULT_CODE.DataUsePermission);
+            }
+        }
+
+        // tmp_result = provider.ProfitOrganisationNon ? requester.UseByProfitMakingProfessionals : true;if 
+
+    //    bool dataSecurityMeasuresRequired =   (provider.DataSecurityMeasuresRequired == true && requester.DataSecurityMeasures == true  && requester.DataDestructionRequired == true && requester.LinkingOfAccessedRecords == true && requester.RecontactingDataSubjects == true && requester.IntellectualPropertyClaims == true && requester.UseOfAccessedResources == true) ||provider.DataSecurityMeasuresRequired == false;
+
+    //     if (!dataSecurityMeasuresRequired) {
+    //         result += u1 << uint8(RESULT_CODE.DataSecurityMeasuresRequired);
+    //     }
 
      
         // if (!((provider.CostOnUse == true && requester.FeesForAccess ==  true) ||provider.CostOnUse == false) ) {
@@ -452,8 +637,8 @@ contract ConsentBase {
     
     function access_data(address provider_address, address requester_address) view public returns (uint32) {
 
-        PurposeProvider memory provider = purpose_providers_mapping[provider_address];
-        PurposeRequester memory requester = purpose_requesters_mapping[requester_address];
+        DUO memory provider = duo_mapping[provider_address];
+        ADAM memory requester = adam_maaping[requester_address];
         
         if (provider.NoRestriction == true) {
             return 0;

@@ -17,7 +17,11 @@ contract ConsentCode is ConsentBase {
         uint128[26] Disease_Category_Affordable;
     }
 
-    
+    uint256[] Group_Countries;
+    uint16[] Group_Index;
+    // uint8[][] Country_Group_baseline;
+
+    uint16 Area_Simple_Version = 0;
 
     mapping(address => Terms) providerMapping; // data subject
     mapping(address => Terms) requesterMapping; // data subject
@@ -51,6 +55,16 @@ contract ConsentCode is ConsentBase {
     //         Area_Simple_Version
     //     );
     // }
+
+
+    function UpdateCountryGroupRelation(
+        uint256[] memory _Group_Countries,
+        uint16[] memory _Country_Group_Code_Index
+    ) public {
+        Group_Countries = _Group_Countries;
+        Group_Index = _Country_Group_Code_Index;
+        Area_Simple_Version += 1;
+    }
 
 
     // MARK: - UploadTerms

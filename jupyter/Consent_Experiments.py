@@ -410,10 +410,10 @@ class Experiment_Simulation:
 
         json.dump(result_dict, open(self.result_fp, "w"), indent=4)
 
-    def _plot_simulation(self, data, x_labels, y_label, file_name, title=None):
+    def _plot_simulation(self, data, y_label, file_name):
 
         alpha = 1
-
+        x_labels = list(data.keys())
         # Extract data points
         success_rates = [
             data[label]["success"] * 100 / data[label]["total"] for label in x_labels
@@ -435,7 +435,7 @@ class Experiment_Simulation:
         )
 
         # Add some text for labels, title and custom x-axis tick labels, etc.
-        ax.set_xlabel("Categories" if title is None else title)
+        # ax.set_xlabel("Categories" if title is None else title)
         ax.set_ylabel(y_label)
         ax.set_xticks(x)
         ax.set_ylim(0, max(success_rates) + 10)
@@ -484,10 +484,10 @@ class Experiment_Simulation:
 
         self._plot_simulation(
             data=category_dict,
-            x_labels=profile_list,
-            y_label="Success Rate",
+            # x_labels=profile_list,
+            y_label="Success Rate (%)",
             file_name="figure/simulation_category.pdf",
-            title="Categories",
+            # title="Categories",
         )
 
     def plot(self):
@@ -506,13 +506,15 @@ class Experiment_Simulation:
                 "success": success,
                 "error": error,
             }
+        x_labels = list(scenario_dict.keys())
+        # x_labels = [label.capitalize() for label in x_labels]
 
         self._plot_simulation(
             data=scenario_dict,
-            x_labels=list(scenario_dict.keys()),
-            y_label="Success Rate",
+            # x_labels=x_labels,
+            y_label="Success Rate (%)",
             file_name="figure/simulation_scenario.pdf",
-            title="Scenarios",
+            # title="Scenarios",
         )
 
 
@@ -737,7 +739,7 @@ if __name__ == "__main__":
 
     # Experiment_Case_Study(local_affordable).start()
 
-    experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=10,requester_number = 30)
+    experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=100,requester_number = 300)
     experiment_simulation.start()
     experiment_simulation.plot()
 

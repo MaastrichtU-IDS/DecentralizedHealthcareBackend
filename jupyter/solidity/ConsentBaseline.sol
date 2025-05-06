@@ -28,60 +28,8 @@ contract ConsentCode is ConsentBase {
     mapping(address => Terms) providerMapping; // data subject
     mapping(address => Terms) requesterMapping; // data subject
 
-    // uint8 constant role_provider = 1;
-    // uint8 constant role_requester = 2;
-    // uint256[] Group_Countries;
-    // uint16[] Group_Index;
-    // // uint8[][] Country_Group_baseline;
-
-    // uint16 Area_Simple_Version = 0;
-
-    // uint8[] Country_Code_8;
-    // uint32[] Country_Group_Code_32;
-    // mapping(uint8 => uint32) Country_Code_Mapping;
-    // mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
-    // mapping(uint8 => mapping(uint32 => bool)) Country_Group_Code_Mapping_Mapping;
-
-
-    //MARK - UpdateAreaSimple
-    // function UpdateCountryGroupRelation(
-    //     uint256[] memory _Group_Countries,
-    //     uint16[] memory _Country_Group_Code_Index
-    // ) public {
-    //     Group_Countries = _Group_Countries;
-    //     Group_Index = _Country_Group_Code_Index;
-    //     Area_Simple_Version += 1;
-    // }
-
-    // // MARK: - DisplayCountryGroupRelation
-    // function DisplayCountryGroupRelation()
-    //     public
-    //     view
-    //     returns (uint256[] memory, uint16[] memory, uint16)
-    // {
-    //     return (Group_Countries,
-    //         Group_Index,
-    //         Area_Simple_Version
-    //     );
-    // }
-
-    // MARK: - UpdateAreaBaseline
-    function UpdateArea(
-        uint8[] memory _Country_Code_8,
-        uint8[][] memory _Country_Group_Code_8
-    ) public {
-        // Country_Group_baseline = _Country_Group_Code_8;
-        for (uint8 i = 0; i < _Country_Code_8.length; i++) {
-            // uint8 country = _Country_Code_8[i];
-            Country_Group_Code_Mapping_Baseline[
-                _Country_Code_8[i]
-            ] = _Country_Group_Code_8[i];
-            // for (uint8 j = 0; j < _Country_Group_Code_32[i].length; j++) {
-            //     uint32 group = _Country_Group_Code_32[i][j];
-            //     Country_Group_Code_Mapping_Mapping[country][group] = true;
-            // }
-        }
-    }
+    mapping(uint8 => uint8[]) Country_Group_Code_Mapping_Baseline;
+    
 
     // MARK: - UploadTerms
     function TermsByRole(
@@ -98,6 +46,24 @@ contract ConsentCode is ConsentBase {
         }
     }
     
+
+    function UpdateCountryGroupRelation(
+            uint8[] memory Group_Code,
+            uint8[][] memory Country_Code
+    ) public {
+            // Country_Group_baseline = _Country_Group_Code_8;
+            for (uint8 i = 0; i < Group_Code.length; i++) {
+                // uint8 country = _Country_Code_8[i];
+                Country_Group_Code_Mapping_Baseline[
+                    Group_Code[i]
+                ] = Country_Code[i];
+                // for (uint8 j = 0; j < _Country_Group_Code_32[i].length; j++) {
+                //     uint32 group = _Country_Group_Code_32[i][j];
+                //     Country_Group_Code_Mapping_Mapping[country][group] = true;
+                // }
+            }
+    }
+
 
     // MARK: - UploadAreaBaseline
     function UploadArea(

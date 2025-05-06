@@ -76,9 +76,9 @@ logger.debug("This is a debug message")
 logger.critical("This is a critical message")
 
 
-profile_strict = "conservative"
-profile_medium = "moderate"
-profile_open = "open"
+profile_strict = "Restrictive"
+profile_medium = "Moderate"
+profile_open = "Open"
 profile_list = [
     profile_open,
     profile_medium,
@@ -362,6 +362,9 @@ class Person:
         start_day=1,
         months=12,
         level=profile_open,
+        user_restrictions=None,
+        institution_restrictions=None,
+        project_restrictions=None,
         **kwargs,
     ):
 
@@ -401,6 +404,10 @@ class Person:
         self.start_day = start_day
         self.months = months
         self.role = kwargs.get("role", 0)
+
+        self.user_restrictions = user_restrictions
+        self.institution_restrictions = institution_restrictions
+        self.project_restrictions = project_restrictions
 
     def random_init(self, profile_dict):
         # if risk_level is not None:
@@ -669,6 +676,24 @@ class Base_Contract:
         else:
             raise ValueError(f"Invalid role: {person.role}")
 
+    def _upload_extension_provider(self, person: Person) -> TransactionResult:
+        func = self.functions.upload_extension_provider(
+            person.address,
+            person.user_restrictions,
+            person.project_restrictions,
+            person.institution_restrictions,
+        )
+        return self.send_transaction(func, person)
+
+    def _upload_extension_requester(self, person: Person) -> TransactionResult:
+        func = self.functions.upload_extension_requester(
+            person.address,
+            person.user_restrictions,
+            person.project_restrictions,
+            person.institution_restrictions,
+        )
+        return self.send_transaction(func, person)
+
     def delete_area(self):
         raise NotImplementedError("delete_area")
 
@@ -738,6 +763,7 @@ class Base_Contract:
         return TransactionResult(gas_used=gas_used, time_used=time_diff, gas_price=gas_price, transaction_hash=receipt["transactionHash"].hex(), status=receipt["status"])
 
     def _upload_requester(self, person: Person):
+        self._upload_purpose_requester(person)
         if ADAM.UseBySpecifiedCountries in person.bool_items:
             self.upload_area(person)
 
@@ -747,7 +773,11 @@ class Base_Contract:
         if ADAM.TimelineRestrictions in person.bool_items:
             self.upload_date(person)
 
+        if ADAM.UsedByPersons in person.bool_items or ADAM.UsedByProjects in person.bool_items or ADAM.UsedByOrganisations in person.bool_items:
+            self._upload_extension_requester(person)
+
     def _upload_provider(self,person: Person) -> TransactionResult:
+        self._upload_provider(person)
         if DUO.GeographicSpecific in person.bool_items:
             self.upload_area(person)
         if DUO.DiseaseSpecific in person.bool_items:
@@ -755,8 +785,11 @@ class Base_Contract:
         if DUO.TimeLimitOnUse in person.bool_items:
             self.upload_date(person)
 
+        if DUO.UserSpecificRestriction in person.bool_items or DUO.ProjectSpecificRestriction in person.bool_items or DUO.InstitutionSpecificRestriction in person.bool_items:
+            self._upload_extension_provider(person)
+
     def upload(self, person: Person) -> TransactionResult:
-        self.upload_purpose(person)
+        # self.upload_purpose(person)
         if person.role == ROLE_PROVIDER:
             return self._upload_provider(person)
         elif person.role == ROLE_REQUESTER:
@@ -944,8 +977,6 @@ class Contract_Affordable(Base_Contract):
         return self.send_transaction(function, person)
 
 
-
-
 class Contract_Baseline(Base_Contract):
     def __init__(self, env):
         super().__init__(env)
@@ -1116,11 +1147,10 @@ class ADAM(Enum):
     IntellectualPropertyClaims = 268435456
     UseOfAccessedResources = 536870912
     FeesForAccess = 1073741824
+    UsedByPersons = 2147483648
+    UsedByProjects = 4294967296
+    UsedByOrganisations = 8589934592
 
-ADAM_order_list = [ADAM.UseForMethodsDevelopment, ADAM.UseForReferenceOrControlMaterial, ADAM.UseForPopulationsResearch, ADAM.UseForAncestryResearch, ADAM.UseForHMBResearch, ADAM.UseForFundamentalBioResearch, ADAM.UseForGeneticsResearch, ADAM.UseForDrugDevelopmentResearch, ADAM.UseForSpecificDiseaseResearch, ADAM.UseForAgeCategoriesResearch, ADAM.UseForGenderCategoriesResearch, ADAM.UseForDecisionSupport, ADAM.UseForDiseaseSupport, 
-                   ADAM.UseByAcademicProfessionals, ADAM.UseByClinicalProfessionals, ADAM.UseByProfitMakingProfessionals, ADAM.UseByNonProfessionals, ADAM.UseBySpecifiedCountries, ADAM.UseForProfitPurpose, 
-                   ADAM.UseForNonProfitPurpose, 
-                   ADAM.TimelineRestrictions, ADAM.FormalApprovalRequired, ADAM.CollaborationRequired, ADAM.PublicationRequired, ADAM.DataSecurityMeasures, ADAM.DataDestructionRequired, ADAM.LinkingOfAccessedRecords, ADAM.RecontactingDataSubjects, ADAM.IntellectualPropertyClaims, ADAM.UseOfAccessedResources, ADAM.FeesForAccess]
 
 class DUO(Enum):
     NoRestriction = 1
@@ -1166,11 +1196,10 @@ class DUO(Enum):
     InstitutionSpecificRestriction = 4194304
     ResearchSpecificRestriction = 8388608
     DataUsePermission = 16777216
-        
 
 
 # DUO_order_list = [
-#     DUO.Allow_All, 
+#     DUO.Allow_All,
 #                   DUO.OpenToGeneralResearchAndClinicalCare, DUO.OpenToHMBResearch, DUO.OpenToPopulationAndAncestryResearch, DUO.OpenToDiseaseSpecific, DUO.OpenToGeneticStudiesOnly, DUO.ResearchSpecificRestrictions, DUO.OpenToResearchUseOnly, DUO.GeneralMethodResearch, DUO.GeographicSpecificRestriction, DUO.OpenToNonProfitUseOnly, DUO.PublicationRequired, DUO.CollaborationRequired, DUO.EthicsApprovalrequired, DUO.TimeLimitOnUse, DUO.CostOnUse, DUO.DataSecurityMeasuresRequired]
 
 
