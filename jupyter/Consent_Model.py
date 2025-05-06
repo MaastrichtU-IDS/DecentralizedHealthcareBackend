@@ -268,31 +268,31 @@ class Environment:
         )
         return env
 
-
 class RESULT_CODE(Enum):
     Success = 0
     FirstCategory = 1
-    OpenToGeneralResearchAndClinicalCare = 2**1
-    OpenToHMBResearch = 2**2
-    OpenToPopulationAndAncestryResearch = 2**3
-    OpenToDiseaseSpecific = 2**4
-    OpenToGeneticStudiesOnly = 2**5
-    ResearchSpecificRestrictions = 2**6
-    OpenToResearchUseOnly = 2**7
-    GeneralMethodResearch = 2**8
-    GeographicSpecificRestriction = 2**9
-    OpenToNonProfitUseOnly = 2**10
-    PublicationRequired = 2**11
-    CollaborationRequired = 2**12
-    EthicsApprovalrequired = 2**13
-    TimeLimitOnUse = 2**14
-    CostOnUse = 2**15
-    DataSecurityMeasuresRequired = 2**16
-    # DiseaseSpecificResearch = 2**17
-
-    # @property
-    # def code(self):
-    #     return self.value
+    GeneralResearch = 1 << 1
+    ClinicalCare = 1 << 2
+    HMBResearch = 1 << 3
+    PopulationAndAncestryResearchOnly = 1 << 4
+    PopulationAndAncestryResearchNon = 1 << 5
+    DiseaseSpecific = 1 << 6
+    GeneticStudiesOnly = 1 << 7
+    NonGeneralMethodResearch = 1 << 8
+    GeographicSpecific = 1 << 9
+    NonProfitUseOnly = 1 << 10
+    NonCommercialUseOnly = 1 << 11
+    PublicationRequired = 1 << 12
+    PublicationMoratorium = 1 << 13
+    CollaborationRequired = 1 << 14
+    EthicsApprovalRequired = 1 << 15
+    TimeLimitOnUse = 1 << 16
+    ReturnToResource = 1 << 17
+    ResearchSpecificRestriction = 1 << 18
+    DataUsePermission = 1 << 19
+    UserSpecificRestriction = 1 << 20
+    ProjectSpecificRestriction = 1 << 21
+    InstitutionSpecificRestriction = 1 << 22
 
 
 class TransactionResult:
@@ -345,6 +345,105 @@ class Env:
         self.accounts = accounts
 
 
+class RandomInitializer:
+    @staticmethod
+    def random_init_person(person, profile_dict):
+        person.months = profile_dict["months"]
+        disease_setting = profile_dict["disease_items"]
+        while True:
+            disease_list = disease_dict[random.choice(string.ascii_uppercase)]
+            if len(disease_list) > 0:
+                break
+
+        if isinstance(disease_setting, float):
+            if disease_setting == 1.0:
+                person.disease_items = ["*"]
+            else:
+                person.disease_items = random.choices(
+                    disease_list,
+                    k=int(disease_setting * len(disease_list)),
+                )
+                person.disease_groups = random.choices(
+                    string.ascii_uppercase, k=int(disease_setting * 26)
+                )
+        elif isinstance(disease_setting, str):
+            person.disease_items = [disease_setting]
+        elif isinstance(disease_setting, list):
+            person.disease_items = disease_setting
+        else:
+            person.disease_items = random.choices(
+                disease_list,
+                k=disease_setting,
+            )
+
+        country_setting = profile_dict["country_code"]
+        if isinstance(country_setting, float):
+            person.country_names = random.sample(
+                all_countries_name,
+                k=int(country_setting * len(all_countries_name)),
+            )
+        else:
+            person.country_names = random.sample(
+                all_countries_name,
+                k=country_setting,
+            )
+
+        country_group_setting = profile_dict["group_code"]
+        if isinstance(country_group_setting, float):
+            person.group_names = random.sample(
+                all_group_names,
+                k=int(country_group_setting * len(all_group_names)),
+            )
+        else:
+            person.group_names = random.sample(
+                all_group_names,
+                k=country_group_setting,
+            )
+
+    @staticmethod
+    def random_init_provider(provider, profile_dict):
+        RandomInitializer.random_init_person(provider, profile_dict)
+        provider.bool_items = set()
+        purpose_setting = profile_dict["simple_items"]
+        if isinstance(purpose_setting, list):
+            provider.bool_items = set(purpose_setting)
+        elif isinstance(purpose_setting, DUO):
+            provider.bool_items.add(purpose_setting)
+        else:
+            raise Exception("purpose_setting is not a list or DUO")
+
+        if provider.level == profile_open:
+            provider.start_year = 2020
+        else:
+            provider.start_year = random.randint(2023, 2025)
+
+        provider.start_month = random.randint(1, 12)
+        provider.start_day = random.randint(1, 28)
+
+    @staticmethod
+    def random_init_requester(requester):
+        profile_dict = {
+            "simple_items": random.uniform(0.0, 0.5),
+            "group_code": random.uniform(0, 0.05),
+            "country_code": random.uniform(0, 0.05),
+            "disease_items": random.uniform(0, 0.05),
+            "disease_groups": random.uniform(0, 0.05),
+            "months": random.randint(1, 24),
+        }
+        RandomInitializer.random_init_person(requester, profile_dict)
+        requester.bool_items = set()
+        for item in ADAM:
+            if random.random() < profile_dict["simple_items"]:
+                requester.bool_items.add(item)
+        if profile_dict["group_code"] > 0 or profile_dict["country_code"] > 0:
+            requester.bool_items.add(ADAM.SpecifiedCountries)
+        if profile_dict["disease_items"] > 0:
+            requester.bool_items.add(ADAM.SpecificDiseaseResearch)
+
+        requester.start_year = random.randint(2024, 2025)
+        requester.start_month = random.randint(1, 12)
+        requester.start_day = random.randint(1, 28)
+
 class Person:
 
     def __init__(
@@ -362,9 +461,9 @@ class Person:
         start_day=1,
         months=12,
         level=profile_open,
-        user_restrictions=None,
-        institution_restrictions=None,
-        project_restrictions=None,
+        user_restrictions=list(),
+        institution_restrictions=list(),
+        project_restrictions=list(),
         **kwargs,
     ):
 
@@ -553,14 +652,6 @@ class Person:
 
         logging.info(f"displayAreaCodes is {result}")
 
-        
-
- 
-
-
-
-
-
 
     def refresh_state(self):
         func = self.contract.functions.RefreshState(self.address)
@@ -688,9 +779,9 @@ class Base_Contract:
     def _upload_extension_requester(self, person: Person) -> TransactionResult:
         func = self.functions.upload_extension_requester(
             person.address,
-            person.user_restrictions,
+            (person.user_restrictions,
             person.project_restrictions,
-            person.institution_restrictions,
+            person.institution_restrictions)
         )
         return self.send_transaction(func, person)
 
@@ -764,10 +855,10 @@ class Base_Contract:
 
     def _upload_requester(self, person: Person):
         self._upload_purpose_requester(person)
-        if ADAM.UseBySpecifiedCountries in person.bool_items:
+        if ADAM.SpecifiedCountries in person.bool_items:
             self.upload_area(person)
 
-        if ADAM.UseForSpecificDiseaseResearch in person.bool_items:
+        if ADAM.SpecificDiseaseResearch in person.bool_items:
             self.upload_disease(person)
 
         if ADAM.TimelineRestrictions in person.bool_items:
@@ -777,7 +868,7 @@ class Base_Contract:
             self._upload_extension_requester(person)
 
     def _upload_provider(self,person: Person) -> TransactionResult:
-        self._upload_provider(person)
+        self._upload_purpose_provider(person)
         if DUO.GeographicSpecific in person.bool_items:
             self.upload_area(person)
         if DUO.DiseaseSpecific in person.bool_items:
@@ -1115,41 +1206,45 @@ import random
 
 from enum import Enum, auto
 import random
+
 class ADAM(Enum):
-    UseForMethodsDevelopment = 1
-    UseForReferenceOrControlMaterial = 2
-    UseForPopulationsResearch = 4
-    UseForAncestryResearch = 8
-    UseForHMBResearch = 16
-    UseForFundamentalBioResearch = 32
-    UseForGeneticsResearch = 64
-    UseForDrugDevelopmentResearch = 128
-    UseForSpecificDiseaseResearch = 256
-    UseForAgeCategoriesResearch = 512
-    UseForGenderCategoriesResearch = 1024
-    UseForDecisionSupport = 2048
-    UseForDiseaseSupport = 4096
-    UseByAcademicProfessionals = 8192
-    UseByClinicalProfessionals = 16384
-    UseByProfitMakingProfessionals = 32768
-    UseByNonProfessionals = 65536
-    UseBySpecifiedCountries = 131072
-    UseForProfitPurpose = 262144
-    UseForNonProfitPurpose = 524288
-    TimelineRestrictions = 1048576
-    FormalApprovalRequired = 2097152
-    CollaborationRequired = 4194304
-    PublicationRequired = 8388608
-    DataSecurityMeasures = 16777216
-    DataDestructionRequired = 33554432
-    LinkingOfAccessedRecords = 67108864
-    RecontactingDataSubjects = 134217728
-    IntellectualPropertyClaims = 268435456
-    UseOfAccessedResources = 536870912
-    FeesForAccess = 1073741824
-    UsedByPersons = 2147483648
-    UsedByProjects = 4294967296
-    UsedByOrganisations = 8589934592
+    UseForMethodsDevelopment = 1 << 0
+    UseForReferenceOrControlMaterial = 1 << 1
+    UseForPopulationsResearch = 1 << 2
+    UseForAncestryResearch = 1 << 3
+    UseForHMBResearch = 1 << 4
+    UseForFundamentalBioResearch = 1 << 5
+    UseForGeneticsResearch = 1 << 6
+    UseForDrugDevelopmentResearch = 1 << 7
+    SpecificDiseaseResearch = 1 << 8
+    UseForAgeCategoriesResearch = 1 << 9
+    UseForGenderCategoriesResearch = 1 << 10
+    UseForDecisionSupport = 1 << 11
+    UseForDiseaseSupport = 1 << 12
+    UseByAcademicProfessionals = 1 << 13
+    UseByClinicalProfessionals = 1 << 14
+    UseByProfitMakingProfessionals = 1 << 15
+    UseByNonProfessionals = 1 << 16
+    SpecifiedCountries = 1 << 17
+    UseForProfitPurpose = 1 << 18
+    UseForNonProfitPurpose = 1 << 19
+    TimelineRestrictions = 1 << 20
+    FormalApprovalRequired = 1 << 21
+    CollaborationRequired = 1 << 22
+    PublicationRequired = 1 << 23
+    NonPublicationRequired = 1 << 24
+    DataSecurityMeasures = 1 << 25
+    DataDestructionRequired = 1 << 26
+    LinkingOfAccessedRecords = 1 << 27
+    RecontactingDataSubjects = 1 << 28
+    IntellectualPropertyClaims = 1 << 29
+    UseOfAccessedResources = 1 << 30
+    FeesForAccess = 1 << 31
+    ReportUsage = 1 << 32
+    UniformConsent = 1 << 33
+    UsedByPersons = 1 << 34
+    UsedByProjects = 1 << 35
+    UsedByOrganisations = 1 << 36
 
 
 class DUO(Enum):
@@ -1378,9 +1473,9 @@ class Requester(Person):
                 if random.random() < profile_dict['simple_items']:
                     self.bool_items.add(item)
             if profile_dict["group_code"] > 0 or profile_dict["country_code"] > 0:
-                self.bool_items.add(ADAM.UseBySpecifiedCountries)
+                self.bool_items.add(ADAM.SpecifiedCountries)
             if profile_dict["disease_items"] > 0:
-                self.bool_items.add(ADAM.UseForSpecificDiseaseResearch)
+                self.bool_items.add(ADAM.SpecificDiseaseResearch)
 
             self.start_year = random.randint(2024, 2025)
             self.start_month = random.randint(1, 12)
@@ -1406,7 +1501,7 @@ class Requester(Person):
     def get_purpose_items(self):
         duo_list = self.contract.functions.GetPurposeItemsRequester(self.address).call()
         result_set = set()
-        for result_item, duo_item in zip(duo_list, ADAM_order_list):
+        for result_item, duo_item in zip(duo_list, ADAM):
             if result_item:
                 result_set.add(duo_item)
         return result_set

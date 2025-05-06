@@ -17,13 +17,12 @@ contract ConsentBase {
     }
 
     enum RESULT_CODE {
-        // Success,
         FirstCategory,
         GeneralResearch,
         ClinicalCare,
         HMBResearch,
-        populationAndAncestryResearchOnly,
-        populationAndAncestryResearchNon,
+        PopulationAndAncestryResearchOnly,
+        PopulationAndAncestryResearchNon,
         DiseaseSpecific,
         GeneticStudiesOnly,
         NonGeneralMethodResearch,
@@ -33,16 +32,14 @@ contract ConsentBase {
         PublicationRequired,
         PublicationMoratorium,
         CollaborationRequired,
-        EthicsApprovalrequired,
+        EthicsApprovalRequired,
         TimeLimitOnUse,
-        ProfitOrganisationNon,
-        DataSecurityMeasuresRequired,
         ReturnToResource,
+        ResearchSpecificRestriction,
+        DataUsePermission,
         UserSpecificRestriction,
         ProjectSpecificRestriction,
-        InstitutionSpecificRestriction,
-        ResearchSpecificRestriction,
-        DataUsePermission
+        InstitutionSpecificRestriction
     }
 
 
@@ -81,10 +78,7 @@ contract ConsentBase {
         bool CollaborationRequired;
         bool EthicsApprovalrequired;
         bool TimeLimitOnUse;
-        // bool ProfitOrganisationNon;
-        // bool DataSecurityMeasuresRequired;
         bool ReturnToResource;
- 
         bool ResearchSpecificRestriction;
         bool DataUsePermission;
 
@@ -92,7 +86,6 @@ contract ConsentBase {
         bool ProjectSpecificRestriction;
         bool InstitutionSpecificRestriction;
 
-        // bool ProjectSpecificRestriction;
     }
 
 
@@ -203,8 +196,8 @@ contract ConsentBase {
         address provider_address,
         address requester_address   
     ) private view returns (bool) {
-        Extension memory provider_extension = provider_extension_mapping[provider_address];
-        Extension memory requester_extension = requester_extension_maaping[requester_address];
+        DUO_Extension memory provider_extension = provider_extension_mapping[provider_address];
+        ADAM_Extension memory requester_extension = requester_extension_maaping[requester_address];
 
         uint32 tmp_provider = 0;
         uint32 tmp_requester = 0;
@@ -231,8 +224,8 @@ contract ConsentBase {
         address provider_address,
         address requester_address   
     ) private view returns (bool) {
-        Extension memory provider_extension = provider_extension_mapping[provider_address];
-        Extension memory requester_extension = requester_extension_maaping[requester_address];
+        DUO_Extension memory provider_extension = provider_extension_mapping[provider_address];
+        ADAM_Extension memory requester_extension = requester_extension_maaping[requester_address];
 
         // Check if the provider's extension is empty
         if (provider_extension.UserSpecificRestriction.length == 0 && 
@@ -265,8 +258,8 @@ contract ConsentBase {
         address provider_address,
         address requester_address   
     ) private view returns (bool) {
-        Extension memory provider_extension = provider_extension_mapping[provider_address];
-        Extension memory requester_extension = requester_extension_maaping[requester_address];
+        DUO_Extension memory provider_extension = provider_extension_mapping[provider_address];
+        ADAM_Extension memory requester_extension = requester_extension_maaping[requester_address];
 
      
         uint32 tmp_provider = 0;
@@ -465,7 +458,7 @@ contract ConsentBase {
         bool generalResearch = (provider.GeneralResearch == true && 
         (requester.UseForHMBResearch == false ||
         requester.UseForPopulationsResearch == true ||
-        requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
+        requester.UseForAncestryResearch == true || requester.UseByAcademicProfessionals==true));
 
         bool clinicalCare = (provider.ClinicalCare == true && 
             (requester.UseForMethodsDevelopment== true || 
@@ -483,10 +476,10 @@ contract ConsentBase {
             // requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
         bool populationAndAncestryResearchOnly = (provider.populationAndAncestryResearchOnly == true &&
             (requester.UseForPopulationsResearch == true || 
-            requester.UseForAncestryResearch == true) || requester.UseByAcademicProfessionals==true);
+            requester.UseForAncestryResearch == true || requester.UseByAcademicProfessionals==true));
         bool populationAndAncestryResearchNon = (provider.populationAndAncestryResearchNon == true &&
             (requester.UseForPopulationsResearch == false && 
-            requester.UseForAncestryResearch == false) || requester.UseByAcademicProfessionals==false);
+            requester.UseForAncestryResearch == false || requester.UseByAcademicProfessionals==false));
         
         //  if (!(provider.populationAndAncestryResearchNon == true &&
         //     (requester.UseForPopulationsResearch == false && 
@@ -600,7 +593,7 @@ contract ConsentBase {
         // bool ethicsApprovalrequired = 
         if (provider.EthicsApprovalrequired  == true){
             if(requester.FormalApprovalRequired == false){
-                result += u1 << uint32(RESULT_CODE.EthicsApprovalrequired);
+                result += u1 << uint32(RESULT_CODE.EthicsApprovalRequired);
             }
         }
 

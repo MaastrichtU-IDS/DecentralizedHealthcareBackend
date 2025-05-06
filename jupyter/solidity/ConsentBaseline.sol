@@ -36,10 +36,10 @@ contract ConsentCode is ConsentBase {
         uint8 role,
         address _address
     ) private view returns (Terms storage) {
-        if (role == role_provider) {
+        if (role == ROLE_PROVIDER) {
             // require(msg.sender == dataProvider, "TermsByRole: Invalid sender");
             return providerMapping[_address];
-        } else if (role == role_requester) {
+        } else if (role == ROLE_REQUESTER) {
             return requesterMapping[_address];
         } else {
             revert("TermsByRole: Invalid role specified");
@@ -74,7 +74,7 @@ contract ConsentCode is ConsentBase {
     ) public {
         Terms storage terms = TermsByRole(role, _address);
 
-        if (role == role_provider) {
+        if (role == ROLE_PROVIDER) {
             // require(msg.sender == dataProvider, "Invalid sender");
             for (uint8 i = 0; i < Country_Code.length; i++) {
                 terms.Area_Country_Map_Baseline[Country_Code[i]] = true;
@@ -86,7 +86,7 @@ contract ConsentCode is ConsentBase {
             // provider_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
         }
 
-        if (role == role_requester) {
+        if (role == ROLE_REQUESTER) {
             terms.Area_Country_List_Baseline = Country_Code;
             terms.Area_Group_List_Baseline = Group_Code;
         }
@@ -100,7 +100,7 @@ contract ConsentCode is ConsentBase {
     ) public {
         Terms storage terms = TermsByRole(role, _address);
 
-        if (role == role_provider) {
+        if (role == ROLE_PROVIDER) {
             // require(msg.sender == dataProvider, "Invalid sender");
             for (uint8 i = 0; i < Country_Code.length; i++) {
                 delete terms.Area_Country_Map_Baseline[Country_Code[i]];
@@ -113,7 +113,7 @@ contract ConsentCode is ConsentBase {
             // provider_area_baseline_mapping[_address].Area_Group_Affordable = Group_Code;
         }
 
-        if (role == role_requester) {
+        if (role == ROLE_REQUESTER) {
             delete terms.Area_Country_List_Baseline ;
             delete terms.Area_Group_List_Baseline ;
   
@@ -128,13 +128,13 @@ contract ConsentCode is ConsentBase {
     ) public {
         Terms storage terms = TermsByRole(role, _address);
          
-        if (role == role_provider) {
+        if (role == ROLE_PROVIDER) {
             for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
                 terms.Disease_Map_Baseline[Disease_Array_Baseline[i]] = true;
             }
         }
 
-        if (role == role_requester) {
+        if (role == ROLE_REQUESTER) {
             // for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
             //     terms.Disease_Array_Baseline.push(Disease_Array_Baseline[i]);
             // }
@@ -151,14 +151,14 @@ contract ConsentCode is ConsentBase {
     ) public {
         Terms storage terms = TermsByRole(role, _address);
          
-        if (role == role_provider) {
+        if (role == ROLE_PROVIDER) {
             for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
                delete terms.Disease_Map_Baseline[Disease_Array_Baseline[i]];
             }
     
         }
 
-        if (role == role_requester) {
+        if (role == ROLE_REQUESTER) {
             // for (uint16 i = 0; i < Disease_Array_Baseline.length; i++) {
             //     terms.Disease_Array_Baseline.push(Disease_Array_Baseline[i]);
             // }

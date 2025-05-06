@@ -17,18 +17,32 @@ from Consent_Model import (
     TestEnum,
     RESULT_CODE,
     Environment,
-    Contract
+    Contract,
 )
-from Consent_Model import country_name_code_dict, disease_list, disease_dict, profile_list, profile_open, profile_medium, profile_strict,logger
+from Consent_Model import (
+    country_name_code_dict,
+    disease_list,
+    disease_dict,
+    profile_list,
+    profile_open,
+    profile_medium,
+    profile_strict,
+    logger,
+)
 
 import string
 import random
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 class Experiment_Performance:
-    def __init__(self, contract_baseline:Base_Contract, 
-                 contract_affordable:Base_Contract,enable_online=False):
+    def __init__(
+        self,
+        contract_baseline: Base_Contract,
+        contract_affordable: Base_Contract,
+        enable_online=False,
+    ):
         self.enable_online = enable_online
         self.env = contract_affordable.env
         self.contract_baseline = contract_baseline
@@ -54,9 +68,15 @@ class Experiment_Performance:
             self._prepare_entities(provider1, requester1)
 
             result_provider_baseline = self.contract_baseline.upload_disease(provider1)
-            result_requester_baseline = self.contract_baseline.upload_disease(requester1)
-            result_provider_affordable = self.contract_affordable.upload_disease(provider1)
-            result_requester_affordable = self.contract_affordable.upload_disease(requester1)
+            result_requester_baseline = self.contract_baseline.upload_disease(
+                requester1
+            )
+            result_provider_affordable = self.contract_affordable.upload_disease(
+                provider1
+            )
+            result_requester_affordable = self.contract_affordable.upload_disease(
+                requester1
+            )
 
             disease_data.append(
                 {
@@ -72,7 +92,9 @@ class Experiment_Performance:
                 }
             )
 
-        result_fp = f"result/{self.env.name}_disease_{'one' if one_group else 'whole'}.json"
+        result_fp = (
+            f"result/{self.env.name}_disease_{'one' if one_group else 'whole'}.json"
+        )
         json.dump(disease_data, open(result_fp, "w"), indent=4)
 
     def test_area(self, label=""):
@@ -81,7 +103,9 @@ class Experiment_Performance:
         data_result = []
 
         for interval in tqdm(self.intervals):
-            countries = self._generate_items(list(country_name_code_dict.keys()), interval)
+            countries = self._generate_items(
+                list(country_name_code_dict.keys()), interval
+            )
             provider1.country_names = countries
             requester1.country_names = countries
             self._prepare_entities(provider1, requester1)
@@ -91,8 +115,7 @@ class Experiment_Performance:
                 requester1
             )
             provider_baseline_result = self.contract_baseline.upload_area(provider1)
-            requester_baseline_result = self.contract_baseline.upload_area(
-                requester1 )
+            requester_baseline_result = self.contract_baseline.upload_area(requester1)
 
             data_result.append(
                 {
@@ -107,7 +130,9 @@ class Experiment_Performance:
                     },
                 }
             )
-        json.dump(data_result, open(f"result/{self.env.name}_area{label}.json", "w"), indent=4)
+        json.dump(
+            data_result, open(f"result/{self.env.name}_area{label}.json", "w"), indent=4
+        )
 
     def _initialize_provider_requester(self, entity_type):
         provider = Provider(
@@ -128,8 +153,7 @@ class Experiment_Performance:
 
     def _prepare_entities(self, provider, requester):
         if self.env.name == TestEnum.polygon.name:
-            self.contract_affordable.delete_area(provider
-                                                )
+            self.contract_affordable.delete_area(provider)
             self.contract_baseline.delete_area(provider)
 
             self.contract_affordable.delete_area(requester)
@@ -138,7 +162,13 @@ class Experiment_Performance:
             provider.address = self.env.accounts.pop()
             requester.address = self.env.accounts.pop()
 
-    def plot_area(self, key_index_name="time_used", factor=1e6, y_label="Time usage (milliseconds)", label=""):
+    def plot_area(
+        self,
+        key_index_name="time_used",
+        factor=1e6,
+        y_label="Time usage (milliseconds)",
+        label="",
+    ):
         result_polygon, result_local = self._load_and_filter_results(
             TestEnum.polygon.name, TestEnum.local.name, "area", label=label
         )
@@ -151,9 +181,22 @@ class Experiment_Performance:
             # label=label,
         )
         task = f"area_{key_index_name}_{label}"
-        self._plot_columns(gas_provider, gas_requester, task, "Precentage of countries (%)", y_label, factor)
+        self._plot_columns(
+            gas_provider,
+            gas_requester,
+            task,
+            "Precentage of countries (%)",
+            y_label,
+            factor,
+        )
 
-    def plot_disease(self, key_index_name="time_used", factor=1e6, y_label="Time Usage (milliseconds)", label=""):
+    def plot_disease(
+        self,
+        key_index_name="time_used",
+        factor=1e6,
+        y_label="Time Usage (milliseconds)",
+        label="",
+    ):
         result_one_polygon, result_one_local = self._load_and_filter_results(
             TestEnum.polygon.name, TestEnum.local.name, "disease_one", label=label
         )
@@ -161,7 +204,11 @@ class Experiment_Performance:
             TestEnum.polygon.name, TestEnum.local.name, "disease_whole", label=label
         )
         provider_whole, requester_whole = self._prepare_plot_data(
-            result_whole_polygon, result_whole_local, key_index_name, "_polygon", "_local"
+            result_whole_polygon,
+            result_whole_local,
+            key_index_name,
+            "_polygon",
+            "_local",
         )
         provider_one, requester_one = self._prepare_plot_data(
             result_one_polygon, result_one_local, key_index_name, "_polygon", "_local"
@@ -174,31 +221,55 @@ class Experiment_Performance:
             y_label,
             factor,
         )
-        self._plot_columns(provider_one, requester_one, f"disease_one_{key_index_name}_{label}", "Precentage of diseases (%)", y_label, factor)
+        self._plot_columns(
+            provider_one,
+            requester_one,
+            f"disease_one_{key_index_name}_{label}",
+            "Precentage of diseases (%)",
+            y_label,
+            factor,
+        )
 
     def _load_and_filter_results(self, polygon_name, local_name, result_type, label=""):
-        result_polygon = json.load(open(f"result/{polygon_name}_{result_type}{label}.json", "r"))
-        result_local = json.load(open(f"result/{local_name}_{result_type}{label}.json", "r"))
+        result_polygon = json.load(
+            open(f"result/{polygon_name}_{result_type}{label}.json", "r")
+        )
+        result_local = json.load(
+            open(f"result/{local_name}_{result_type}{label}.json", "r")
+        )
         # used_intervals = [0, 20, 40, 60, 80, 100]
         result_polygon = [d for d in result_polygon if d["interval"] in self.intervals]
         result_local = [d for d in result_local if d["interval"] in self.intervals]
 
-        assert len(result_polygon) == len(result_local), f"Length mismatch: {len(result_polygon)} vs {len(result_local)}"
+        assert len(result_polygon) == len(
+            result_local
+        ), f"Length mismatch: {len(result_polygon)} vs {len(result_local)}"
         return result_polygon, result_local
 
-    def _prepare_plot_data(self, result_polygon, result_local, key_index_name, polygon_label, local_label):
-        provider_data = self.plot_transform(result_local, "provider", key_index_name, local_label) | \
-                        self.plot_transform(result_polygon, "provider", key_index_name, polygon_label)
-        requester_data = self.plot_transform(result_local, "requester", key_index_name, local_label) | \
-                         self.plot_transform(result_polygon, "requester", key_index_name, polygon_label)
+    def _prepare_plot_data(
+        self, result_polygon, result_local, key_index_name, polygon_label, local_label
+    ):
+        provider_data = self.plot_transform(
+            result_local, "provider", key_index_name, local_label
+        ) | self.plot_transform(
+            result_polygon, "provider", key_index_name, polygon_label
+        )
+        requester_data = self.plot_transform(
+            result_local, "requester", key_index_name, local_label
+        ) | self.plot_transform(
+            result_polygon, "requester", key_index_name, polygon_label
+        )
         return provider_data, requester_data
 
-    def _plot_columns(self, provider_data, requester_data, task, x_label, y_label, factor):
+    def _plot_columns(
+        self, provider_data, requester_data, task, x_label, y_label, factor
+    ):
         self.plot_column(provider_data, task, "provider", x_label, y_label, factor)
         self.plot_column(requester_data, task, "requester", x_label, y_label, factor)
 
     def plot_column(self, data, task, role, x_label, y_label, factor=1e3):
         import matplotlib.pyplot as plt
+
         patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
         data_frame = pd.DataFrame(data)
         fig, ax1 = plt.subplots(figsize=(18, 4), dpi=600)
@@ -214,20 +285,52 @@ class Experiment_Performance:
         for k in keys:
             data_frame[k] /= factor
 
-        baseline_local_bars = self._plot_bar(ax1, baseline_local_x, data_frame["baseline_local"], "Baseline (Ganache)", "lightcoral", alpha, width)
-        
+        baseline_local_bars = self._plot_bar(
+            ax1,
+            baseline_local_x,
+            data_frame["baseline_local"],
+            "Baseline (Ganache)",
+            "lightcoral",
+            alpha,
+            width,
+        )
+
         # for spine in ax1.spines.values():
         #     spine.set_visible(True)
-        affordable_local_bars = self._plot_bar(ax1, affordable_local_x, data_frame["affordable_local"], "Proposed (Ganache)", "yellow", alpha, width)
-        baseline_polygon_bars = self._plot_bar(ax1, baseline_polygon_x, data_frame["baseline_polygon"], "Baseline (Amoy)", "royalblue", alpha, width)
-        affordable_polygon_bars = self._plot_bar(ax1, affordable_polygon_x, data_frame["affordable_polygon"], "Proposed (Amoy)", "turquoise", alpha, width)
+        affordable_local_bars = self._plot_bar(
+            ax1,
+            affordable_local_x,
+            data_frame["affordable_local"],
+            "Proposed (Ganache)",
+            "yellow",
+            alpha,
+            width,
+        )
+        baseline_polygon_bars = self._plot_bar(
+            ax1,
+            baseline_polygon_x,
+            data_frame["baseline_polygon"],
+            "Baseline (Amoy)",
+            "royalblue",
+            alpha,
+            width,
+        )
+        affordable_polygon_bars = self._plot_bar(
+            ax1,
+            affordable_polygon_x,
+            data_frame["affordable_polygon"],
+            "Proposed (Amoy)",
+            "turquoise",
+            alpha,
+            width,
+        )
 
         y_max = max([data_frame[k].max() for k in keys])
         ax1.set_ylim(0, y_max * 1.2)
         ax1.set_xlabel(x_label)
         ax1.set_ylabel(y_label)
-        ax1.tick_params(axis='y')
-        ax1.legend(loc='upper left', ncol=4)
+        ax1.tick_params(axis="y")
+        ax1.legend(loc="upper left", ncol=4)
 
         self._add_bar_labels(ax1, baseline_local_bars, data_font_size)
         self._add_bar_labels(ax1, affordable_local_bars, data_font_size)
@@ -237,7 +340,9 @@ class Experiment_Performance:
         plt.savefig(f"figure/column_{task}_{role}.pdf")
 
     def _plot_bar(self, ax, x, y, label, color, alpha, width):
-        return ax.bar(x, y, width=width, label=label, color=color, alpha=alpha,  edgecolor="black")
+        return ax.bar(
+            x, y, width=width, label=label, color=color, alpha=alpha, edgecolor="black"
+        )
 
     def _add_bar_labels(self, ax, bars, font_size):
         for bar in bars:
@@ -252,7 +357,7 @@ class Experiment_Performance:
             "interval": [d["interval"] for d in data_list],
         }
 
-    def plot(self,label=""):
+    def plot(self, label=""):
         self.plot_area(label=label)
         self.plot_disease(label=label)
 
@@ -262,21 +367,27 @@ class Experiment_Performance:
             y_label="Gas usage (Gwei)",
             label=label,
         )
-        self.plot_disease(key_index_name="gas_used", factor=1e3, y_label="Gas usage", label=label)
+        self.plot_disease(
+            key_index_name="gas_used", factor=1e3, y_label="Gas usage", label=label
+        )
 
 
 class Experiment_Simulation:
 
     class Scenarios:
-        def __init__(self, contract:Base_Contract, proportion: list, size, requesters: list) -> None:
+        def __init__(
+            self, contract: Base_Contract, proportion: list, size, requesters: list
+        ) -> None:
             self.proportion = proportion
             self.size = size
             self.env = contract.env
             self.contract = contract
 
-            self.levels = [profile_open for _ in range(int(proportion[0] * size))] + [  
-                profile_medium for _ in range(int(proportion[1] * size))] + [
-                profile_strict for _ in range(int(proportion[2] * size))    ]
+            self.levels = (
+                [profile_open for _ in range(int(proportion[0] * size))]
+                + [profile_medium for _ in range(int(proportion[1] * size))]
+                + [profile_strict for _ in range(int(proportion[2] * size))]
+            )
 
             random.shuffle(self.levels)
             # logger.info("levels", self.levels)
@@ -289,9 +400,9 @@ class Experiment_Simulation:
                 provider = Provider(
                     name=f"provider_{i}",
                     description=f"provider_{i}",
-                    env = self.env,
+                    env=self.env,
                     # address=accounts.pop(),
-                    level = level,
+                    level=level,
                     profile=Experiment_Simulation.PROFILES_DICT[level],
                     random_init=True,
                 )
@@ -303,7 +414,7 @@ class Experiment_Simulation:
             result_map = {}
             for provider in tqdm(self.provider_list):
                 for requester in self.requester_list:
-                    access_result = self.contract.access(provider,requester=requester)
+                    access_result = self.contract.access(provider, requester=requester)
                     if provider.level not in result_map:
                         result_map[provider.level] = {
                             "total": 0,
@@ -322,12 +433,17 @@ class Experiment_Simulation:
                                 result_map[provider.level]["error"][error_name] = 1
 
             return result_map
+
     PROFILES_DICT = {
         profile_strict: {
-            "simple_items": [DUO.HMBResearch, DUO.DiseaseSpecific, DUO.GeographicSpecific],
+            "simple_items": [
+                DUO.HMBResearch,
+                DUO.DiseaseSpecific,
+                DUO.GeographicSpecific,
+            ],
             "group_code": 2,
             "country_code": 20,
-            "disease_items": ["A**","B**"],
+            "disease_items": ["A**", "B**"],
             "disease_groups": 0.2,
             "months": 6,
         },
@@ -335,12 +451,12 @@ class Experiment_Simulation:
             "simple_items": [DUO.HMBResearch, DUO.GeographicSpecific],
             "group_code": 2,
             "country_code": 20,
-            "disease_items": ["A**","B**"],
+            "disease_items": ["A**", "B**"],
             "disease_groups": 0.5,
             "months": 12,
         },
         profile_open: {
-            "simple_items":  DUO.HMBResearch,
+            "simple_items": DUO.HMBResearch,
             "group_code": 1.0,
             "country_code": 1.0,
             "disease_items": 1.0,
@@ -349,8 +465,9 @@ class Experiment_Simulation:
         },
     }
 
-    def __init__(self, contract:Base_Contract,requester_number = 200,
-        provider_number = 100):
+    def __init__(
+        self, contract: Base_Contract, requester_number=200, provider_number=100
+    ):
         self.env = contract.env
         self.contract = contract
         # requester_number = 200
@@ -363,7 +480,7 @@ class Experiment_Simulation:
             requester = Requester(
                 name=f"requester_{i}",
                 description=f"requester_{i}",
-                env = self.env,
+                env=self.env,
                 # address=local_env.accounts.pop(),
                 random_init=True,
             )
@@ -519,13 +636,13 @@ class Experiment_Simulation:
 
 
 class Experiment_Case_Study:
-    def __init__(self,  contract : Base_Contract):
+    def __init__(self, contract: Base_Contract):
         self.env = contract.env
         self.contract = contract
         self.init_person()
         self.result_map = {
-            RESULT_CODE.GeographicSpecificRestriction.name: r"\faFlag[regular]",
-            RESULT_CODE.OpenToDiseaseSpecific.name: r"\faCapsules",
+            RESULT_CODE.GeographicSpecific.name: r"\faFlag[regular]",
+            RESULT_CODE.DiseaseSpecific.name: r"\faCapsules",
             RESULT_CODE.TimeLimitOnUse.name: r"\faCalendar*[regular]",
             # RESULT_CODE.GeographicSpecificRestriction: r"\circletfillhl",
         }
@@ -534,9 +651,9 @@ class Experiment_Case_Study:
     def init_person(self):
         provider1 = Provider(
             name="Provider 1",
-            env = self.env,
+            env=self.env,
             description=r"Provider.\ref{provider:a}",
-            bool_items={DUO.Allow_All},
+            bool_items={DUO.NoRestriction},
             # country_names=["*"],
             # disease_items=["*"],
         )
@@ -544,7 +661,7 @@ class Experiment_Case_Study:
             name="Provider 2",
             env=self.env,
             description=r"Provider.\ref{provider:b}",
-            bool_items={DUO.OpenToDiseaseSpecific},
+            bool_items={DUO.DiseaseSpecific},
             # country_names=["*"],
             disease_items=["A**", "B01"],
         )
@@ -553,7 +670,7 @@ class Experiment_Case_Study:
             name="Provider 3",
             env=self.env,
             description=r"Provider.\ref{provider:c}",
-            bool_items={DUO.GeographicSpecificRestriction},
+            bool_items={DUO.GeographicSpecific},
             country_names=["USA"],
             group_names=["EUROPEAN_UNION"],
             # disease_items=["*"],
@@ -575,7 +692,7 @@ class Experiment_Case_Study:
             name="Provider 5",
             env=self.env,
             description=r"Provider.\ref{provider:e}",
-            bool_items={DUO.OpenToGeneticStudiesOnly},
+            bool_items={DUO.GeneticStudiesOnly},
             # country_names=["*"],
             # disease_items=["*"],
         )
@@ -583,18 +700,18 @@ class Experiment_Case_Study:
             name="Requester 1",
             env=self.env,
             description="Requester1",
-            bool_items={ADAM.TimelineRestrictions,ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.TimelineRestrictions, ADAM.UseByAcademicProfessionals},
             start_year=2024,
             start_month=6,
             start_day=1,
-            months=6
+            months=6,
         )
 
         requester2 = Requester(
             name="Requester 2",
             env=self.env,
             description="Requester2",
-            bool_items={ADAM.UseForSpecificDiseaseResearch,ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.SpecificDiseaseResearch, ADAM.UseByAcademicProfessionals},
             disease_items=["A01"],
             # country_names=["*"],
         )
@@ -603,7 +720,7 @@ class Experiment_Case_Study:
             name="Requester 3",
             env=self.env,
             description="Requester3",
-            bool_items={ADAM.UseForSpecificDiseaseResearch,ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.SpecificDiseaseResearch, ADAM.UseByAcademicProfessionals},
             disease_items=["B02"],
             # country_names=["*"],
         )
@@ -612,7 +729,7 @@ class Experiment_Case_Study:
             name="Requester 4",
             env=self.env,
             description="Requester4",
-            bool_items={ADAM.UseBySpecifiedCountries,ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
             country_names=["USA"],
             # disease_items=["*"],
         )
@@ -621,7 +738,7 @@ class Experiment_Case_Study:
             name="Requester 5",
             env=self.env,
             description="Requester5",
-            bool_items={ADAM.UseBySpecifiedCountries,ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
             country_names=["NLD"],
             # disease_items=["*"],
         )
@@ -630,7 +747,7 @@ class Experiment_Case_Study:
             name="Requester 6",
             env=self.env,
             description="Requester6",
-            bool_items={ADAM.UseBySpecifiedCountries,ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
             country_names=["USA", "THA"],
             # disease_items=["*"],
         )
@@ -639,7 +756,7 @@ class Experiment_Case_Study:
             name="Requester 7",
             env=self.env,
             description="Requester7",
-            bool_items={ADAM.UseBySpecifiedCountries, ADAM.UseByAcademicProfessionals},
+            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
             # country_names = [],
             group_names=["EUROPEAN_UNION"],
             # disease_items=["*"],
@@ -713,10 +830,10 @@ class Experiment_Case_Study:
             row_list = []
             row_list.append(requester.description)
             for ip, provider in enumerate(self.provider_list):
-                access_result = self.contract.access(provider,  requester)
+                access_result = self.contract.access(provider, requester)
                 access_str = []
                 for error in access_result:
-                    access_str.append(self.result_map.get(error.name,error.name))
+                    access_str.append(self.result_map.get(error, self.error_other))
 
                 if len(access_str) == 0:
                     access_result = "\cmark"
@@ -733,16 +850,20 @@ class Experiment_Case_Study:
 if __name__ == "__main__":
 
     environment = Environment()
-    local_baseline = Contract_Baseline(environment.deploy_contract_local(environment.interface_baseline))
-    local_affordable =Contract_Affordable(environment.deploy_contract_local(environment.interface_affordable) )
-
+    local_baseline = Contract_Baseline(
+        environment.deploy_contract_local(environment.interface_baseline)
+    )
+    local_affordable = Contract_Affordable(
+        environment.deploy_contract_local(environment.interface_affordable)
+    )
 
     # Experiment_Case_Study(local_affordable).start()
 
-    experiment_simulation =  Experiment_Simulation(local_affordable,provider_number=100,requester_number = 300)
+    experiment_simulation = Experiment_Simulation(
+        local_affordable, provider_number=200, requester_number=500
+    )
     experiment_simulation.start()
     experiment_simulation.plot()
-
 
     # performance = Experiment_Performance(contract_affordable=local_affordable, contract_baseline=local_baseline)
     # performance.start()

@@ -72,10 +72,10 @@ contract ConsentCode is ConsentBase {
         uint8 role,
         address _address
     ) private view returns (Terms storage) {
-        if (role == role_provider) {
+        if (role == ROLE_PROVIDER) {
             // require(msg.sender == dataProvider, "TermsByRole: Invalid sender");
             return providerMapping[_address];
-        } else if (role == role_requester) {
+        } else if (role == ROLE_REQUESTER) {
             return requesterMapping[_address];
         } else {
             revert("TermsByRole: Invalid role specified");
