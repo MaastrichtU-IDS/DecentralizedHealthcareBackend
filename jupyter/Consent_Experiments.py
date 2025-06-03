@@ -1,6 +1,8 @@
+import datetime
 import json
 from wsgiref.handlers import BaseCGIHandler
 
+from bitarray import bits2bytes
 from matplotlib import spines
 import pandas as pd
 from tqdm import tqdm
@@ -34,6 +36,7 @@ import string
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+from multiprocessing import Pool, cpu_count
 
 
 class Experiment_Performance:
@@ -358,23 +361,31 @@ class Experiment_Performance:
         }
 
     def plot(self, label=""):
-        self.plot_area(label=label)
-        self.plot_disease(label=label)
+        self.plot_area(
+            label=label,
+            key_index_name="time_used",
+            factor=1e6,
+            y_label="Time usage (milliseconds)",
+            )
+        self.plot_disease(
+            label=label,
+            key_index_name="time_used",
+            factor=1e6,
+            y_label="Time usage (milliseconds)",
+
+                          )
 
         self.plot_area(
             key_index_name="gas_used",
             factor=1e3,
-            y_label="Gas usage (Gwei)",
+            y_label="Gas usage (1000 gas)",
             label=label,
         )
         self.plot_disease(
-            key_index_name="gas_used", factor=1e3, y_label="Gas usage", label=label
+            key_index_name="gas_used", factor=1e3, y_label="Gas usage (1000 gas)", label=label
         )
 
-
-class Experiment_Simulation:
-
-    class Scenarios:
+class Simulation_Scenarios:
         def __init__(
             self, contract: Base_Contract, proportion: list, size, requesters: list
         ) -> None:
@@ -390,7 +401,6 @@ class Experiment_Simulation:
             )
 
             random.shuffle(self.levels)
-            # logger.info("levels", self.levels)
             self.provider_list = self.initial_scenarios()
             self.requester_list = requesters
 
@@ -401,40 +411,53 @@ class Experiment_Simulation:
                     name=f"provider_{i}",
                     description=f"provider_{i}",
                     env=self.env,
-                    # address=accounts.pop(),
                     level=level,
-                    profile=Experiment_Simulation.PROFILES_DICT[level],
+                    profile=PROFILES_DICT[level],
                     random_init=True,
                 )
                 self.contract.upload(provider)
                 provider_list.append(provider)
             return provider_list
 
+        def _process_provider(self, provider, requesters):
+            provider_result = {}
+            if provider.level not in provider_result:
+                provider_result[provider.level] = {
+                    "total": 0,
+                    "success": 0,
+                    "error": {},
+                }
+            for requester in requesters:
+                access_result = self.contract.access(provider, requester=requester)
+                provider_result[provider.level]["total"] += 1
+                if not access_result:
+                    provider_result[provider.level]["success"] += 1
+                else:
+                    for error_name in access_result:
+                        if error_name in provider_result[provider.level]["error"]:
+                            provider_result[provider.level]["error"][error_name] += 1
+                        else:
+                            provider_result[provider.level]["error"][error_name] = 1
+            return provider_result
+
         def start(self):
             result_map = {}
             for provider in tqdm(self.provider_list):
-                for requester in self.requester_list:
-                    access_result = self.contract.access(provider, requester=requester)
-                    if provider.level not in result_map:
-                        result_map[provider.level] = {
-                            "total": 0,
-                            "success": 0,
-                            "error": {},
-                        }
-                    result_map[provider.level]["total"] += 1
-                    if not access_result:
-                        result_map[provider.level]["success"] += 1
-                    else:
-                        for error_name in access_result:
-                            # error_str = error_name.name
-                            if error_name in result_map[provider.level]["error"]:
-                                result_map[provider.level]["error"][error_name] += 1
-                            else:
-                                result_map[provider.level]["error"][error_name] = 1
+                provider_result = self._process_provider(provider, self.requester_list)
+                for level, data in provider_result.items():
+                    if level not in result_map:
+                        result_map[level] = {"total": 0, "success": 0, "error": {}}
+                    result_map[level]["total"] += data["total"]
+                    result_map[level]["success"] += data["success"]
+                    for error_name, count in data["error"].items():
+                        if error_name in result_map[level]["error"]:
+                            result_map[level]["error"][error_name] += count
+                        else:
+                            result_map[level]["error"][error_name] = count
 
             return result_map
 
-    PROFILES_DICT = {
+PROFILES_DICT = {
         profile_strict: {
             "simple_items": [
                 DUO.HMBResearch,
@@ -465,6 +488,8 @@ class Experiment_Simulation:
         },
     }
 
+
+class Experiment_Simulation:
     def __init__(
         self, contract: Base_Contract, requester_number=200, provider_number=100
     ):
@@ -474,7 +499,8 @@ class Experiment_Simulation:
         # provider_number = 100
         self.requester_list = []
         self.provider_number = provider_number
-        self.result_fp = "result/result_simulation.json"
+        current_time = datetime.datetime.now().strftime("%m-%d-%H-%M")
+        self.result_fp = f"result/result_simulation_{current_time}.json"
 
         for i in range(requester_number):
             requester = Requester(
@@ -492,19 +518,19 @@ class Experiment_Simulation:
         # self.requester_list[0].update_area_group_relation()
 
     def start(self):
-        scenarios_1 = Experiment_Simulation.Scenarios(
+        scenarios_1 = Simulation_Scenarios(
             contract=self.contract,
             proportion=[1, 0, 0],
             size=self.provider_number,
             requesters=self.requester_list,
         )
-        scenarios_2 = Experiment_Simulation.Scenarios(
+        scenarios_2 = Simulation_Scenarios(
             contract=self.contract,
             proportion=[0.5, 0.25, 0.25],
             size=self.provider_number,
             requesters=self.requester_list,
         )
-        scenarios_3 = Experiment_Simulation.Scenarios(
+        scenarios_3 = Simulation_Scenarios(
             contract=self.contract,
             proportion=[0.2, 0.4, 0.4],
             size=self.provider_number,
@@ -607,7 +633,9 @@ class Experiment_Simulation:
             # title="Categories",
         )
 
-    def plot(self):
+    def plot(self, result_fp=None):
+        if result_fp is not None:
+            self.result_fp = result_fp
         self.plot_simulation_category()
         self.plot_simulation_scenario()
 
@@ -724,6 +752,10 @@ class Experiment_Case_Study:
             disease_items=["B02"],
             # country_names=["*"],
         )
+        # 128 bits
+        # describe in paper 
+        # 256 bits
+        
 
         requester4 = Requester(
             name="Requester 4",
@@ -857,10 +889,10 @@ if __name__ == "__main__":
         environment.deploy_contract_local(environment.interface_affordable)
     )
 
-    # Experiment_Case_Study(local_affordable).start()
+    Experiment_Case_Study(local_affordable).start()
 
     experiment_simulation = Experiment_Simulation(
-        local_affordable, provider_number=200, requester_number=500
+        local_affordable, provider_number=100, requester_number=200
     )
     experiment_simulation.start()
     experiment_simulation.plot()
@@ -868,3 +900,10 @@ if __name__ == "__main__":
     # performance = Experiment_Performance(contract_affordable=local_affordable, contract_baseline=local_baseline)
     # performance.start()
     # performance.plot()
+
+    # mention the how the index of country to a integer in paper. 
+    # specify geoghraphic group in European
+    # what groups do i neeed? and reasons of choseing the groups, due to GDPR. 
+
+    # can user define the groups. more clear in the paper that users can select contries in any number, from 1 to all. 
+    #  groups need more thinking. ICD-10. 

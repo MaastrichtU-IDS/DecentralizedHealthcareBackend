@@ -913,27 +913,13 @@ class Contract_Affordable(Base_Contract):
     def update_area_group_relation(self, person: Person) -> TransactionResult:
 
         country_group_dict = {}
-
-        for country_name, country_dict in country_name_code_dict.items():
-
-            groups = country_dict["groups"]
-
-            if len(groups) == 0:
-
-                continue
-
-            for g in groups:
-
-                if g not in group_index_dict:
-                    continue
-
-                g_index = group_index_dict[g]
-
-                if g_index not in country_group_dict:
-
-                    country_group_dict[g_index] = 0
-
-                country_group_dict[g_index] |= country_dict["index"]
+        group_country_dict = json.load(open("data/group_country.json", "r"))
+        country_index_dict = json.load(open("data/country_index.json", "r"))
+        for item in group_country_dict.items():
+            countries = item['members']
+            countries_value = sum([country_index_dict[c] for c in countries])
+            group_index = item["index"]
+            country_group_dict[group_index] = countries_value
 
         country_group_data = list(country_group_dict.values())
 
@@ -1141,6 +1127,7 @@ class Contract_Baseline(Base_Contract):
 pattern = r"^[A-Z][0-9\*]{2}$"
 pattern_compiled = re.compile(pattern)
 def diseaseCode2IntHierarchy(code: str):
+    # A01
     #  the code is a string like A00,B11, etc.
     #  return the int code for chapter, group as a tuple
     # print(f"code is {code}")

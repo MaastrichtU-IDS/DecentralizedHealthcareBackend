@@ -4,9 +4,10 @@ import "./ConsentBase.sol";
 
 contract ConsentCode is ConsentBase {
  
-    //  constructor() {
-    //     dataProvider = msg.sender;
-    // }
+     constructor() {
+        // dataProvider = msg.sender;
+        consent_managers.push(msg.sender);
+    }
     // MARK: - Terms
     struct Terms {
         // affordable
@@ -16,6 +17,8 @@ contract ConsentCode is ConsentBase {
         uint32 Disease_Group_Affordable;
         uint128[26] Disease_Category_Affordable;
     }
+
+    mapping<address,bool> private consent_managers;
 
     uint256[] Group_Countries;
     uint16[] Group_Index;
@@ -61,9 +64,23 @@ contract ConsentCode is ConsentBase {
         uint256[] memory _Group_Countries,
         uint16[] memory _Country_Group_Code_Index
     ) public {
+        require(consent_managers[msg.sender] == true, "UpdateCountryGroupRelation: Invalid consent managers");
+        
         Group_Countries = _Group_Countries;
         Group_Index = _Country_Group_Code_Index;
         Area_Simple_Version += 1;
+
+        // _Country_Group_Code_Index [1,2]
+        // _Group_Countries   [  ]
+    }
+
+    function update_consent_manager(
+        address[] memory _consent_managers
+    ) public {
+        require(consent_managers[msg.sender] == true, "update_consent_manager: Invalid consent managers");
+        for (uint8 i = 0; i < _consent_managers.length; i++) {
+            consent_managers[_consent_managers[i]] = true;
+        }
     }
 
 

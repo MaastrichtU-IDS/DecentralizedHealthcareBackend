@@ -1,62 +1,62 @@
 {
     "scenario_1": {
         "Open": {
-            "total": 1000,
-            "success": 460,
+            "total": 100,
+            "success": 50,
             "error": {
-                "FirstCategory": 540
+                "FirstCategory": 50
             }
         }
     },
     "scenario_2": {
-        "Open": {
-            "total": 500,
-            "success": 230,
+        "Moderate": {
+            "total": 20,
+            "success": 2,
             "error": {
-                "FirstCategory": 270
+                "FirstCategory": 10,
+                "GeographicSpecific": 8
             }
         },
-        "Moderate": {
-            "total": 250,
-            "success": 17,
+        "Open": {
+            "total": 50,
+            "success": 25,
             "error": {
-                "GeographicSpecific": 98,
-                "FirstCategory": 135
+                "FirstCategory": 25
             }
         },
         "Restrictive": {
-            "total": 250,
-            "success": 0,
+            "total": 20,
+            "success": 2,
             "error": {
-                "GeographicSpecific": 98,
-                "DiseaseSpecific": 105,
-                "FirstCategory": 135
+                "FirstCategory": 10,
+                "GeographicSpecific": 8,
+                "DiseaseSpecific": 6
             }
         }
     },
     "scenario_3": {
-        "Restrictive": {
-            "total": 400,
-            "success": 0,
+        "Moderate": {
+            "total": 40,
+            "success": 4,
             "error": {
-                "GeographicSpecific": 158,
-                "DiseaseSpecific": 168,
-                "FirstCategory": 216
+                "FirstCategory": 20,
+                "GeographicSpecific": 16
             }
         },
         "Open": {
-            "total": 200,
-            "success": 92,
+            "total": 20,
+            "success": 10,
             "error": {
-                "FirstCategory": 108
+                "FirstCategory": 10
             }
         },
-        "Moderate": {
-            "total": 400,
-            "success": 24,
+        "Restrictive": {
+            "total": 40,
+            "success": 4,
             "error": {
-                "GeographicSpecific": 160,
-                "FirstCategory": 216
+                "FirstCategory": 20,
+                "GeographicSpecific": 16,
+                "DiseaseSpecific": 12
             }
         }
     }

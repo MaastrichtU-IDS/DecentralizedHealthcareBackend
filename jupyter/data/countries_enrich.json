@@ -3761,6 +3761,7 @@
             "MONTREAL_PROTOCOL_COUNTRIES"
         ],
         "index": 239
+        // 2^239 mention in paper, which list are using.
     },
     "URY": {
         "official_name_en": "Uruguay",
