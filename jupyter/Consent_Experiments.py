@@ -1,8 +1,5 @@
 import datetime
 import json
-from wsgiref.handlers import BaseCGIHandler
-
-from bitarray import bits2bytes
 from matplotlib import spines
 import pandas as pd
 from tqdm import tqdm
@@ -38,6 +35,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from multiprocessing import Pool, cpu_count
 
+from enum import Enum
+
 
 class Experiment_Performance:
     def __init__(
@@ -50,14 +49,43 @@ class Experiment_Performance:
         self.env = contract_affordable.env
         self.contract_baseline = contract_baseline
         self.contract_affordable = contract_affordable
-        self.intervals = [0, 20, 40, 60, 80, 100]
+        # self.intervals = [100]
+        self.intervals = [20, 40, 60, 80, 100]
+        self.font_size = "9"
+        self.column_width = 4.5
+
+        class DataKey:
+            BASELINE_LOCAL = "baseline_local"
+            AFFORDABLE_LOCAL = "affordable_local"
+            BASELINE_POLYGON = "baseline_polygon"
+            AFFORDABLE_POLYGON = "affordable_polygon"
+
+        self.data_key_enum = DataKey
+        self.data_key_label = {
+            self.data_key_enum.BASELINE_LOCAL: {
+                "label": "Baseline\n(Ganache)",
+                "color": "lightcoral",
+            },
+            self.data_key_enum.AFFORDABLE_LOCAL: {
+                "label": "Proposed\n(Ganache)",
+                "color": "yellow",
+            },
+            self.data_key_enum.BASELINE_POLYGON: {
+                "label": "Baseline\n(Amoy)",
+                "color": "royalblue",
+            },
+            self.data_key_enum.AFFORDABLE_POLYGON: {
+                "label": "Proposed\n(Amoy)",
+                "color": "turquoise",
+            },
+        }
 
     def start(self):
-        self.test_area()
-        self.test_disease(one_group=True)
-        self.test_disease(one_group=False)
+        self._test_area()
+        self._test_disease(one_group=True)
+        self._test_disease(one_group=False)
 
-    def test_disease(self, one_group=False):
+    def _test_disease(self, one_group=False):
         provider1, requester1 = self._initialize_provider_requester("disease")
         # intevals = [0, 20, 40, 60, 80, 100]
         disease_data = []
@@ -100,7 +128,7 @@ class Experiment_Performance:
         )
         json.dump(disease_data, open(result_fp, "w"), indent=4)
 
-    def test_area(self, label=""):
+    def _test_area(self, label=""):
         provider1, requester1 = self._initialize_provider_requester("area")
         # intevals = [0, 20, 40, 60, 80, 100]
         data_result = []
@@ -165,7 +193,7 @@ class Experiment_Performance:
             provider.address = self.env.accounts.pop()
             requester.address = self.env.accounts.pop()
 
-    def plot_area(
+    def _plot_area(
         self,
         key_index_name="time_used",
         factor=1e6,
@@ -188,12 +216,12 @@ class Experiment_Performance:
             gas_provider,
             gas_requester,
             task,
-            "Precentage of countries (%)",
+            "Precentage of uploaded countries",
             y_label,
             factor,
         )
 
-    def plot_disease(
+    def _plot_disease(
         self,
         key_index_name="time_used",
         factor=1e6,
@@ -220,7 +248,7 @@ class Experiment_Performance:
             provider_whole,
             requester_whole,
             f"disease_whole_{key_index_name}_{label}",
-            "Precentage of diseases (%)",
+            "Precentage of uploaded diseases",
             y_label,
             factor,
         )
@@ -228,7 +256,7 @@ class Experiment_Performance:
             provider_one,
             requester_one,
             f"disease_one_{key_index_name}_{label}",
-            "Precentage of diseases (%)",
+            "Precentage of uploaded diseases",
             y_label,
             factor,
         )
@@ -252,14 +280,14 @@ class Experiment_Performance:
     def _prepare_plot_data(
         self, result_polygon, result_local, key_index_name, polygon_label, local_label
     ):
-        provider_data = self.plot_transform(
+        provider_data = self._plot_transform(
             result_local, "provider", key_index_name, local_label
-        ) | self.plot_transform(
+        ) | self._plot_transform(
             result_polygon, "provider", key_index_name, polygon_label
         )
-        requester_data = self.plot_transform(
+        requester_data = self._plot_transform(
             result_local, "requester", key_index_name, local_label
-        ) | self.plot_transform(
+        ) | self._plot_transform(
             result_polygon, "requester", key_index_name, polygon_label
         )
         return provider_data, requester_data
@@ -267,26 +295,170 @@ class Experiment_Performance:
     def _plot_columns(
         self, provider_data, requester_data, task, x_label, y_label, factor
     ):
-        self.plot_column(provider_data, task, "provider", x_label, y_label, factor)
-        self.plot_column(requester_data, task, "requester", x_label, y_label, factor)
+        self._generate_column_chart(
+            provider_data, task, "provider", x_label, y_label, factor
+        )
+        # self._generate_column_chart(
+        #     requester_data, task, "requester", x_label, y_label, factor
+        # )
 
-    def plot_column(self, data, task, role, x_label, y_label, factor=1e3):
+    def _sparse_filter(
+        self, data_local, data_polygon, key="time_used", label="", factor=1e6
+    ):
+        local_100 = [d for d in data_local if d["interval"] == 100][0]
+        polygon_100 = [d for d in data_polygon if d["interval"] == 100][0]
+        result = {
+            self.data_key_enum.BASELINE_LOCAL: local_100["baseline"]["provider"][key],
+            self.data_key_enum.AFFORDABLE_LOCAL: local_100["affordable"]["provider"][
+                key
+            ],
+            self.data_key_enum.BASELINE_POLYGON: polygon_100["baseline"]["provider"][
+                key
+            ],
+            self.data_key_enum.AFFORDABLE_POLYGON: polygon_100["affordable"][
+                "provider"
+            ][key],
+        }
+
+        for key in self.data_key_label.keys():
+            result[key] = result[key] / factor
+        return result
+
+    def _sparse_plot_time(self, label=""):
+        result_polygon, result_local = self._load_and_filter_results(
+            TestEnum.polygon.name, TestEnum.local.name, "area", label=label
+        )
+        result_one_polygon, result_one_local = self._load_and_filter_results(
+            TestEnum.polygon.name, TestEnum.local.name, "disease_one", label=label
+        )
+        result_whole_polygon, result_whole_local = self._load_and_filter_results(
+            TestEnum.polygon.name, TestEnum.local.name, "disease_whole", label=label
+        )
+        geographic_data_time = self._sparse_filter(
+            result_local, result_polygon, "time_used"
+        )
+        disease_one_data_time = self._sparse_filter(
+            result_one_local, result_one_polygon, "time_used"
+        )
+        disease_whole_data_time = self._sparse_filter(
+            result_whole_local, result_whole_polygon, "time_used"
+        )
+        self._plot_sparse(
+            geographic_data_time,
+            "area_time",
+            "provider",
+            "Interval",
+            "Time Used(milliseconds)",
+        )
+        self._plot_sparse(
+            disease_one_data_time,
+            "disease_one_time",
+            "provider",
+            "Interval",
+            "Time Used(milliseconds)",
+        )
+        self._plot_sparse(
+            disease_whole_data_time,
+            "disease_whole_time",
+            "provider",
+            "Interval",
+            "Time Used(milliseconds)",
+        )
+
+        geographic_data_time = self._sparse_filter(
+            result_local, result_polygon, "gas_used", factor=1e3
+        )
+        disease_one_data_time = self._sparse_filter(
+            result_one_local, result_one_polygon, "gas_used", factor=1e3
+        )
+        disease_whole_data_time = self._sparse_filter(
+            result_whole_local, result_whole_polygon, "gas_used", factor=1e3
+        )
+        self._plot_sparse(
+            geographic_data_time,
+            "area_gas",
+            "provider",
+            "Interval",
+            "Gas Used(1000 units)",
+        )
+        self._plot_sparse(
+            disease_one_data_time,
+            "disease_one_gas",
+            "provider",
+            "Interval",
+            "Gas Used(1000 units)",
+        )
+        self._plot_sparse(
+            disease_whole_data_time,
+            "disease_whole_gas",
+            "provider",
+            "Interval",
+            "Gas Used(1000 units)",
+        )
+
+    def plot_sparse(self, label=""):
+        self._sparse_plot_time(label=label)
+
+        # print("result_polygon", result_polygon)
+
+    def _plot_sparse(self, data, task, role, x_label, y_label, factor=1e3):
+        import matplotlib.pyplot as plt
+        import pandas as pd
+
+        fig, ax = plt.subplots(figsize=(4, 3), dpi=300)
+        x_value = [data[key] for key in self.data_key_label.keys()]
+        x_labels = [
+            self.data_key_label[key]["label"] for key in self.data_key_label.keys()
+        ]
+        colors = [
+            self.data_key_label[key]["color"] for key in self.data_key_label.keys()
+        ]
+        # values = [data.get(label, 0) for label in x_labels]
+        bars = ax.bar(
+            x_labels,
+            x_value,
+            color=colors,
+            edgecolor="black",
+            alpha=1,
+            width=0.8,
+        )
+        # ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+        ax.set_ylim(0, max(x_value) * 1.2)
+        # ax.set_title("Bar Plot of Four Categories")
+        for bar in bars:
+            height = int(bar.get_height())
+            ax.annotate(
+                f"{height}",
+                xy=(bar.get_x() + bar.get_width() / 2, height),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+            )
+        plt.tight_layout()
+        plt.savefig(f"figure/sparse_{task}.pdf")
+        plt.close()
+
+    def _generate_column_chart(self, data, task, role, x_label, y_label, factor=1e3):
         import matplotlib.pyplot as plt
 
         patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
         data_frame = pd.DataFrame(data)
-        fig, ax1 = plt.subplots(figsize=(18, 4), dpi=600)
-        width = 3.5
+        fig, ax1 = plt.subplots(figsize=(10, 4), dpi=300)
+        # figsize=(10, 3), dpi=300
+        # self.column_width = 4.5
         alpha = 1.0
-        data_font_size = None
-        baseline_local_x = data_frame["interval"] - 1.8 * width
-        affordable_local_x = data_frame["interval"] - 0.7 * width
-        baseline_polygon_x = data_frame["interval"] + 0.7 * width
-        affordable_polygon_x = data_frame["interval"] + 1.8 * width
+        # data_font_size = "8"
+        baseline_local_x = data_frame["interval"] - 1.5 * self.column_width
+        affordable_local_x = data_frame["interval"] - 0.5 * self.column_width
+        baseline_polygon_x = data_frame["interval"] + 0.5 * self.column_width
+        affordable_polygon_x = data_frame["interval"] + 1.5 * self.column_width
 
         keys = data.keys() - ["interval"]
         for k in keys:
-            data_frame[k] /= factor
+            # data_frame[k] = data_frame[k].astype(int)
+            data_frame[k] = (data_frame[k] / factor).astype(int)
 
         baseline_local_bars = self._plot_bar(
             ax1,
@@ -295,7 +467,7 @@ class Experiment_Performance:
             "Baseline (Ganache)",
             "lightcoral",
             alpha,
-            width,
+            self.column_width,
         )
 
         # for spine in ax1.spines.values():
@@ -307,7 +479,7 @@ class Experiment_Performance:
             "Proposed (Ganache)",
             "yellow",
             alpha,
-            width,
+            self.column_width,
         )
         baseline_polygon_bars = self._plot_bar(
             ax1,
@@ -316,7 +488,7 @@ class Experiment_Performance:
             "Baseline (Amoy)",
             "royalblue",
             alpha,
-            width,
+            self.column_width,
         )
         affordable_polygon_bars = self._plot_bar(
             ax1,
@@ -325,20 +497,33 @@ class Experiment_Performance:
             "Proposed (Amoy)",
             "turquoise",
             alpha,
-            width,
+            self.column_width,
         )
+        # Add horizontal line as ruler for every  main ylabel. e.g. 1000, 2000, 3000
+        y_ticks = ax1.get_yticks()
 
+        # print(data_frame["interval"])
+        # for i in y_ticks:
+        #     ax1.axhline(i, color="gray", linestyle="--", linewidth=0.5)
+        ax1.set_yticklabels([f"{int(y)}" for y in y_ticks], fontsize=self.font_size)
         y_max = max([data_frame[k].max() for k in keys])
-        ax1.set_ylim(0, y_max * 1.2)
+        ax1.set_ylim(0, y_max * 1.3)
         ax1.set_xlabel(x_label)
+        # ax1.margins(y=0.1)
         ax1.set_ylabel(y_label)
-        ax1.tick_params(axis="y")
+        # ax1.tick_params(axis="y")
+        # ax1.set_xticks(data_frame["interval"])
+        # ax1.tick_params(axis="x", labelsize=data_font_size)
+        xticklabels = [0] + [f"{int(interval)}%" for interval in data_frame["interval"]]
+        print("xticklabels", xticklabels)
+        ax1.set_xticklabels(xticklabels, fontsize=self.font_size)
+
         ax1.legend(loc="upper left", ncol=4)
 
-        self._add_bar_labels(ax1, baseline_local_bars, data_font_size)
-        self._add_bar_labels(ax1, affordable_local_bars, data_font_size)
-        self._add_bar_labels(ax1, baseline_polygon_bars, data_font_size)
-        self._add_bar_labels(ax1, affordable_polygon_bars, data_font_size)
+        self._add_bar_labels(ax1, baseline_local_bars, self.font_size)
+        self._add_bar_labels(ax1, affordable_local_bars, self.font_size)
+        self._add_bar_labels(ax1, baseline_polygon_bars, self.font_size)
+        self._add_bar_labels(ax1, affordable_polygon_bars, self.font_size)
 
         plt.savefig(f"figure/column_{task}_{role}.pdf")
 
@@ -351,9 +536,9 @@ class Experiment_Performance:
         for bar in bars:
             yval = bar.get_height()
             xval = bar.get_x() + bar.get_width() / 2
-            ax.text(xval, yval, int(yval), ha="center", va="bottom", fontsize=font_size)
+            ax.text(xval, yval, yval, ha="center", va="bottom", fontsize=font_size)
 
-    def plot_transform(self, data_list, role, column, label=""):
+    def _plot_transform(self, data_list, role, column, label=""):
         return {
             f"baseline{label}": [d["baseline"][role][column] for d in data_list],
             f"affordable{label}": [d["affordable"][role][column] for d in data_list],
@@ -361,132 +546,136 @@ class Experiment_Performance:
         }
 
     def plot(self, label=""):
-        self.plot_area(
+        self._plot_area(
             label=label,
             key_index_name="time_used",
             factor=1e6,
             y_label="Time usage (milliseconds)",
-            )
-        self.plot_disease(
+        )
+        self._plot_disease(
             label=label,
             key_index_name="time_used",
             factor=1e6,
             y_label="Time usage (milliseconds)",
+        )
 
-                          )
-
-        self.plot_area(
+        self._plot_area(
             key_index_name="gas_used",
             factor=1e3,
             y_label="Gas usage (1000 gas)",
             label=label,
         )
-        self.plot_disease(
-            key_index_name="gas_used", factor=1e3, y_label="Gas usage (1000 gas)", label=label
+        self._plot_disease(
+            key_index_name="gas_used",
+            factor=1e3,
+            y_label="Gas usage (1000 gas)",
+            label=label,
         )
 
+
 class Simulation_Scenarios:
-        def __init__(
-            self, contract: Base_Contract, proportion: list, size, requesters: list
-        ) -> None:
-            self.proportion = proportion
-            self.size = size
-            self.env = contract.env
-            self.contract = contract
+    def __init__(
+        self, contract: Base_Contract, proportion: list, size, requesters: list
+    ) -> None:
+        self.proportion = proportion
+        self.size = size
+        self.env = contract.env
+        self.contract = contract
 
-            self.levels = (
-                [profile_open for _ in range(int(proportion[0] * size))]
-                + [profile_medium for _ in range(int(proportion[1] * size))]
-                + [profile_strict for _ in range(int(proportion[2] * size))]
+        self.levels = (
+            [profile_open for _ in range(int(proportion[0] * size))]
+            + [profile_medium for _ in range(int(proportion[1] * size))]
+            + [profile_strict for _ in range(int(proportion[2] * size))]
+        )
+
+        random.shuffle(self.levels)
+        self.provider_list = self.initial_scenarios()
+        self.requester_list = requesters
+
+    def initial_scenarios(self):
+        provider_list = []
+        for i, level in enumerate(self.levels):
+            provider = Provider(
+                name=f"provider_{i}",
+                description=f"provider_{i}",
+                env=self.env,
+                level=level,
+                profile=PROFILES_DICT[level],
+                random_init=True,
             )
+            self.contract.upload(provider)
+            provider_list.append(provider)
+        return provider_list
 
-            random.shuffle(self.levels)
-            self.provider_list = self.initial_scenarios()
-            self.requester_list = requesters
+    def _process_provider(self, provider, requesters):
+        provider_result = {}
+        if provider.level not in provider_result:
+            provider_result[provider.level] = {
+                "total": 0,
+                "success": 0,
+                "error": {},
+            }
+        for requester in requesters:
+            access_result = self.contract.access(provider, requester=requester)
+            provider_result[provider.level]["total"] += 1
+            if not access_result:
+                provider_result[provider.level]["success"] += 1
+            else:
+                for error_name in access_result:
+                    if error_name in provider_result[provider.level]["error"]:
+                        provider_result[provider.level]["error"][error_name] += 1
+                    else:
+                        provider_result[provider.level]["error"][error_name] = 1
+        return provider_result
 
-        def initial_scenarios(self):
-            provider_list = []
-            for i, level in enumerate(self.levels):
-                provider = Provider(
-                    name=f"provider_{i}",
-                    description=f"provider_{i}",
-                    env=self.env,
-                    level=level,
-                    profile=PROFILES_DICT[level],
-                    random_init=True,
-                )
-                self.contract.upload(provider)
-                provider_list.append(provider)
-            return provider_list
+    def start(self):
+        result_map = {}
+        for provider in tqdm(self.provider_list):
+            provider_result = self._process_provider(provider, self.requester_list)
+            for level, data in provider_result.items():
+                if level not in result_map:
+                    result_map[level] = {"total": 0, "success": 0, "error": {}}
+                result_map[level]["total"] += data["total"]
+                result_map[level]["success"] += data["success"]
+                for error_name, count in data["error"].items():
+                    if error_name in result_map[level]["error"]:
+                        result_map[level]["error"][error_name] += count
+                    else:
+                        result_map[level]["error"][error_name] = count
 
-        def _process_provider(self, provider, requesters):
-            provider_result = {}
-            if provider.level not in provider_result:
-                provider_result[provider.level] = {
-                    "total": 0,
-                    "success": 0,
-                    "error": {},
-                }
-            for requester in requesters:
-                access_result = self.contract.access(provider, requester=requester)
-                provider_result[provider.level]["total"] += 1
-                if not access_result:
-                    provider_result[provider.level]["success"] += 1
-                else:
-                    for error_name in access_result:
-                        if error_name in provider_result[provider.level]["error"]:
-                            provider_result[provider.level]["error"][error_name] += 1
-                        else:
-                            provider_result[provider.level]["error"][error_name] = 1
-            return provider_result
+        return result_map
 
-        def start(self):
-            result_map = {}
-            for provider in tqdm(self.provider_list):
-                provider_result = self._process_provider(provider, self.requester_list)
-                for level, data in provider_result.items():
-                    if level not in result_map:
-                        result_map[level] = {"total": 0, "success": 0, "error": {}}
-                    result_map[level]["total"] += data["total"]
-                    result_map[level]["success"] += data["success"]
-                    for error_name, count in data["error"].items():
-                        if error_name in result_map[level]["error"]:
-                            result_map[level]["error"][error_name] += count
-                        else:
-                            result_map[level]["error"][error_name] = count
-
-            return result_map
 
 PROFILES_DICT = {
-        profile_strict: {
-            "simple_items": [
-                DUO.HMBResearch,
-                DUO.DiseaseSpecific,
-                DUO.GeographicSpecific,
-            ],
-            "group_code": 2,
-            "country_code": 20,
-            "disease_items": ["A**", "B**"],
-            "disease_groups": 0.2,
-            "months": 6,
-        },
-        profile_medium: {
-            "simple_items": [DUO.HMBResearch, DUO.GeographicSpecific],
-            "group_code": 2,
-            "country_code": 20,
-            "disease_items": ["A**", "B**"],
-            "disease_groups": 0.5,
-            "months": 12,
-        },
-        profile_open: {
-            "simple_items": DUO.HMBResearch,
-            "group_code": 1.0,
-            "country_code": 1.0,
-            "disease_items": 1.0,
-            "disease_groups": 0.8,
-            "months": 2**8 - 1,
-        },
-    }
+    profile_strict: {
+        "simple_items": [
+            DUO.HMBResearch,
+            DUO.DiseaseSpecific,
+            DUO.GeographicSpecific,
+        ],
+        "group_code": 2,
+        "country_code": 20,
+        "disease_items": ["A**", "B**"],
+        "disease_groups": 0.2,
+        "months": 6,
+    },
+    profile_medium: {
+        "simple_items": [DUO.HMBResearch, DUO.GeographicSpecific],
+        "group_code": 2,
+        "country_code": 20,
+        "disease_items": ["A**", "B**"],
+        "disease_groups": 0.5,
+        "months": 12,
+    },
+    profile_open: {
+        "simple_items": DUO.HMBResearch,
+        "group_code": 1.0,
+        "country_code": 1.0,
+        "disease_items": 1.0,
+        "disease_groups": 0.8,
+        "months": 2**8 - 1,
+    },
+}
 
 
 class Experiment_Simulation:
@@ -514,7 +703,7 @@ class Experiment_Simulation:
             self.requester_list.append(requester)
 
         # print(random.random())
-        self.contract.update_area_group_relation(self.requester_list[0])
+        self.contract.update_area_group_relation()
         # self.requester_list[0].update_area_group_relation()
 
     def start(self):
@@ -753,9 +942,8 @@ class Experiment_Case_Study:
             # country_names=["*"],
         )
         # 128 bits
-        # describe in paper 
+        # describe in paper
         # 256 bits
-        
 
         requester4 = Requester(
             name="Requester 4",
@@ -816,7 +1004,7 @@ class Experiment_Case_Study:
             # disease_items=["*"],
         )
 
-        r = self.contract.update_area_group_relation(provider1)
+        r = self.contract.update_area_group_relation()
         # v,c,g = provider1.contract.functions.DisplayCountryGroupRelation().call()
         print("update_area_group_code ", r)
 
@@ -889,21 +1077,24 @@ if __name__ == "__main__":
         environment.deploy_contract_local(environment.interface_affordable)
     )
 
-    Experiment_Case_Study(local_affordable).start()
+    # Experiment_Case_Study(local_affordable).start()
 
-    experiment_simulation = Experiment_Simulation(
-        local_affordable, provider_number=100, requester_number=200
+    # experiment_simulation = Experiment_Simulation(
+    #     local_affordable, provider_number=10, requester_number=20
+    # )
+    # experiment_simulation.start()
+    # experiment_simulation.plot()
+
+    performance = Experiment_Performance(
+        contract_affordable=local_affordable, contract_baseline=local_baseline
     )
-    experiment_simulation.start()
-    experiment_simulation.plot()
-
-    # performance = Experiment_Performance(contract_affordable=local_affordable, contract_baseline=local_baseline)
     # performance.start()
-    # performance.plot()
+    performance.plot()
+    # performance.plot_sparse()
 
-    # mention the how the index of country to a integer in paper. 
+    # mention the how the index of country to a integer in paper.
     # specify geoghraphic group in European
-    # what groups do i neeed? and reasons of choseing the groups, due to GDPR. 
+    # what groups do i neeed? and reasons of choseing the groups, due to GDPR.
 
-    # can user define the groups. more clear in the paper that users can select contries in any number, from 1 to all. 
-    #  groups need more thinking. ICD-10. 
+    # can user define the groups. more clear in the paper that users can select contries in any number, from 1 to all.
+    #  groups need more thinking. ICD-10.

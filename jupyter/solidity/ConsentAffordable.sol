@@ -6,7 +6,7 @@ contract ConsentCode is ConsentBase {
  
      constructor() {
         // dataProvider = msg.sender;
-        consent_managers.push(msg.sender);
+        consent_managers[msg.sender]= true;
     }
     // MARK: - Terms
     struct Terms {
@@ -18,7 +18,7 @@ contract ConsentCode is ConsentBase {
         uint128[26] Disease_Category_Affordable;
     }
 
-    mapping<address,bool> private consent_managers;
+    mapping(address=>bool) private consent_managers;
 
     uint256[] Group_Countries;
     uint16[] Group_Index;
