@@ -4,7 +4,7 @@ from matplotlib import spines
 import pandas as pd
 from tqdm import tqdm
 
-from Consent_Model import (
+from DUO_Consent_Model import (
     Base_Contract,
     Contract_Affordable,
     Contract_Baseline,
@@ -12,14 +12,13 @@ from Consent_Model import (
     Provider,
     Requester,
     DUO,
-    ADAM,
     TestEnum,
     RESULT_CODE,
     Environment,
     Contract,
 )
 
-from Consent_Model import (
+from DUO_Consent_Model import (
     country_name_code_dict,
     disease_list,
     disease_dict,
@@ -650,7 +649,6 @@ class Simulation_Scenarios:
 PROFILES_DICT = {
     profile_strict: {
         "simple_items": [
-            DUO.HMBResearch,
             DUO.DiseaseSpecific,
             DUO.GeographicSpecific,
         ],
@@ -661,7 +659,7 @@ PROFILES_DICT = {
         "months": 6,
     },
     profile_medium: {
-        "simple_items": [DUO.HMBResearch, DUO.GeographicSpecific],
+        "simple_items": [ DUO.GeographicSpecific],
         "group_code": 2,
         "country_code": 20,
         "disease_items": ["A**", "B**"],
@@ -669,7 +667,7 @@ PROFILES_DICT = {
         "months": 12,
     },
     profile_open: {
-        "simple_items": DUO.HMBResearch,
+        "simple_items": [DUO.HMBResearch],
         "group_code": 1.0,
         "country_code": 1.0,
         "disease_items": 1.0,
@@ -914,22 +912,22 @@ class Experiment_Case_Study:
             # country_names=["*"],
             # disease_items=["*"],
         )
+
         requester1 = Requester(
             name="Requester 1",
             env=self.env,
             description="Requester1",
-            bool_items={ADAM.TimelineRestrictions, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.TimeLimitOnUse},
             start_year=2024,
             start_month=6,
             start_day=1,
             months=6,
         )
-
         requester2 = Requester(
             name="Requester 2",
             env=self.env,
             description="Requester2",
-            bool_items={ADAM.SpecificDiseaseResearch, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.DiseaseSpecific},
             disease_items=["A01"],
             # country_names=["*"],
         )
@@ -938,7 +936,7 @@ class Experiment_Case_Study:
             name="Requester 3",
             env=self.env,
             description="Requester3",
-            bool_items={ADAM.SpecificDiseaseResearch, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.DiseaseSpecific},
             disease_items=["B02"],
             # country_names=["*"],
         )
@@ -950,7 +948,7 @@ class Experiment_Case_Study:
             name="Requester 4",
             env=self.env,
             description="Requester4",
-            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.GeographicSpecific},
             country_names=["USA"],
             # disease_items=["*"],
         )
@@ -959,7 +957,7 @@ class Experiment_Case_Study:
             name="Requester 5",
             env=self.env,
             description="Requester5",
-            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.GeographicSpecific},
             country_names=["NLD"],
             # disease_items=["*"],
         )
@@ -968,7 +966,7 @@ class Experiment_Case_Study:
             name="Requester 6",
             env=self.env,
             description="Requester6",
-            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.GeographicSpecific},
             country_names=["USA", "THA"],
             # disease_items=["*"],
         )
@@ -977,7 +975,7 @@ class Experiment_Case_Study:
             name="Requester 7",
             env=self.env,
             description="Requester7",
-            bool_items={ADAM.SpecifiedCountries, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.GeographicSpecific},
             # country_names = [],
             group_names=["EUROPEAN_UNION"],
             # disease_items=["*"],
@@ -987,7 +985,7 @@ class Experiment_Case_Study:
             name="Requester 8",
             env=self.env,
             description="Requester8",
-            bool_items={ADAM.TimelineRestrictions, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.TimeLimitOnUse},
             start_year=2024,
             start_month=1,
             start_day=1,
@@ -1000,7 +998,7 @@ class Experiment_Case_Study:
             name="Requester 9",
             env=self.env,
             description="Requester9",
-            bool_items={ADAM.UseForGeneticsResearch, ADAM.UseByAcademicProfessionals},
+            bool_items={DUO.GeneticStudiesOnly},
             # country_names=["*"],
             # disease_items=["*"],
         )
@@ -1057,7 +1055,7 @@ class Experiment_Case_Study:
                     access_str.append(self.result_map.get(error, self.error_other))
 
                 if len(access_str) == 0:
-                    access_result = "\cmark"
+                    access_result = r"\cmark"
                 else:
                     access_result = " ".join(access_str)
                 row_list.append(access_result)
@@ -1078,7 +1076,7 @@ if __name__ == "__main__":
         environment.deploy_contract_local(environment.interface_affordable)
     )
 
-    # Experiment_Case_Study(local_affordable).start()
+    Experiment_Case_Study(local_affordable).start()
 
     # experiment_simulation = Experiment_Simulation(
     #     local_affordable, provider_number=10, requester_number=20
@@ -1086,11 +1084,11 @@ if __name__ == "__main__":
     # experiment_simulation.start()
     # experiment_simulation.plot()
 
-    performance = Experiment_Performance(
-        contract_affordable=local_affordable, contract_baseline=local_baseline
-    )
+    # performance = Experiment_Performance(
+    # contract_affordable=local_affordable, contract_baseline=local_baseline
+    # )
     # performance.start()
-    performance.plot()
+    # performance.plot()
     # performance.plot_sparse()
 
     # mention the how the index of country to a integer in paper.
