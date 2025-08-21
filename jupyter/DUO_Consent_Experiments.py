@@ -589,10 +589,11 @@ class Simulation_Scenarios:
         )
 
         random.shuffle(self.levels)
+        logger.info(f"Initial provider levels: {len(self.levels)}")
         self.provider_list = self.initial_scenarios()
         self.requester_list = requesters
 
-    def initial_scenarios(self):
+    def initial_scenarios(self) -> list[Provider]:
         provider_list = []
         for i, level in enumerate(self.levels):
             provider = Provider(
@@ -600,79 +601,149 @@ class Simulation_Scenarios:
                 description=f"provider_{i}",
                 env=self.env,
                 level=level,
-                profile=PROFILES_DICT[level],
-                random_init=True,
+                profile_dict=PROVIDER_PROFILES_DICT[level],
             )
             self.contract.upload(provider)
             provider_list.append(provider)
+            # purpose = self.contract.get_purpose(provider)
+            # print(
+            #     f"Provider {i} with level {level} has purpose: {purpose}, profile: {provider.profile_dict}"
+            # )
         return provider_list
 
-    def _process_provider(self, provider, requesters):
-        provider_result = {}
-        if provider.level not in provider_result:
-            provider_result[provider.level] = {
-                "total": 0,
-                "success": 0,
-                "error": {},
-            }
+    def _process_provider(self, provider: Provider, requesters: list[Requester]):
+        provider_result = {
+            "total": 0,
+            "success": 0,
+            "error": {},
+        }
+
         for requester in requesters:
             access_result = self.contract.access(provider, requester=requester)
-            provider_result[provider.level]["total"] += 1
+            provider_result["total"] += 1
             if not access_result:
-                provider_result[provider.level]["success"] += 1
+                provider_result["success"] += 1
             else:
                 for error_name in access_result:
-                    if error_name in provider_result[provider.level]["error"]:
-                        provider_result[provider.level]["error"][error_name] += 1
+                    if error_name in provider_result["error"]:
+                        provider_result["error"][error_name] += 1
                     else:
-                        provider_result[provider.level]["error"][error_name] = 1
+                        provider_result["error"][error_name] = 1
         return provider_result
 
     def start(self):
         result_map = {}
         for provider in tqdm(self.provider_list):
             provider_result = self._process_provider(provider, self.requester_list)
-            for level, data in provider_result.items():
-                if level not in result_map:
-                    result_map[level] = {"total": 0, "success": 0, "error": {}}
-                result_map[level]["total"] += data["total"]
-                result_map[level]["success"] += data["success"]
-                for error_name, count in data["error"].items():
-                    if error_name in result_map[level]["error"]:
-                        result_map[level]["error"][error_name] += count
-                    else:
-                        result_map[level]["error"][error_name] = count
+
+            if provider.level not in result_map:
+                result_map[provider.level] = {"total": 0, "success": 0, "error": {}}
+            result_map[provider.level]["total"] += provider_result["total"]
+            result_map[provider.level]["success"] += provider_result["success"]
+            for error_name, count in provider_result["error"].items():
+                if error_name in result_map[provider.level]["error"]:
+                    result_map[provider.level]["error"][error_name] += count
+                else:
+                    result_map[provider.level]["error"][error_name] = count
 
         return result_map
 
 
-PROFILES_DICT = {
+PROVIDER_PROFILES_DICT = {
     profile_strict: {
-        "simple_items": [
+        "purpose": [
             DUO.DiseaseSpecific,
             DUO.GeographicSpecific,
+            DUO.TimeLimitOnUse,
+            # DUO.GeneticStudiesOnly,
+            # DUO.NonGeneralMethodResearch,
         ],
-        "group_code": 2,
-        "country_code": 20,
-        "disease_items": ["A**", "B**"],
-        "disease_groups": 0.2,
-        "months": 6,
+        "geography": {
+            "group": 3,
+            "country": 50,
+        },
+        "disease": ["A**", "B**", "C**", "D**", "E**"],
+        "date": {
+            "start_year": 2024,
+            "start_month": 6,
+            "start_day": 1,
+            "hold_month": 6,
+        },
     },
     profile_medium: {
-        "simple_items": [ DUO.GeographicSpecific],
+        "purpose": [DUO.GeographicSpecific, DUO.TimeLimitOnUse],
+        "geography": {
+            "group": 2,
+            "country": 50,
+        },
+        "disease": ["A**", "B**"],
+        "date": {
+            "start_year": 2024,
+            "start_month": 6,
+            "start_day": 1,
+            "hold_month": 12,
+        },
+    },
+    profile_open: {
+        "purpose": [DUO.HMBResearch, DUO.TimeLimitOnUse],
+        "geography": {
+            "group": 1.0,
+            "country": ["NLD"],
+        },
+        "disease": 1.0,
+        "date": {
+            "start_year": 2024,
+            "start_month": 6,
+            "start_day": 1,
+            "hold_month": 60,
+        },
+    },
+}
+
+REQUESTER_PROFILES = {
+    profile_strict: {
+        "purpose": {
+            DUO.GeographicSpecific: 1.5,
+            DUO.DiseaseSpecific: 1.5,
+            DUO.TimeLimitOnUse: 1.1,
+        },
+        "geography": {
+            "group": 0,
+            "country": 1,
+        },
+        "disease": "A01",
+        "date": {
+            "start_year": (2026, 2030),
+            "start_month": (1, 12),
+            "start_day": (1, 30),
+            "hold_month": (3, 90),
+        },
+    },
+    profile_medium: {
+        "simple_items": [DUO.GeographicSpecific],
         "group_code": 2,
         "country_code": 20,
-        "disease_items": ["A**", "B**"],
+        "disease_items": 10,
         "disease_groups": 0.5,
-        "months": 12,
+        "date": {
+            "start_year": 2024,
+            "start_month": 6,
+            "start_day": 1,
+            "months": 12,
+        },
     },
     profile_open: {
         "simple_items": [DUO.HMBResearch],
         "group_code": 1.0,
         "country_code": 1.0,
         "disease_items": 1.0,
-        "disease_groups": 0.8,
-        "months": 2**8 - 1,
+        "disease_groups": 1.0,
+        "date": {
+            "start_year": 2024,
+            "start_month": 6,
+            "start_day": 1,
+            "months": 60,
+        },
     },
 }
 
@@ -683,27 +754,57 @@ class Experiment_Simulation:
     ):
         self.env = contract.env
         self.contract = contract
-        # requester_number = 200
-        # provider_number = 100
-        self.requester_list = []
+        self.requester_number = requester_number
         self.provider_number = provider_number
+        self.requester_list = []
         current_time = datetime.datetime.now().strftime("%m-%d-%H-%M")
         self.result_fp = f"result/result_simulation_{current_time}.json"
 
-        for i in range(requester_number):
+        self.requester_proportion = [0, 0, 1]
+
+        # print(random.random())
+        self.contract.update_area_group_relation()
+        self.init_requesters()
+        # self.requester_list[0].update_area_group_relation()
+
+    def init_requesters(self):
+
+        levels = (
+            [
+                profile_open
+                for _ in range(
+                    int(self.requester_proportion[0] * self.requester_number)
+                )
+            ]
+            + [
+                profile_medium
+                for _ in range(
+                    int(self.requester_proportion[1] * self.requester_number)
+                )
+            ]
+            + [
+                profile_strict
+                for _ in range(
+                    int(self.requester_proportion[2] * self.requester_number)
+                )
+            ]
+        )
+        random.shuffle(levels)
+
+        for i in range(self.requester_number):
             requester = Requester(
                 name=f"requester_{i}",
                 description=f"requester_{i}",
                 env=self.env,
-                # address=local_env.accounts.pop(),
-                random_init=True,
+                profile_dict=REQUESTER_PROFILES[levels[i]],
             )
             self.contract.upload(requester)
             self.requester_list.append(requester)
 
-        # print(random.random())
-        self.contract.update_area_group_relation()
-        # self.requester_list[0].update_area_group_relation()
+            # purpose = self.contract.get_purpose(requester)
+            # print(
+            #     f"Requester {i} with level {levels[i]} has purpose: {purpose}, profile: {requester.profile_dict}"
+            # )
 
     def start(self):
         scenarios_1 = Simulation_Scenarios(
@@ -746,6 +847,7 @@ class Experiment_Simulation:
         alpha = 1
         x_labels = list(data.keys())
         # Extract data points
+
         success_rates = [
             data[label]["success"] * 100 / data[label]["total"] for label in x_labels
         ]
@@ -1076,13 +1178,13 @@ if __name__ == "__main__":
         environment.deploy_contract_local(environment.interface_affordable)
     )
 
-    Experiment_Case_Study(local_affordable).start()
+    # Experiment_Case_Study(local_affordable).start()
 
-    # experiment_simulation = Experiment_Simulation(
-    #     local_affordable, provider_number=10, requester_number=20
-    # )
-    # experiment_simulation.start()
-    # experiment_simulation.plot()
+    experiment_simulation = Experiment_Simulation(
+        local_affordable, provider_number=30, requester_number=30
+    )
+    experiment_simulation.start()
+    experiment_simulation.plot()
 
     # performance = Experiment_Performance(
     # contract_affordable=local_affordable, contract_baseline=local_baseline
@@ -1090,10 +1192,3 @@ if __name__ == "__main__":
     # performance.start()
     # performance.plot()
     # performance.plot_sparse()
-
-    # mention the how the index of country to a integer in paper.
-    # specify geoghraphic group in European
-    # what groups do i neeed? and reasons of choseing the groups, due to GDPR.
-
-    # can user define the groups. more clear in the paper that users can select contries in any number, from 1 to all.
-    #  groups need more thinking. ICD-10.

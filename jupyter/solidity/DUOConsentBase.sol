@@ -14,7 +14,7 @@ contract ConsentBase {
     }
 
     enum RESULT_CODE {
-        FirstCategory,
+        NoRestriction,
         GeneralResearch,
         ClinicalCare,
         HMBResearch,
@@ -33,7 +33,6 @@ contract ConsentBase {
         TimeLimitOnUse,
         ReturnToResource,
         ResearchSpecificRestriction,
-        DataUsePermission,
         UserSpecificRestriction,
         ProjectSpecificRestriction,
         InstitutionSpecificRestriction
@@ -56,8 +55,8 @@ contract ConsentBase {
         bool GeneralResearch;
         bool ClinicalCare;
         bool HMBResearch;
-        bool populationAndAncestryResearchOnly;
-        bool populationAndAncestryResearchNon;
+        bool PopulationAndAncestryResearchOnly;
+        bool PopulationAndAncestryResearchNon;
         bool DiseaseSpecific;
         bool GeneticStudiesOnly;
         bool NonGeneralMethodResearch;
@@ -71,7 +70,7 @@ contract ConsentBase {
         bool TimeLimitOnUse;
         bool ReturnToResource;
         bool ResearchSpecificRestriction;
-        bool DataUsePermission;
+        // bool DataUsePermission;
         bool UserSpecificRestriction;
         bool ProjectSpecificRestriction;
         bool InstitutionSpecificRestriction;
@@ -89,19 +88,40 @@ contract ConsentBase {
     mapping(address => DUO_Extension) provider_extension_mapping;
     mapping(address => DUO_Extension) requester_extension_mapping;
 
-    function uploadPurpose(
+    function upload_purpose(
         uint8 role,
         address _address1,
         DUO memory purpose
     ) public {
         if (role == ROLE_PROVIDER) {
             provider_mapping[_address1] = purpose;
+            if (
+                purpose.NoRestriction == false &&
+                (purpose.GeneralResearch == false &&
+                    purpose.HMBResearch == false &&
+                    purpose.DiseaseSpecific == false)
+            ) {
+                revert("Research purpose is mandatory for PROVIDER");
+            }
         } else if (role == ROLE_REQUESTER) {
+            if (purpose.NoRestriction == true) {
+                revert("NoRestriction is not allowed for REQUESTER");
+            }
+
+            if (purpose.GeographicSpecific == false) {
+                revert("GeographicSpecific is mandatory for REQUESTER");
+            }
+            if (purpose.DiseaseSpecific == false) {
+                revert("DiseaseSpecific is mandatory for REQUESTER");
+            }
+            if (purpose.TimeLimitOnUse == false) {
+                revert("TimeLimitOnUse is mandatory for REQUESTER");
+            }
             requester_mapping[_address1] = purpose;
         }
     }
 
-    function GetPurposeItems(
+    function get_purpose(
         uint8 role,
         address _address
     ) public view returns (DUO memory) {
@@ -109,14 +129,23 @@ contract ConsentBase {
             return provider_mapping[_address];
         } else if (role == ROLE_REQUESTER) {
             return requester_mapping[_address];
+        } else {
+            revert("get_purpose: Invalid role specified");
         }
     }
 
     function upload_extension(
         uint8 role,
         address _address1,
-        DUO_Extension memory extension
+        uint32[] memory UserSpecificRestriction,
+        uint32[] memory ProjectSpecificRestriction,
+        uint32[] memory InstitutionSpecificRestriction
     ) public {
+        DUO_Extension memory extension = DUO_Extension({
+            UserSpecificRestriction: UserSpecificRestriction,
+            ProjectSpecificRestriction: ProjectSpecificRestriction,
+            InstitutionSpecificRestriction: InstitutionSpecificRestriction
+        });
         if (role == ROLE_PROVIDER) {
             provider_extension_mapping[_address1] = extension;
         } else if (role == ROLE_REQUESTER) {
@@ -321,48 +350,37 @@ contract ConsentBase {
     }
 
     // MARK: - CheckDate
-    function CheckDate(
+    function _check_date(
         address _provider_address,
         address _requester_address
     ) public view returns (bool) {
-        if (
-            requesterDateMapping[_requester_address].Start_Year >
-            providerDateMapping[_provider_address].Start_Year
-        ) {
+        Date memory requester_date = requesterDateMapping[_requester_address];
+        Date memory provider_date = providerDateMapping[_provider_address];
+        if (requester_date.Months > provider_date.Months) {
+            return false;
+        }
+
+        if (requester_date.Start_Year > provider_date.Start_Year) {
             return true;
         }
-        if (
-            requesterDateMapping[_requester_address].Start_Year <
-            providerDateMapping[_provider_address].Start_Year
-        ) {
+        if (requester_date.Start_Year < provider_date.Start_Year) {
             return false;
         }
 
         // year now equal
-        if (
-            requesterDateMapping[_requester_address].Start_Month >
-            providerDateMapping[_provider_address].Start_Month
-        ) {
+        if (requester_date.Start_Month > provider_date.Start_Month) {
             return true;
         }
-        if (
-            requesterDateMapping[_requester_address].Start_Month <
-            providerDateMapping[_provider_address].Start_Month
-        ) {
+
+        if (requester_date.Start_Month < provider_date.Start_Month) {
             return false;
         }
 
         // month now equal
-        if (
-            requesterDateMapping[_requester_address].Start_Day >=
-            providerDateMapping[_provider_address].Start_Day
-        ) {
+        if (requester_date.Start_Day >= provider_date.Start_Day) {
             return true;
         }
-        if (
-            requesterDateMapping[_requester_address].Start_Day <
-            providerDateMapping[_provider_address].Start_Day
-        ) {
+        if (requester_date.Start_Day < provider_date.Start_Day) {
             return false;
         }
 
@@ -399,32 +417,33 @@ contract ConsentBase {
         uint32 u1 = 1;
 
         if (provider.GeneralResearch == true) {
-            if (requester.GeneralResearch == false) {
-                result += u1 << uint32(RESULT_CODE.GeneralResearch);
+            // if (provider.GeneralResearch == false) {
+            //     result += u1 << uint32(RESULT_CODE.GeneralResearch);
+            // }
+        }
+
+        if (provider.HMBResearch == true) {
+            if (requester.GeneralResearch == true) {
+                result += u1 << uint32(RESULT_CODE.HMBResearch);
             }
         }
+
         if (provider.ClinicalCare == true) {
             if (requester.ClinicalCare == false) {
                 result += u1 << uint32(RESULT_CODE.ClinicalCare);
             }
         }
 
-        if (provider.HMBResearch == true) {
-            if (requester.HMBResearch == false) {
-                result += u1 << uint32(RESULT_CODE.HMBResearch);
-            }
-        }
-
-        if (provider.populationAndAncestryResearchOnly == true) {
-            if (requester.populationAndAncestryResearchOnly == false) {
+        if (provider.PopulationAndAncestryResearchOnly == true) {
+            if (requester.PopulationAndAncestryResearchOnly == false) {
                 result +=
                     u1 <<
                     uint32(RESULT_CODE.PopulationAndAncestryResearchOnly);
             }
         }
 
-        if (provider.populationAndAncestryResearchNon == true) {
-            if (requester.populationAndAncestryResearchNon == false) {
+        if (provider.PopulationAndAncestryResearchNon == true) {
+            if (requester.PopulationAndAncestryResearchNon == false) {
                 result +=
                     u1 <<
                     uint32(RESULT_CODE.PopulationAndAncestryResearchNon);
@@ -432,14 +451,14 @@ contract ConsentBase {
         }
 
         if (provider.ResearchSpecificRestriction == true) {
-            if (requester.ReturnToResource == false) {
+            if (requester.ResearchSpecificRestriction == false) {
                 result += u1 << uint32(RESULT_CODE.ResearchSpecificRestriction);
             }
         }
 
         if (provider.UserSpecificRestriction == true) {
             if (
-                requester.UserSpecificRestriction == false ||
+                requester.UserSpecificRestriction == false &&
                 check_users(provider_address, requester_address) == false
             ) {
                 result += u1 << uint32(RESULT_CODE.UserSpecificRestriction);
@@ -473,22 +492,19 @@ contract ConsentBase {
         }
 
         if (provider.NonGeneralMethodResearch == true) {
-            if (requester.NonGeneralMethodResearch == true) {
+            if (requester.NonGeneralMethodResearch == false) {
                 result += u1 << uint32(RESULT_CODE.NonGeneralMethodResearch);
             }
         }
 
         if (provider.NonProfitUseOnly == true) {
-            if (
-                requester.NonProfitUseOnly == false ||
-                requester.NonCommercialUseOnly == true
-            ) {
+            if (requester.NonProfitUseOnly == false) {
                 result += u1 << uint32(RESULT_CODE.NonProfitUseOnly);
             }
         }
 
         if (provider.NonCommercialUseOnly == true) {
-            if (requester.NonCommercialUseOnly == true) {
+            if (requester.NonCommercialUseOnly == false) {
                 result += u1 << uint32(RESULT_CODE.NonCommercialUseOnly);
             }
         }
@@ -523,24 +539,6 @@ contract ConsentBase {
             }
         }
 
-        if (provider.DataUsePermission == true) {
-            if (requester.DataUsePermission == false) {
-                result += u1 << uint32(RESULT_CODE.DataUsePermission);
-            }
-        }
-
-        // tmp_result = provider.ProfitOrganisationNon ? requester.UseByProfitMakingProfessionals : true;if
-
-        //    bool dataSecurityMeasuresRequired =   (provider.DataSecurityMeasuresRequired == true && requester.DataSecurityMeasures == true  && requester.DataDestructionRequired == true && requester.LinkingOfAccessedRecords == true && requester.RecontactingDataSubjects == true && requester.IntellectualPropertyClaims == true && requester.UseOfAccessedResources == true) ||provider.DataSecurityMeasuresRequired == false;
-
-        //     if (!dataSecurityMeasuresRequired) {
-        //         result += u1 << uint8(RESULT_CODE.DataSecurityMeasuresRequired);
-        //     }
-
-        // if (!((provider.CostOnUse == true && requester.FeesForAccess ==  true) ||provider.CostOnUse == false) ) {
-        //     result += u1 << uint8(RESULT_CODE.CostOnUse);
-        // }
-
         return result;
     }
 
@@ -556,15 +554,15 @@ contract ConsentBase {
         }
 
         uint32 result = basic_access_check(provider_address, requester_address);
-        if (result != 0) {
-            return result;
-        }
+        // if (result != 0) {
+        //     return result;
+        // }
         uint32 u1 = 1;
 
         if (provider.GeographicSpecific) {
             if (
-                !requester.GeographicSpecific ||
-                !CheckArea(provider_address, requester_address)
+                requester.GeographicSpecific == false ||
+                CheckArea(provider_address, requester_address) == false
             ) {
                 result += u1 << uint32(RESULT_CODE.GeographicSpecific);
             }
@@ -572,8 +570,10 @@ contract ConsentBase {
 
         if (provider.DiseaseSpecific) {
             if (
-                !requester.DiseaseSpecific ||
-                !CheckDisease(provider_address, requester_address)
+                requester.GeneralResearch == true ||
+                requester.HMBResearch == true ||
+                requester.DiseaseSpecific == false ||
+                CheckDisease(provider_address, requester_address) == false
             ) {
                 result += u1 << uint32(RESULT_CODE.DiseaseSpecific);
             }
@@ -581,8 +581,8 @@ contract ConsentBase {
 
         if (provider.TimeLimitOnUse) {
             if (
-                !requester.TimeLimitOnUse ||
-                !CheckDate(provider_address, requester_address)
+                requester.TimeLimitOnUse == false ||
+                _check_date(provider_address, requester_address) == false
             ) {
                 result += u1 << uint32(RESULT_CODE.TimeLimitOnUse);
             }

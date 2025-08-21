@@ -16,7 +16,7 @@ import re
 import enum
 from enum import Enum
 import yaml
-
+import random
 from web3.middleware import ExtraDataToPOAMiddleware
 
 
@@ -79,11 +79,16 @@ logger.critical("This is a critical message")
 profile_strict = "Restrictive"
 profile_medium = "Moderate"
 profile_open = "Open"
+
 profile_list = [
     profile_open,
     profile_medium,
     profile_strict,
 ]
+
+
+ROLE_PROVIDER = 1
+ROLE_REQUESTER = 2
 
 
 # consent_fp_relative = r"jupyter\\data\\UnifiedConsentModel.sol"
@@ -97,6 +102,99 @@ solcx_version = "0.8.0"
 solcx.install_solc(solcx_version)
 # compiled_sol = solcx.compile_source(source=contract_source_code,
 #   solc_binary="/snap/bin/solc")
+
+
+import time
+
+
+import random
+import icd10
+
+
+def expand_code_range(code_range):
+    # Split the range into start and end codes
+    start_code, end_code = code_range.split("-")
+
+    # Extract letters and numbers
+    start_letter, start_number = start_code[0], int(start_code[1:])
+    end_letter, end_number = end_code[0], int(end_code[1:])
+    # print(f"start_letter {start_letter}, start_number {start_number}")
+    # print(f"end_letter {end_letter}, end_number {end_number}")
+
+    # Initialize variables
+    codes = []
+    current_letter = start_letter
+    current_number = start_number
+
+    # Loop until the current code matches the end code
+    while current_letter <= end_letter:
+        while current_number <= 99:  # Maximum number in the range
+            # Add the current code to the list
+            codes.append(f"{current_letter}{current_number:02}")
+            if current_letter == end_letter and current_number == end_number:
+                break  # Stop if the end code is reached
+            current_number += 1  # Increment the number part
+
+        # Reset for the next letter if not yet at the end
+        # if current_letter < end_letter:
+        current_letter = chr(ord(current_letter) + 1)  # Move to the next letter
+        current_number = 0  # Reset number to 0 for the next letter
+
+    return codes
+
+
+def decode_country_code(country_code: int):
+    countries = []
+    for name, index in country_index_dict.items():
+        if index & country_code:
+            countries.append(name)
+    return countries
+
+
+def decode_group_code(group_code: int):
+    groups = []
+    for k, v in group_index_dict.items():
+        if v & group_code:
+            groups.append(k)
+    return groups
+
+
+# disease_list = []
+disease_dict = {}
+disease_list = []
+for c in icd10.chapters:
+    codes = expand_code_range(c[1])
+    disease_list.extend(codes)
+    for code in codes:
+        #
+        letter = code[0]
+        if letter not in disease_dict:
+            disease_dict[letter] = []
+        disease_dict[letter].append(code)
+
+# disease_list = [item for sublist in disease_dict.values() for item in sublist]
+print(f"disease_list length {len(disease_list)}")
+
+country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
+
+for k in country_name_code_dict.keys():
+    country_name_code_dict[k]["position_index"] = (
+        2 ** country_name_code_dict[k]["index"]
+    )
+
+group_index_dict = json.load(open("data/group_index.json", "r"))
+country_index_dict = json.load(open("data/country_index.json", "r"))
+# allowed_group_names = {"EUROPEAN_UNION"}
+
+group_order_index_dict = {
+    name: index for index, name in enumerate(group_index_dict.keys())
+}
+
+country_code_name_dict = {v["index"]: k for k, v in country_name_code_dict.items()}
+
+all_countries_name = list(country_name_code_dict.keys())
+
+all_group_names = list(group_index_dict.keys())
 
 
 class Environment:
@@ -376,19 +474,21 @@ class Person:
         name="",
         description="",
         address=None,
-        bool_items=set(),
-        country_names=list(),
-        group_names=list(),
-        disease_items=list(),
+        bool_items=None,
+        country_names=None,
+        group_names=None,
+        disease_items=None,
         start_year=2021,
         start_month=1,
         start_day=1,
-        months=12,
+        hold_month=12,
+        profile_dict=None,
         level=profile_open,
-        user_restrictions=list(),
-        institution_restrictions=list(),
-        project_restrictions=list(),
-        **kwargs,
+        user_restrictions=None,
+        institution_restrictions=None,
+        project_restrictions=None,
+        role=ROLE_PROVIDER,
+        # **kwargs,
     ):
 
         self.name = name
@@ -408,7 +508,7 @@ class Person:
 
             # print(f"balance of {address} is {balance}")
 
-        self.bool_items = bool_items
+        self.purpose = bool_items
 
         self.description = description
 
@@ -425,153 +525,225 @@ class Person:
         self.start_year = start_year
         self.start_month = start_month
         self.start_day = start_day
-        self.months = months
-        self.role = kwargs.get("role", 0)
+        self.hold_month = hold_month
+        self.role = role
 
         self.user_restrictions = user_restrictions
         self.institution_restrictions = institution_restrictions
         self.project_restrictions = project_restrictions
+        self.profile_dict = profile_dict
 
-    def random_init(self, profile_dict):
-        # if risk_level is not None:
-        self.months = profile_dict["months"]
+        if profile_dict is not None:
+            self.random_init(profile_dict)
 
-        # while True:
-        #     disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-        #     if len(disease_list) > 0:
-        #         break
-        disease_setting = profile_dict["disease_items"]
-        while True:
-            disease_list = disease_dict[random.choice(string.ascii_uppercase)]
-            if len(disease_list) > 0:
-                break
+    def _init_purpose(self, purpose_setting):
+        if self.purpose is None:
+            self.purpose = set()
+
+        if isinstance(purpose_setting, float):
+            if purpose_setting == 1.0:
+                self.purpose = set(DUO)
+            else:
+                for item in DUO:
+                    if random.random() < purpose_setting:
+                        self.purpose.add(item)
+        elif isinstance(purpose_setting, list):
+            self.purpose = set(purpose_setting)
+        elif isinstance(purpose_setting, DUO):
+            self.purpose.add(purpose_setting)
+        elif isinstance(purpose_setting, dict):
+            for key, value in purpose_setting.items():
+                if random.random() < value:
+                    self.purpose.add(key)
+        else:
+            raise Exception("purpose_setting is not a list or DUO")
+
+    def _init_disease(self, disease_setting):
+        if self.disease_items is None:
+            self.disease_items = set()
 
         if isinstance(disease_setting, float):
             if disease_setting == 1.0:
                 self.disease_items = ["*"]
             else:
-                self.disease_items = random.choices(
+                self.disease_items = random.sample(
                     disease_list,
                     k=int(disease_setting * len(disease_list)),
                 )
-                self.disease_groups = random.choices(
+                self.disease_groups = random.sample(
                     string.ascii_uppercase, k=int(disease_setting * 26)
                 )
         elif isinstance(disease_setting, str):
             self.disease_items = [disease_setting]
         elif isinstance(disease_setting, list):
             self.disease_items = disease_setting
-        else:
+        elif isinstance(disease_setting, int):
             self.disease_items = random.choices(
                 disease_list,
                 k=disease_setting,
             )
-
-        country_setting = profile_dict["country_code"]
-        if isinstance(country_setting, float):
-            self.country_names = random.sample(
-                all_countries_name,
-                k=int(country_setting * len(all_countries_name)),
-            )
         else:
+            raise Exception("Invalid disease_setting type")
+
+    def _init_date(self, date_setting):
+        if isinstance(date_setting["start_year"], tuple):
+            self.start_year = random.randint(*date_setting["start_year"])
+        else:
+            self.start_year = date_setting["start_year"]
+
+        if isinstance(date_setting["start_month"], tuple):
+            self.start_month = random.randint(*date_setting["start_month"])
+        else:
+            self.start_month = date_setting["start_month"]
+
+        if isinstance(date_setting["start_day"], tuple):
+            self.start_day = random.randint(*date_setting["start_day"])
+        else:
+            self.start_day = date_setting["start_day"]
+
+        if isinstance(date_setting["hold_month"], tuple):
+            self.hold_month = random.randint(*date_setting["hold_month"])
+        else:
+            self.hold_month = date_setting["hold_month"]
+
+    def _init_geography(self, geography_setting):
+        if self.country_names is None:
+            self.country_names = set()
+        if self.group_names is None:
+            self.group_names = set()
+
+        country_setting = geography_setting["country"]
+        if isinstance(country_setting, float):
+            if country_setting == 1.0:
+                self.country_names = ["*"]
+            else:
+                self.country_names = random.sample(
+                    list(country_name_code_dict.keys()),
+                    k=int(country_setting * len(country_name_code_dict)),
+                )
+        elif isinstance(country_setting, str):
+            self.country_names = [country_setting]
+
+        elif isinstance(country_setting, list):
+            self.country_names = country_setting
+        elif isinstance(country_setting, int):
             self.country_names = random.sample(
-                all_countries_name,
+                list(country_name_code_dict.keys()),
                 k=country_setting,
             )
+        else:
+            raise Exception("Invalid country_setting type")
 
-        country_group_setting = profile_dict["group_code"]
-        if isinstance(country_group_setting, float):
+        group_setting = geography_setting["group"]
+        if isinstance(group_setting, float):
             self.group_names = random.sample(
                 all_group_names,
-                k=int(country_group_setting * len(all_group_names)),
+                k=int(group_setting * len(all_group_names)),
+            )
+        elif isinstance(group_setting, int):
+            self.group_names = random.sample(
+                all_group_names,
+                k=group_setting,
             )
         else:
-            self.group_names = random.sample(
-                all_group_names,
-                k=country_group_setting,
-            )
+            raise Exception("Invalid group_setting type")
 
-    def update_area_group_code_baseline(self, part_number=20):
+    def random_init(self, profile_dict):
 
-        def split(a, n):
+        self.purpose = set()
+        purpose_setting = profile_dict["purpose"]
+        self._init_purpose(purpose_setting)
 
-            k, m = divmod(len(a), n)
+        date_setting = profile_dict["date"]
+        self._init_date(date_setting)
 
-            return tuple(
-                a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n)
-            )
+        disease_setting = profile_dict["disease"]
+        self._init_disease(disease_setting)
 
-        country_group_dict = {}
+        country_setting = profile_dict["geography"]
+        self._init_geography(country_setting)
 
-        for c in self.country_names:
+    # def update_area_group_code_baseline(self, part_number=20):
 
-            if c not in self.country_name_code_dict:
+    #     def split(a, n):
 
-                print(f"{c} not in country_dict")
+    #         k, m = divmod(len(a), n)
 
-                return
+    #         return tuple(
+    #             a[i * k + min(i, m) : (i + 1) * k + min(i + 1, m)] for i in range(n)
+    #         )
 
-            country_dict = self.country_name_code_dict[c]
+    #     country_group_dict = {}
 
-            country_group_dict[country_dict["index"]] = [
-                self.group_order_index_dict[g] for g in country_dict["groups"]
-            ]
+    #     for c in self.country_names:
 
-        country_code_list = list(country_group_dict.keys())
+    #         if c not in self.country_name_code_dict:
 
-        country_group_index_list = list(country_group_dict.values())
+    #             print(f"{c} not in country_dict")
 
-        country_number = len(country_code_list)
+    #             return
 
-        # print("country_group_dict", country_group_dict)
+    #         country_dict = self.country_name_code_dict[c]
 
-        country_code_list_part = split(country_code_list, part_number)
+    #         country_group_dict[country_dict["index"]] = [
+    #             self.group_order_index_dict[g] for g in country_dict["groups"]
+    #         ]
 
-        country_group_index_list_part = split(country_group_index_list, part_number)
+    #     country_code_list = list(country_group_dict.keys())
 
-        gas = 0
+    #     country_group_index_list = list(country_group_dict.values())
 
-        for i in range(part_number):
+    #     country_number = len(country_code_list)
 
-            func = self.contract.functions.UpdateAreaBaseline(
-                country_code_list_part[i], country_group_index_list_part[i]
-            )
+    #     # print("country_group_dict", country_group_dict)
 
-            func_gas = func.estimate_gas()
+    #     country_code_list_part = split(country_code_list, part_number)
 
-            gas += func_gas
-        return gas
+    #     country_group_index_list_part = split(country_group_index_list, part_number)
 
-    def display_area_codes(self):
-        (
-            Group_Code,
-            Country_Codes,
-            Country_Group_Codes,
-        ) = self.contract.functions.DisplayAreaCode(self.role, self.address).call()
+    #     gas = 0
 
-        # groupp_code is a int of the sum of the value of group_index_dict, decode it according to the group_index_dict
+    #     for i in range(part_number):
 
-        group_names = []
+    #         func = self.contract.functions.UpdateAreaBaseline(
+    #             country_code_list_part[i], country_group_index_list_part[i]
+    #         )
 
-        for k, v in self.group_index_dict.items():
+    #         func_gas = func.estimate_gas()
 
-            if v & Group_Code:
+    #         gas += func_gas
+    #     return gas
 
-                group_names.append(k)
+    # def display_area_codes(self):
+    #     (
+    #         Group_Code,
+    #         Country_Codes,
+    #         Country_Group_Codes,
+    #     ) = self.contract.functions.DisplayAreaCode(self.role, self.address).call()
 
-        # print("displayAreaCodes", Country_Codes)
+    #     # groupp_code is a int of the sum of the value of group_index_dict, decode it according to the group_index_dict
 
-        # print("Country_Group_Codes", Country_Group_Codes)
+    #     group_names = []
 
-        country_names = [self.country_code_name_dict[c] for c in Country_Codes]
+    #     for k, v in self.group_index_dict.items():
 
-        result = {"group_names": group_names, "country_codes": country_names}
+    #         if v & Group_Code:
 
-        logging.info(f"displayAreaCodes is {result}")
+    #             group_names.append(k)
 
-    def refresh_state(self):
-        func = self.contract.functions.RefreshState(self.address)
-        return self.send_transaction(func)
+    #     # print("displayAreaCodes", Country_Codes)
+
+    #     # print("Country_Group_Codes", Country_Group_Codes)
+
+    #     country_names = [self.country_code_name_dict[c] for c in Country_Codes]
+
+    #     result = {"group_names": group_names, "country_codes": country_names}
+
+    #     logging.info(f"displayAreaCodes is {result}")
+
+    # def refresh_state(self):
+    #     func = self.contract.functions.RefreshState(self.address)
+    #     return self.send_transaction(func)
 
 
 class Base_Contract:
@@ -600,31 +772,43 @@ class Base_Contract:
                 person.start_year,
                 person.start_month,
                 person.start_day,
-                person.months,
+                person.hold_month,
             )
 
         except Exception as e:
             print(f"error in upload_date {e}")
             logger.error(
-                f"error in upload_date, role {person.role}, address {person.address}, start_year {person.start_year}, start_month {person.start_month}, start_day {person.start_day}, months {person.months}"
+                f"error in upload_date, role {person.role}, address {person.address}, start_year {person.start_year}, start_month {person.start_month}, start_day {person.start_day}, hold_month {person.hold_month}"
             )
+
+        # logger.info(
+        #     f"upload_date, role {person.role}, address {person.address}, start_year {person.start_year}, start_month {person.start_month}, start_day {person.start_day}, hold_month {person.hold_month}"
+        # )
 
         return self.send_transaction(func, person)
 
     def upload_purpose(self, person: Person) -> TransactionResult:
-        simple_value = [True if item in person.bool_items else False for item in DUO]
+        simple_value = [True if item in person.purpose else False for item in DUO]
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
         # )
 
-        upload_func = self.contract.functions.uploadPurpose(
+        upload_func = self.contract.functions.upload_purpose(
             person.role, person.address, simple_value
         )
 
         return self.send_transaction(upload_func, person)
 
+    def get_purpose(self, person: Person):
+        purpose = self.contract.functions.get_purpose(
+            person.role, person.address
+        ).call()
+        result = [item for item, value in zip(DUO, purpose) if value]
+        return result
+
     def _upload_extension_provider(self, person: Person) -> TransactionResult:
-        func = self.functions.upload_extension_provider(
+        func = self.functions.upload_extension(
+            person.role,
             person.address,
             person.user_restrictions,
             person.project_restrictions,
@@ -713,17 +897,19 @@ class Base_Contract:
 
     def upload(self, person: Person) -> TransactionResult:
         self.upload_purpose(person)
-        if DUO.GeographicSpecific in person.bool_items:
+
+        # logger.info(f"purpose {person.purpose}")
+        if DUO.GeographicSpecific in person.purpose:
             self.upload_area(person)
-        if DUO.DiseaseSpecific in person.bool_items:
+        if DUO.DiseaseSpecific in person.purpose:
             self.upload_disease(person)
-        if DUO.TimeLimitOnUse in person.bool_items:
+        if DUO.TimeLimitOnUse in person.purpose:
             self.upload_date(person)
 
         if (
-            DUO.UserSpecificRestriction in person.bool_items
-            or DUO.ProjectSpecificRestriction in person.bool_items
-            or DUO.InstitutionSpecificRestriction in person.bool_items
+            DUO.UserSpecificRestriction in person.purpose
+            or DUO.ProjectSpecificRestriction in person.purpose
+            or DUO.InstitutionSpecificRestriction in person.purpose
         ):
             self._upload_extension_provider(person)
 
@@ -734,6 +920,7 @@ class Base_Contract:
             raise ValueError(f"Invalid role: {provider.role} {requester.role}")
 
         result = self.send_transaction(func, provider, call=True, label="access").result
+        # print(f"access result {result}")
         result_set = set()
         if result == 0:
             return result_set
@@ -1031,148 +1218,32 @@ import random
 
 class DUO(Enum):
     NoRestriction = 1
-    # OpenToGeneralResearchAndClinicalCare = 2
-    # OpenToHMBResearch = 4
-    # OpenToPopulationAndAncestryResearch = 8
-    # OpenToDiseaseSpecific = 16
-    # OpenToGeneticStudiesOnly = 32
-    # ResearchSpecificRestrictions = 64
-    # OpenToResearchUseOnly = 128
-    # GeneralMethodResearch = 256
-    # GeographicSpecificRestriction = 512
-    # OpenToNonProfitUseOnly = 1024
-    # PublicationRequired = 2048
-    # CollaborationRequired = 4096
-    # EthicsApprovalrequired = 8192
-    # TimeLimitOnUse = 16384
-    # CostOnUse = 32768
-    # DataSecurityMeasuresRequired = 65536
-    # DiseaseSpecificResearch = 131072
-
-    GeneralResearch = 2
-    ClinicalCare = 4
-    HMBResearch = 8
-    PopulationAndAncestryResearchOnly = 16
-    PopulationAndAncestryResearchNon = 32
-    DiseaseSpecific = 64
-    GeneticStudiesOnly = 128
-    GeneralMethodResearchNon = 256
-    GeographicSpecific = 512
-    NonProfitUseOnly = 1024
-    NonCommercialUseOnly = 2048
-    PublicationRequired = 4096
-    PublicationMoratorium = 8192
-    CollaborationRequired = 16384
-    EthicsApprovalrequired = 32768
-    TimeLimitOnUse = 65536
-    ProfitOrganisationNon = 131072
-    DataSecurityMeasuresRequired = 262144
-    ReturnToResource = 524288
-    UserSpecificRestriction = 1048576
-    ProjectSpecificRestriction = 2097152
-    InstitutionSpecificRestriction = 4194304
-    ResearchSpecificRestriction = 8388608
-    DataUsePermission = 16777216
+    GeneralResearch = 1 << 2
+    ClinicalCare = 1 << 3
+    HMBResearch = 1 << 4
+    PopulationAndAncestryResearchOnly = 1 << 5
+    PopulationAndAncestryResearchNon = 1 << 6
+    DiseaseSpecific = 1 << 7
+    GeneticStudiesOnly = 1 << 8
+    NonGeneralMethodResearch = 1 << 9
+    GeographicSpecific = 1 << 10
+    NonProfitUseOnly = 1 << 11
+    NonCommercialUseOnly = 1 << 12
+    PublicationRequired = 1 << 13
+    PublicationMoratorium = 1 << 14
+    CollaborationRequired = 1 << 15
+    EthicsApprovalRequired = 1 << 16
+    TimeLimitOnUse = 1 << 17
+    ReturnToResource = 1 << 18
+    ResearchSpecificRestriction = 1 << 19
+    UserSpecificRestriction = 1 << 20
+    ProjectSpecificRestriction = 1 << 21
+    InstitutionSpecificRestriction = 1 << 22
 
 
 # DUO_order_list = [
 #     DUO.Allow_All,
 #                   DUO.OpenToGeneralResearchAndClinicalCare, DUO.OpenToHMBResearch, DUO.OpenToPopulationAndAncestryResearch, DUO.OpenToDiseaseSpecific, DUO.OpenToGeneticStudiesOnly, DUO.ResearchSpecificRestrictions, DUO.OpenToResearchUseOnly, DUO.GeneralMethodResearch, DUO.GeographicSpecificRestriction, DUO.OpenToNonProfitUseOnly, DUO.PublicationRequired, DUO.CollaborationRequired, DUO.EthicsApprovalrequired, DUO.TimeLimitOnUse, DUO.CostOnUse, DUO.DataSecurityMeasuresRequired]
-
-
-ROLE_PROVIDER = 1
-ROLE_REQUESTER = 2
-
-
-import time
-
-
-import random
-import icd10
-
-
-def expand_code_range(code_range):
-    # Split the range into start and end codes
-    start_code, end_code = code_range.split("-")
-
-    # Extract letters and numbers
-    start_letter, start_number = start_code[0], int(start_code[1:])
-    end_letter, end_number = end_code[0], int(end_code[1:])
-    # print(f"start_letter {start_letter}, start_number {start_number}")
-    # print(f"end_letter {end_letter}, end_number {end_number}")
-
-    # Initialize variables
-    codes = []
-    current_letter = start_letter
-    current_number = start_number
-
-    # Loop until the current code matches the end code
-    while current_letter <= end_letter:
-        while current_number <= 99:  # Maximum number in the range
-            # Add the current code to the list
-            codes.append(f"{current_letter}{current_number:02}")
-            if current_letter == end_letter and current_number == end_number:
-                break  # Stop if the end code is reached
-            current_number += 1  # Increment the number part
-
-        # Reset for the next letter if not yet at the end
-        # if current_letter < end_letter:
-        current_letter = chr(ord(current_letter) + 1)  # Move to the next letter
-        current_number = 0  # Reset number to 0 for the next letter
-
-    return codes
-
-
-# disease_list = []
-disease_dict = {}
-for c in icd10.chapters:
-    codes = expand_code_range(c[1])
-    for code in codes:
-        #
-        letter = code[0]
-        if letter not in disease_dict:
-            disease_dict[letter] = []
-        disease_dict[letter].append(code)
-
-disease_list = [item for sublist in disease_dict.values() for item in sublist]
-print(f"disease_list length {len(disease_list)}")
-
-country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
-
-for k in country_name_code_dict.keys():
-    country_name_code_dict[k]["position_index"] = (
-        2 ** country_name_code_dict[k]["index"]
-    )
-
-group_index_dict = json.load(open("data/group_index.json", "r"))
-country_index_dict = json.load(open("data/country_index.json", "r"))
-# allowed_group_names = {"EUROPEAN_UNION"}
-
-group_order_index_dict = {
-    name: index for index, name in enumerate(group_index_dict.keys())
-}
-
-country_code_name_dict = {v["index"]: k for k, v in country_name_code_dict.items()}
-
-all_countries_name = list(country_name_code_dict.keys())
-
-all_group_names = list(group_index_dict.keys())
-
-
-def decode_country_code(country_code: int):
-    countries = []
-    for name, index in country_index_dict.items():
-        if index & country_code:
-            countries.append(name)
-    return countries
-
-
-def decode_group_code(group_code: int):
-    groups = []
-    for k, v in group_index_dict.items():
-        if v & group_code:
-            groups.append(k)
-    return groups
 
 
 import string
@@ -1187,40 +1258,8 @@ class Provider(Person):
         self.role = ROLE_PROVIDER
 
         # risk_level = kwargs.get("risk_level", None)
-        random_init = kwargs.get("random_init", False)
+        # random_init = kwargs.get("random_init", False)
         self.contract: Base_Contract = kwargs.get("contract", None)
-
-        if random_init:
-            profile_dict = kwargs.get("profile")
-
-            self.random_init(profile_dict)
-
-            self.bool_items = set()
-            purpose_setting = profile_dict["simple_items"]
-            if isinstance(purpose_setting, list):
-                self.bool_items = set(purpose_setting)
-            elif isinstance(purpose_setting, DUO):
-                self.bool_items.add(purpose_setting)
-            else:
-                raise Exception("purpose_setting is not a list or DUO")
-            # for item in DUO:
-            #     if self.level != profile_open and item == DUO.Allow_All:
-            #         continue
-            #     if random.random() < profile_dict['simple_items']:
-            #         self.bool_items.add(item)
-
-            if self.level == profile_open:
-                self.start_year = 2020
-            else:
-                self.start_year = random.randint(2023, 2025)
-
-            self.start_month = random.randint(1, 12)
-
-            self.start_day = random.randint(1, 28)
-
-            # logger.info(
-            #     f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items}"
-            # )
 
     def get_purpose_items(self):
         duo_list = self.contract.functions.GetPurposeItemsProvider(self.address).call()
@@ -1236,37 +1275,38 @@ class Requester(Person):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.role = ROLE_REQUESTER
-        random_init = kwargs.get("random_init", False)
-        if random_init:
+        # random_init = kwargs.get("random_init", False)
 
-            # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
-            profile_dict = {
-                "simple_items": random.uniform(0.0, 0.5),
-                "group_code": random.uniform(0, 0.05),
-                "country_code": random.uniform(0, 0.05),
-                "disease_items": random.uniform(0, 0.05),
-                "disease_groups": random.uniform(0, 0.05),
-                "months": random.randint(1, 24),
-            }
-            # profile_dict = self.profiles[self.profile]
-            # self.random_init(profile_dict)
-            self.random_init(profile_dict)
+        # if random_init:
 
-            self.bool_items = set()
-            for item in DUO:
-                if random.random() < profile_dict["simple_items"]:
-                    self.bool_items.add(item)
-            if profile_dict["group_code"] > 0 or profile_dict["country_code"] > 0:
-                self.bool_items.add(DUO.GeographicSpecific)
-            if profile_dict["disease_items"] > 0:
-                self.bool_items.add(DUO.DiseaseSpecific)
+        #     # logger.info(f"{self.name} bool_items is {self.bool_items.to_int()}")
+        #     profile_dict = {
+        #         "simple_items": random.uniform(0.0, 0.5),
+        #         "group_code": random.uniform(0, 0.05),
+        #         "country_code": random.uniform(0, 0.05),
+        #         "disease_items": random.uniform(0, 0.05),
+        #         "disease_groups": random.uniform(0, 0.05),
+        #         "months": random.randint(1, 24),
+        #     }
+        #     # profile_dict = self.profiles[self.profile]
+        #     # self.random_init(profile_dict)
+        #     self.random_init(profile_dict)
 
-            self.start_year = random.randint(2024, 2025)
-            self.start_month = random.randint(1, 12)
-            self.start_day = random.randint(1, 28)
-            # self.months = random.randint(1, 24)
-            # generate icd-10 codes
-            # logger.info(                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items}" )
+        #     self.bool_items = set()
+        #     for item in DUO:
+        #         if random.random() < profile_dict["simple_items"]:
+        #             self.bool_items.add(item)
+        #     if profile_dict["group_code"] > 0 or profile_dict["country_code"] > 0:
+        #         self.bool_items.add(DUO.GeographicSpecific)
+        #     if profile_dict["disease_items"] > 0:
+        #         self.bool_items.add(DUO.DiseaseSpecific)
+
+        #     self.start_year = random.randint(2024, 2025)
+        #     self.start_month = random.randint(1, 12)
+        #     self.start_day = random.randint(1, 28)
+        # self.months = random.randint(1, 24)
+        # generate icd-10 codes
+        # logger.info(                f"{self.name}  country_names {self.country_names} group_names {self.group_names} disease_items {self.disease_items} start_year {self.start_year} start_month {self.start_month} start_day {self.start_day} months {self.months} bool_items {self.bool_items}" )
 
     def _check_role(self, provider: Provider):
 
