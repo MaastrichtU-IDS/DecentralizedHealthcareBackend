@@ -12,8 +12,8 @@ contract ConsentCode is ConsentBase {
         // affordable
         uint16 Area_Group_Affordable;
         uint256 Area_Country_Affordable;
-        uint32 Disease_Group_Affordable;
-        uint128[26] Disease_Category_Affordable;
+        uint32 Disease_Group;
+        uint128[26] Disease_Category;
     }
 
     mapping(address => bool) private consent_managers;
@@ -145,22 +145,20 @@ contract ConsentCode is ConsentBase {
         uint8 role,
         address _address,
         // bool allow_all,
-        uint32 Disease_Group_Affordable,
-        uint128[] memory Disease_Category_Affordable
+        uint32 Disease_Group,
+        uint128[] memory Disease_Category
     ) public {
         Terms storage terms = TermsByRole(role, _address);
-        for (uint8 i = 0; i < Disease_Category_Affordable.length; i++) {
-            terms.Disease_Category_Affordable[i] = Disease_Category_Affordable[
-                i
-            ];
+        for (uint8 i = 0; i < Disease_Category.length; i++) {
+            terms.Disease_Category[i] = Disease_Category[i];
         }
     }
 
     // MARK: UploadDiseaseBaseline
     function delete_disease(uint8 role, address _address) public {
         Terms storage terms = TermsByRole(role, _address);
-        delete terms.Disease_Category_Affordable;
-        delete terms.Disease_Group_Affordable;
+        delete terms.Disease_Category;
+        delete terms.Disease_Group;
     }
 
     // MARK: - DisplayDiseaseCode
@@ -178,7 +176,7 @@ contract ConsentCode is ConsentBase {
     // ) public view returns (uint32, uint128[26] memory, bool) {
     //     Terms storage terms = TermsByRole(role, _address);
 
-    //         return (terms.Disease_Group_Affordable;,terms.Disease_Category_Affordable;,terms.allow_all_disease );
+    //         return (terms.Disease_Group;,terms.Disease_Category;,terms.allow_all_disease );
 
     // }
 
@@ -195,8 +193,8 @@ contract ConsentCode is ConsentBase {
                 "CheckAreaAffordable: Group_Countries and Group_Index must have the same length"
             );
         }
-        Terms storage requester_terms = requesterMapping[_requester_address];
-        Terms storage provider_terms = providerMapping[_provider_address];
+        Terms memory requester_terms = requesterMapping[_requester_address];
+        Terms memory provider_terms = providerMapping[_provider_address];
         // if (provider_terms.Allow_all_area == true) {
         //     return true;
         // }
@@ -234,44 +232,37 @@ contract ConsentCode is ConsentBase {
         return false;
     }
 
-    // CheckDiseaseAffordable
     function CheckDisease(
         address _provider_address,
         address _requester_address
     ) public view override returns (bool) {
-        // uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group_Affordable;
-        // uint32 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;
+        // uint32 requester_group_code = requesterMapping[_requester_address].Disease_Group;
+        // uint32 provider_group_code = providerMapping[_provider_address].Disease_Group;
         // if ((requester_group_code & provider_group_code) != requester_group_code) {
         //     return false;
         // }
+        Terms memory requester_terms = requesterMapping[_requester_address];
+        Terms memory provider_terms = providerMapping[_provider_address];
 
         bool allowed = false;
         for (
             uint index_requester = 0;
-            index_requester <
-            requesterMapping[_requester_address]
-                .Disease_Category_Affordable
-                .length;
+            index_requester < requester_terms.Disease_Category.length;
             index_requester++
         ) {
             // uint8 requester_group_code = requesterMapping[_requester_address]
-            //     .Disease_Group_Affordable;[index_requester];
-            uint128 requester_category_code = requesterMapping[
-                _requester_address
-            ].Disease_Category_Affordable[index_requester];
+            //     .Disease_Group;[index_requester];
+            uint128 requester_category_code = requester_terms.Disease_Category[
+                index_requester
+            ];
             allowed = false;
             for (
                 uint index_provider = 0;
-                index_provider <
-                providerMapping[_provider_address]
-                    .Disease_Category_Affordable
-                    .length;
+                index_provider < provider_terms.Disease_Category.length;
                 index_provider++
             ) {
-                // uint8 provider_group_code = providerMapping[_provider_address].Disease_Group_Affordable;[index_requester];
-                uint128 provider_category_code = providerMapping[
-                    _provider_address
-                ].Disease_Category_Affordable[index_provider];
+                uint128 provider_category_code = provider_terms
+                    .Disease_Category[index_provider];
                 if (
                     provider_category_code & requester_category_code ==
                     requester_category_code

@@ -117,6 +117,14 @@ contract ConsentBase {
             if (purpose.TimeLimitOnUse == false) {
                 revert("TimeLimitOnUse is mandatory for REQUESTER");
             }
+
+            if (purpose.GeneralResearch == true) {
+                revert("GeneralResearch is not allowed for REQUESTER");
+            }
+
+            if (purpose.HMBResearch == true) {
+                revert("HMBResearch is not allowed for REQUESTER");
+            }
             requester_mapping[_address1] = purpose;
         }
     }

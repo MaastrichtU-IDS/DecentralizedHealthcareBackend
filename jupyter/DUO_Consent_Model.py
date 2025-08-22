@@ -175,12 +175,12 @@ for c in icd10.chapters:
 # disease_list = [item for sublist in disease_dict.values() for item in sublist]
 print(f"disease_list length {len(disease_list)}")
 
-country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
+# country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
 
-for k in country_name_code_dict.keys():
-    country_name_code_dict[k]["position_index"] = (
-        2 ** country_name_code_dict[k]["index"]
-    )
+# for k in country_name_code_dict.keys():
+#     country_name_code_dict[k]["position_index"] = (
+#         2 ** country_name_code_dict[k]["index"]
+#     )
 
 group_index_dict = json.load(open("data/group_index.json", "r"))
 country_index_dict = json.load(open("data/country_index.json", "r"))
@@ -190,9 +190,9 @@ group_order_index_dict = {
     name: index for index, name in enumerate(group_index_dict.keys())
 }
 
-country_code_name_dict = {v["index"]: k for k, v in country_name_code_dict.items()}
+country_code_name_dict = {v: k for k, v in country_index_dict.items()}
 
-all_countries_name = list(country_name_code_dict.keys())
+all_countries_name = list(country_index_dict.keys())
 
 all_group_names = list(group_index_dict.keys())
 
@@ -618,8 +618,8 @@ class Person:
                 self.country_names = ["*"]
             else:
                 self.country_names = random.sample(
-                    list(country_name_code_dict.keys()),
-                    k=int(country_setting * len(country_name_code_dict)),
+                    all_countries_name,
+                    k=int(country_setting * len(all_countries_name)),
                 )
         elif isinstance(country_setting, str):
             self.country_names = [country_setting]
@@ -628,7 +628,7 @@ class Person:
             self.country_names = country_setting
         elif isinstance(country_setting, int):
             self.country_names = random.sample(
-                list(country_name_code_dict.keys()),
+                all_countries_name,
                 k=country_setting,
             )
         else:
@@ -788,6 +788,27 @@ class Base_Contract:
         return self.send_transaction(func, person)
 
     def upload_purpose(self, person: Person) -> TransactionResult:
+        if person.role == ROLE_PROVIDER:
+            # Check if at least one of three items is in person.purpose
+            required_items = {DUO.GeneralResearch, DUO.DiseaseSpecific, DUO.HMBResearch}
+            if not any(item in person.purpose for item in required_items):
+                raise ValueError(
+                    "At least one of GeneralResearch, DiseaseSpecific, or HMBResearch must be in purpose"
+                )
+        elif person.role == ROLE_REQUESTER:
+            # Check if at least one of two items is in person.purpose
+            required_items = {
+                DUO.DiseaseSpecific,
+                DUO.GeographicSpecific,
+                DUO.TimeLimitOnUse,
+            }
+            if not any(item in person.purpose for item in required_items):
+                raise ValueError(
+                    "At least one of DiseaseSpecific, GeographicSpecific, or TimeLimitOnUse must be in purpose"
+                )
+            person.purpose.discard(DUO.GeneralResearch)
+            person.purpose.discard(DUO.HMBResearch)
+
         simple_value = [True if item in person.purpose else False for item in DUO]
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
@@ -984,23 +1005,12 @@ class Contract_Affordable(Base_Contract):
             group_code = 0
         country_code = sum(country_codes)
 
-        # decoded_countries = decode_country_code(country_code)
-        # missed_countries = set(self.country_names) - set(decoded_countries)
-        # if len(missed_countries) > 0:
-        #     logger.error(f"missed_countries {missed_countries}")
-        # print("country_group_data length", len(country_group_data))
-
         # logger.info(
-        #     f"upload_area_affordable name {self.name}, group_code {group_code}, country_code {country_code}"
+        #     f"name {person.name} country_codes {country_code}, {bin(country_code)}   group_code {group_code} {bin(group_code)}"
         # )
-        # print(f"upload_area_affordable role {self.role}, address {self.address}, group_code {group_code}, country_code {country_code}")
-
         func = self.contract.functions.UploadArea(
             person.role, person.address, group_code, country_code
         )
-
-        # print("UploadAreaCode role", self.role)
-
         return self.send_transaction(func, person, label="upload_area")
 
     def display_area(self):
@@ -1047,7 +1057,10 @@ class Contract_Affordable(Base_Contract):
             for group_code, chapter_code in disease_dict.items()
         ]
         # print(f"name {self.name} disease_dict {disease_dict}")
-        # print(f"name {self.name} disease_group_code {disease_group_code} disease_combined_codes {disease_combined_codes}")
+        # print(
+        #     f"name {person.name} disease_group_code {disease_group_code} ({bin(disease_group_code)}) "
+        #     f"disease_combined_codes {[f'{code} ({bin(code)})' for code in disease_combined_codes]}"
+        # )
         max_code = 1 << 128
         for code in disease_combined_codes:
             if code > max_code:

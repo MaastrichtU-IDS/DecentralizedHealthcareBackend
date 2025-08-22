@@ -19,7 +19,6 @@ from DUO_Consent_Model import (
 )
 
 from DUO_Consent_Model import (
-    country_name_code_dict,
     disease_list,
     disease_dict,
     profile_list,
@@ -601,7 +600,7 @@ class Simulation_Scenarios:
                 description=f"provider_{i}",
                 env=self.env,
                 level=level,
-                profile_dict=PROVIDER_PROFILES_DICT[level],
+                profile_dict=PROVIDER_PROFILES[level],
             )
             self.contract.upload(provider)
             provider_list.append(provider)
@@ -649,7 +648,7 @@ class Simulation_Scenarios:
         return result_map
 
 
-PROVIDER_PROFILES_DICT = {
+PROVIDER_PROFILES = {
     profile_strict: {
         "purpose": [
             DUO.DiseaseSpecific,
@@ -659,26 +658,26 @@ PROVIDER_PROFILES_DICT = {
             # DUO.NonGeneralMethodResearch,
         ],
         "geography": {
-            "group": 3,
+            "group": 2,
             "country": 50,
         },
-        "disease": ["A**", "B**", "C**", "D**", "E**"],
+        "disease": ["A**", "B**", "C**"],
         "date": {
-            "start_year": 2024,
+            "start_year": 2026,
             "start_month": 6,
             "start_day": 1,
             "hold_month": 6,
         },
     },
     profile_medium: {
-        "purpose": [DUO.GeographicSpecific, DUO.TimeLimitOnUse],
+        "purpose": [DUO.GeographicSpecific, DUO.HMBResearch, DUO.TimeLimitOnUse],
         "geography": {
             "group": 2,
             "country": 50,
         },
-        "disease": ["A**", "B**"],
+        "disease": ["A**", "B**", "C**"],
         "date": {
-            "start_year": 2024,
+            "start_year": 2026,
             "start_month": 6,
             "start_day": 1,
             "hold_month": 12,
@@ -692,7 +691,7 @@ PROVIDER_PROFILES_DICT = {
         },
         "disease": 1.0,
         "date": {
-            "start_year": 2024,
+            "start_year": 2026,
             "start_month": 6,
             "start_day": 1,
             "hold_month": 60,
@@ -702,47 +701,17 @@ PROVIDER_PROFILES_DICT = {
 
 REQUESTER_PROFILES = {
     profile_strict: {
-        "purpose": {
-            DUO.GeographicSpecific: 1.5,
-            DUO.DiseaseSpecific: 1.5,
-            DUO.TimeLimitOnUse: 1.1,
-        },
+        "purpose": [DUO.GeographicSpecific, DUO.DiseaseSpecific, DUO.TimeLimitOnUse],
         "geography": {
             "group": 0,
             "country": 1,
         },
-        "disease": "A01",
+        "disease": 1,
         "date": {
             "start_year": (2026, 2030),
             "start_month": (1, 12),
             "start_day": (1, 30),
-            "hold_month": (3, 90),
-        },
-    },
-    profile_medium: {
-        "simple_items": [DUO.GeographicSpecific],
-        "group_code": 2,
-        "country_code": 20,
-        "disease_items": 10,
-        "disease_groups": 0.5,
-        "date": {
-            "start_year": 2024,
-            "start_month": 6,
-            "start_day": 1,
-            "months": 12,
-        },
-    },
-    profile_open: {
-        "simple_items": [DUO.HMBResearch],
-        "group_code": 1.0,
-        "country_code": 1.0,
-        "disease_items": 1.0,
-        "disease_groups": 1.0,
-        "date": {
-            "start_year": 2024,
-            "start_month": 6,
-            "start_day": 1,
-            "months": 60,
+            "hold_month": (3, 24),
         },
     },
 }
@@ -763,8 +732,7 @@ class Experiment_Simulation:
         self.requester_proportion = [0, 0, 1]
 
         # print(random.random())
-        self.contract.update_area_group_relation()
-        self.init_requesters()
+
         # self.requester_list[0].update_area_group_relation()
 
     def init_requesters(self):
@@ -807,6 +775,8 @@ class Experiment_Simulation:
             # )
 
     def start(self):
+        self.contract.update_area_group_relation()
+        self.init_requesters()
         scenarios_1 = Simulation_Scenarios(
             contract=self.contract,
             proportion=[1, 0, 0],
@@ -1181,10 +1151,10 @@ if __name__ == "__main__":
     # Experiment_Case_Study(local_affordable).start()
 
     experiment_simulation = Experiment_Simulation(
-        local_affordable, provider_number=30, requester_number=30
+        local_affordable, provider_number=100, requester_number=200
     )
-    experiment_simulation.start()
-    experiment_simulation.plot()
+    # experiment_simulation.start()
+    experiment_simulation.plot(result_fp="result/result_simulation_08-22-13-47.json")
 
     # performance = Experiment_Performance(
     # contract_affordable=local_affordable, contract_baseline=local_baseline
