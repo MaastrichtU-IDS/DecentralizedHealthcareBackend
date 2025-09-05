@@ -50,8 +50,8 @@ class Experiment_Performance:
         self.contract_affordable = contract_affordable
         # self.intervals = [100]
         self.intervals = [20, 40, 60, 80, 100]
-        self.font_size = "9"
-        self.column_width = 4.5
+        self.font_size = "21"
+        self.column_width = 3
 
         class DataKey:
             BASELINE_LOCAL = "baseline_local"
@@ -444,7 +444,7 @@ class Experiment_Performance:
 
         patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
         data_frame = pd.DataFrame(data)
-        fig, ax1 = plt.subplots(figsize=(10, 4), dpi=300)
+        fig, ax1 = plt.subplots(figsize=(11, 4), dpi=300)
         # figsize=(10, 3), dpi=300
         # self.column_width = 4.5
         alpha = 1.0
@@ -456,7 +456,7 @@ class Experiment_Performance:
 
         keys = data.keys() - ["interval"]
         for k in keys:
-            # data_frame[k] = data_frame[k].astype(int)
+            data_frame[k] = data_frame[k].astype(int)
             data_frame[k] = (data_frame[k] / factor).astype(int)
 
         baseline_local_bars = self._plot_bar(
@@ -506,10 +506,10 @@ class Experiment_Performance:
         #     ax1.axhline(i, color="gray", linestyle="--", linewidth=0.5)
         ax1.set_yticklabels([f"{int(y)}" for y in y_ticks], fontsize=self.font_size)
         y_max = max([data_frame[k].max() for k in keys])
-        ax1.set_ylim(0, y_max * 1.3)
-        ax1.set_xlabel(x_label)
+        ax1.set_ylim(0, y_max * 1.05)
+        # ax1.set_xlabel(x_label, fontsize=self.font_size)
         # ax1.margins(y=0.1)
-        ax1.set_ylabel(y_label)
+        ax1.set_ylabel(y_label, fontsize=self.font_size)
         # ax1.tick_params(axis="y")
         # ax1.set_xticks(data_frame["interval"])
         # ax1.tick_params(axis="x", labelsize=data_font_size)
@@ -517,12 +517,12 @@ class Experiment_Performance:
         print("xticklabels", xticklabels)
         ax1.set_xticklabels(xticklabels, fontsize=self.font_size)
 
-        ax1.legend(loc="upper left", ncol=4)
+        # ax1.legend(loc="upper left", ncol=4)
 
-        self._add_bar_labels(ax1, baseline_local_bars, self.font_size)
-        self._add_bar_labels(ax1, affordable_local_bars, self.font_size)
-        self._add_bar_labels(ax1, baseline_polygon_bars, self.font_size)
-        self._add_bar_labels(ax1, affordable_polygon_bars, self.font_size)
+        # self._add_bar_labels(ax1, baseline_local_bars, self.font_size)
+        # self._add_bar_labels(ax1, affordable_local_bars, self.font_size)
+        # self._add_bar_labels(ax1, baseline_polygon_bars, self.font_size)
+        # self._add_bar_labels(ax1, affordable_polygon_bars, self.font_size)
 
         plt.savefig(f"figure/column_{task}_{role}.pdf")
 
@@ -561,13 +561,13 @@ class Experiment_Performance:
         self._plot_area(
             key_index_name="gas_used",
             factor=1e3,
-            y_label="Gas usage (1000 gas)",
+            y_label="Gas usage (thousand gas)",
             label=label,
         )
         self._plot_disease(
             key_index_name="gas_used",
             factor=1e3,
-            y_label="Gas usage (1000 gas)",
+            y_label="Gas usage (thousand gas)",
             label=label,
         )
 
@@ -582,9 +582,9 @@ class Simulation_Scenarios:
         self.contract = contract
 
         self.levels = (
-            [profile_open for _ in range(int(proportion[0] * size))]
-            + [profile_medium for _ in range(int(proportion[1] * size))]
-            + [profile_strict for _ in range(int(proportion[2] * size))]
+            [profile_open for _ in range(round(proportion[0] * size))]
+            + [profile_medium for _ in range(round(proportion[1] * size))]
+            + [profile_strict for _ in range(round(proportion[2] * size))]
         )
 
         random.shuffle(self.levels)
@@ -719,7 +719,11 @@ REQUESTER_PROFILES = {
 
 class Experiment_Simulation:
     def __init__(
-        self, contract: Base_Contract, requester_number=200, provider_number=100
+        self,
+        contract: Base_Contract,
+        requester_number=200,
+        provider_number=100,
+        result_fp=None,
     ):
         self.env = contract.env
         self.contract = contract
@@ -727,7 +731,10 @@ class Experiment_Simulation:
         self.provider_number = provider_number
         self.requester_list = []
         current_time = datetime.datetime.now().strftime("%m-%d-%H-%M")
-        self.result_fp = f"result/result_simulation_{current_time}.json"
+        if result_fp is None:
+            self.result_fp = f"result/result_simulation_{current_time}.json"
+        else:
+            self.result_fp = result_fp
 
         self.requester_proportion = [0, 0, 1]
 
@@ -741,19 +748,19 @@ class Experiment_Simulation:
             [
                 profile_open
                 for _ in range(
-                    int(self.requester_proportion[0] * self.requester_number)
+                    round(self.requester_proportion[0] * self.requester_number)
                 )
             ]
             + [
                 profile_medium
                 for _ in range(
-                    int(self.requester_proportion[1] * self.requester_number)
+                    round(self.requester_proportion[1] * self.requester_number)
                 )
             ]
             + [
                 profile_strict
                 for _ in range(
-                    int(self.requester_proportion[2] * self.requester_number)
+                    round(self.requester_proportion[2] * self.requester_number)
                 )
             ]
         )
@@ -812,21 +819,23 @@ class Experiment_Simulation:
 
         json.dump(result_dict, open(self.result_fp, "w"), indent=4)
 
-    def _plot_simulation(self, data, y_label, file_name):
+    def _plot_simulation(self, data, x_stick_labels, y_label, file_name):
 
         alpha = 1
-        x_labels = list(data.keys())
+        if x_stick_labels is None:
+            x_stick_labels = list(data.keys())
         # Extract data points
 
         success_rates = [
-            data[label]["success"] * 100 / data[label]["total"] for label in x_labels
+            data[label]["success"] * 100 / data[label]["total"]
+            for label in x_stick_labels
         ]
 
         # Create a bar chart
-        x = np.arange(len(x_labels))  # the label locations
+        x = np.arange(len(x_stick_labels))  # the label locations
         width = 0.4  # the width of the bars
 
-        fig, ax = plt.subplots(figsize=(5, 4))
+        fig, ax = plt.subplots(figsize=(5, 3))
         bars = ax.bar(
             x,
             success_rates,
@@ -842,7 +851,7 @@ class Experiment_Simulation:
         ax.set_ylabel(y_label)
         ax.set_xticks(x)
         ax.set_ylim(0, max(success_rates) + 10)
-        ax.set_xticklabels(x_labels)
+        ax.set_xticklabels(x_stick_labels)
 
         # Add labels to the bars
         def add_labels(bars):
@@ -887,7 +896,7 @@ class Experiment_Simulation:
 
         self._plot_simulation(
             data=category_dict,
-            # x_labels=profile_list,
+            x_stick_labels=profile_list,
             y_label="Success Rate (%)",
             file_name="figure/simulation_category.pdf",
             # title="Categories",
@@ -916,7 +925,7 @@ class Experiment_Simulation:
 
         self._plot_simulation(
             data=scenario_dict,
-            # x_labels=x_labels,
+            x_stick_labels=x_labels,
             y_label="Success Rate (%)",
             file_name="figure/simulation_scenario.pdf",
             # title="Scenarios",
@@ -960,7 +969,7 @@ class Experiment_Case_Study:
             description=r"Provider.\ref{provider:c}",
             bool_items={DUO.GeographicSpecific},
             country_names=["USA"],
-            group_names=["EUROPEAN_UNION"],
+            group_names=["EU"],
             # disease_items=["*"],
         )
 
@@ -973,7 +982,7 @@ class Experiment_Case_Study:
             start_year=2024,
             start_month=6,
             start_day=1,
-            months=6,
+            hold_month=6,
             # disease_items=["*"],
         )
         provider5 = Provider(
@@ -993,7 +1002,7 @@ class Experiment_Case_Study:
             start_year=2024,
             start_month=6,
             start_day=1,
-            months=6,
+            hold_month=6,
         )
         requester2 = Requester(
             name="Requester 2",
@@ -1049,7 +1058,7 @@ class Experiment_Case_Study:
             description="Requester7",
             bool_items={DUO.GeographicSpecific},
             # country_names = [],
-            group_names=["EUROPEAN_UNION"],
+            group_names=["EU"],
             # disease_items=["*"],
         )
 
@@ -1061,7 +1070,7 @@ class Experiment_Case_Study:
             start_year=2024,
             start_month=1,
             start_day=1,
-            months=6,
+            hold_month=6,
             # country_names=["*"],
             # disease_items=["*"],
         )
@@ -1091,12 +1100,12 @@ class Experiment_Case_Study:
             requester8,
             requester9,
         ]
-        for i, requester in enumerate(self.requester_list):
-            requester.description = f"Requester.\\ref{{requester:{i+1}}}"
-            self.contract.upload(requester)
-            # logger.info(
-            #     f"requester {requester.name} address {requester.address}, purpose item missed {requester.bool_items - requester.get_purpose_items()} added {requester.get_purpose_items()-requester.bool_items}"
-            # )
+        try:
+            for i, requester in enumerate(self.requester_list):
+                requester.description = f"Requester.\\ref{{requester:{i+1}}}"
+                self.contract.upload(requester)
+        except:
+            logger.info(f"requester {requester.name} address {requester.address}")
             # print(w3.eth.block_number)
 
         for provider in self.provider_list:
@@ -1150,15 +1159,15 @@ if __name__ == "__main__":
 
     # Experiment_Case_Study(local_affordable).start()
 
-    experiment_simulation = Experiment_Simulation(
-        local_affordable, provider_number=100, requester_number=200
-    )
-    # experiment_simulation.start()
-    experiment_simulation.plot(result_fp="result/result_simulation_08-22-13-47.json")
-
-    # performance = Experiment_Performance(
-    # contract_affordable=local_affordable, contract_baseline=local_baseline
+    # experiment_simulation = Experiment_Simulation(
+    #     local_affordable, provider_number=100, requester_number=200
     # )
+    # # experiment_simulation.start()
+    # experiment_simulation.plot(result_fp="result/result_simulation_09-04-11-44.json")
+
+    performance = Experiment_Performance(
+        contract_affordable=local_affordable, contract_baseline=local_baseline
+    )
     # performance.start()
-    # performance.plot()
+    performance.plot()
     # performance.plot_sparse()

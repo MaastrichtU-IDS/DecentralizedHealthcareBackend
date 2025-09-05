@@ -172,23 +172,21 @@ for c in icd10.chapters:
             disease_dict[letter] = []
         disease_dict[letter].append(code)
 
-# disease_list = [item for sublist in disease_dict.values() for item in sublist]
-print(f"disease_list length {len(disease_list)}")
+        # disease_list = [item for sublist in disease_dict.values() for item in sublist]
+        # print(f"disease_list length {len(disease_list)}")
 
-# country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
+        # country_name_code_dict = json.load(open("data/countries_enrich.json", "r"))
 
-# for k in country_name_code_dict.keys():
-#     country_name_code_dict[k]["position_index"] = (
-#         2 ** country_name_code_dict[k]["index"]
-#     )
+        # for k in country_name_code_dict.keys():
+        #     country_name_code_dict[k]["position_index"] = (
+        #         2 ** country_name_code_dict[k]["index"]
+        #     )
 
-group_index_dict = json.load(open("data/group_index.json", "r"))
+group_country_dict = json.load(open("data/group_country.json", "r"))
+
+group_index_dict = {v["abbreviation"]: v["index"] for v in group_country_dict}
 country_index_dict = json.load(open("data/country_index.json", "r"))
 # allowed_group_names = {"EUROPEAN_UNION"}
-
-group_order_index_dict = {
-    name: index for index, name in enumerate(group_index_dict.keys())
-}
 
 country_code_name_dict = {v: k for k, v in country_index_dict.items()}
 
@@ -791,10 +789,10 @@ class Base_Contract:
         if person.role == ROLE_PROVIDER:
             # Check if at least one of three items is in person.purpose
             required_items = {DUO.GeneralResearch, DUO.DiseaseSpecific, DUO.HMBResearch}
-            if not any(item in person.purpose for item in required_items):
-                raise ValueError(
-                    "At least one of GeneralResearch, DiseaseSpecific, or HMBResearch must be in purpose"
-                )
+            # if not any(item in person.purpose for item in required_items):
+            #     raise ValueError(
+            #         "At least one of GeneralResearch, DiseaseSpecific, or HMBResearch must be in purpose"
+            #     )
         elif person.role == ROLE_REQUESTER:
             # Check if at least one of two items is in person.purpose
             required_items = {
@@ -802,20 +800,20 @@ class Base_Contract:
                 DUO.GeographicSpecific,
                 DUO.TimeLimitOnUse,
             }
-            if not any(item in person.purpose for item in required_items):
-                raise ValueError(
-                    "At least one of DiseaseSpecific, GeographicSpecific, or TimeLimitOnUse must be in purpose"
-                )
+            # if not any(item in person.purpose for item in required_items):
+            #     raise ValueError(
+            #         "At least one of DiseaseSpecific, GeographicSpecific, or TimeLimitOnUse must be in purpose"
+            #     )
             person.purpose.discard(DUO.GeneralResearch)
             person.purpose.discard(DUO.HMBResearch)
 
-        simple_value = [True if item in person.purpose else False for item in DUO]
+        purpose_unload = [True if item in person.purpose else False for item in DUO]
         # logging.info(
         #     f"name {self.name} role {self.role}, address {self.address}, bool_items {simple_value}"
         # )
 
         upload_func = self.contract.functions.upload_purpose(
-            person.role, person.address, simple_value
+            person.role, person.address, purpose_unload
         )
 
         return self.send_transaction(upload_func, person)
@@ -958,8 +956,7 @@ class Contract_Affordable(Base_Contract):
     def update_area_group_relation(self) -> TransactionResult:
 
         country_group_dict = {}
-        group_country_dict = json.load(open("data/group_country.json", "r"))
-        country_index_dict = json.load(open("data/country_index.json", "r"))
+
         for item in group_country_dict:
             countries = item["members"]
             countries_value = sum([country_index_dict[c] for c in countries])
@@ -996,14 +993,18 @@ class Contract_Affordable(Base_Contract):
 
         # #     return self.send_transaction(func)
 
-        country_codes = [country_index_dict[c] for c in person.country_names]
+        if person.country_names is not None:
+            country_codes = [country_index_dict[c] for c in person.country_names]
+            country_code = sum(country_codes)
+        else:
+            country_code = 0
+
         if person.group_names is not None and len(person.group_names) > 0:
             group_codes = [group_index_dict[g] for g in person.group_names]
             group_code = sum(group_codes)
         else:
             # logger.debug(f"do not have group_names")
             group_code = 0
-        country_code = sum(country_codes)
 
         # logger.info(
         #     f"name {person.name} country_codes {country_code}, {bin(country_code)}   group_code {group_code} {bin(group_code)}"
@@ -1102,9 +1103,6 @@ class Contract_Baseline(Base_Contract):
             group_codes = [group_index_dict[g] for g in person.group_names]
         else:
             group_codes = []
-        # group_codes = [group_order_index_dict[g] for g in self.group_names]
-        # logger.info(f"country_codes {country_codes} group_codes {group_codes}")
-        # if test_mode == TestEnum.polygon:
 
         func = self.contract.functions.UploadArea(
             person.role,

@@ -95,36 +95,36 @@ contract ConsentBase {
     ) public {
         if (role == ROLE_PROVIDER) {
             provider_mapping[_address1] = purpose;
-            if (
-                purpose.NoRestriction == false &&
-                (purpose.GeneralResearch == false &&
-                    purpose.HMBResearch == false &&
-                    purpose.DiseaseSpecific == false)
-            ) {
-                revert("Research purpose is mandatory for PROVIDER");
-            }
+            // if (
+            //     purpose.NoRestriction == false &&
+            //     (purpose.GeneralResearch == false &&
+            //         purpose.HMBResearch == false &&
+            //         purpose.DiseaseSpecific == false)
+            // ) {
+            //     revert("Research purpose is mandatory for PROVIDER");
+            // }
         } else if (role == ROLE_REQUESTER) {
-            if (purpose.NoRestriction == true) {
-                revert("NoRestriction is not allowed for REQUESTER");
-            }
+            // if (purpose.NoRestriction == true) {
+            //     revert("NoRestriction is not allowed for REQUESTER");
+            // }
 
-            if (purpose.GeographicSpecific == false) {
-                revert("GeographicSpecific is mandatory for REQUESTER");
-            }
-            if (purpose.DiseaseSpecific == false) {
-                revert("DiseaseSpecific is mandatory for REQUESTER");
-            }
-            if (purpose.TimeLimitOnUse == false) {
-                revert("TimeLimitOnUse is mandatory for REQUESTER");
-            }
+            // if (purpose.GeographicSpecific == false) {
+            //     revert("GeographicSpecific is mandatory for REQUESTER");
+            // }
+            // if (purpose.DiseaseSpecific == false) {
+            //     revert("DiseaseSpecific is mandatory for REQUESTER");
+            // }
+            // if (purpose.TimeLimitOnUse == false) {
+            //     revert("TimeLimitOnUse is mandatory for REQUESTER");
+            // }
 
-            if (purpose.GeneralResearch == true) {
-                revert("GeneralResearch is not allowed for REQUESTER");
-            }
+            // if (purpose.GeneralResearch == true) {
+            //     revert("GeneralResearch is not allowed for REQUESTER");
+            // }
 
-            if (purpose.HMBResearch == true) {
-                revert("HMBResearch is not allowed for REQUESTER");
-            }
+            // if (purpose.HMBResearch == true) {
+            //     revert("HMBResearch is not allowed for REQUESTER");
+            // }
             requester_mapping[_address1] = purpose;
         }
     }
