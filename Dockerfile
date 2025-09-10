@@ -38,11 +38,6 @@ RUN brownie networks add LUCE luce host=http://ganache_db:8545 chainid=72
 
 
 COPY . .
-# RUN cd luce_vm/brownie && brownie compile
-
-# RUN pip install -e .
-
-# RUN python -m solcx.install v0.4.25
 
 
 
