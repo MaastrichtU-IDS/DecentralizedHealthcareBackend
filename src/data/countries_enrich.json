@@ -1,0 +1,3929 @@
+{
+    "TWN": {
+        "official_name_en": "",
+        "ISO3166-1-Alpha-3": "TWN",
+        "groups": [
+            "SSP"
+        ],
+        "index": 1
+    },
+    "AFG": {
+        "official_name_en": "Afghanistan",
+        "ISO3166-1-Alpha-3": "AFG",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 2
+    },
+    "ALB": {
+        "official_name_en": "Albania",
+        "ISO3166-1-Alpha-3": "ALB",
+        "groups": [
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 3
+    },
+    "DZA": {
+        "official_name_en": "Algeria",
+        "ISO3166-1-Alpha-3": "DZA",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 4
+    },
+    "ASM": {
+        "official_name_en": "American Samoa",
+        "ISO3166-1-Alpha-3": "ASM",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 5
+    },
+    "AND": {
+        "official_name_en": "Andorra",
+        "ISO3166-1-Alpha-3": "AND",
+        "groups": [
+            "AR5",
+            "NON_ANNEX_ONE",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 6
+    },
+    "AGO": {
+        "official_name_en": "Angola",
+        "ISO3166-1-Alpha-3": "AGO",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 7
+    },
+    "AIA": {
+        "official_name_en": "Anguilla",
+        "ISO3166-1-Alpha-3": "AIA",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 8
+    },
+    "ATA": {
+        "official_name_en": "Antarctica",
+        "ISO3166-1-Alpha-3": "ATA",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 9
+    },
+    "ATG": {
+        "official_name_en": "Antigua and Barbuda",
+        "ISO3166-1-Alpha-3": "ATG",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 10
+    },
+    "ARG": {
+        "official_name_en": "Argentina",
+        "ISO3166-1-Alpha-3": "ARG",
+        "groups": [
+            "AR5",
+            "G20",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 11
+    },
+    "ARM": {
+        "official_name_en": "Armenia",
+        "ISO3166-1-Alpha-3": "ARM",
+        "groups": [
+            "AR5",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 12
+    },
+    "ABW": {
+        "official_name_en": "Aruba",
+        "ISO3166-1-Alpha-3": "ABW",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 13
+    },
+    "AUS": {
+        "official_name_en": "Australia",
+        "ISO3166-1-Alpha-3": "AUS",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "G20",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 14
+    },
+    "AUT": {
+        "official_name_en": "Austria",
+        "ISO3166-1-Alpha-3": "AUT",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 15
+    },
+    "AZE": {
+        "official_name_en": "Azerbaijan",
+        "ISO3166-1-Alpha-3": "AZE",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 16
+    },
+    "BHS": {
+        "official_name_en": "Bahamas",
+        "ISO3166-1-Alpha-3": "BHS",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 17
+    },
+    "BHR": {
+        "official_name_en": "Bahrain",
+        "ISO3166-1-Alpha-3": "BHR",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 18
+    },
+    "BGD": {
+        "official_name_en": "Bangladesh",
+        "ISO3166-1-Alpha-3": "BGD",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 19
+    },
+    "BRB": {
+        "official_name_en": "Barbados",
+        "ISO3166-1-Alpha-3": "BRB",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 20
+    },
+    "BLR": {
+        "official_name_en": "Belarus",
+        "ISO3166-1-Alpha-3": "BLR",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "IMO",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 21
+    },
+    "BEL": {
+        "official_name_en": "Belgium",
+        "ISO3166-1-Alpha-3": "BEL",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 22
+    },
+    "BLZ": {
+        "official_name_en": "Belize",
+        "ISO3166-1-Alpha-3": "BLZ",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 23
+    },
+    "BEN": {
+        "official_name_en": "Benin",
+        "ISO3166-1-Alpha-3": "BEN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 24
+    },
+    "BMU": {
+        "official_name_en": "Bermuda",
+        "ISO3166-1-Alpha-3": "BMU",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 25
+    },
+    "BTN": {
+        "official_name_en": "Bhutan",
+        "ISO3166-1-Alpha-3": "BTN",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 26
+    },
+    "BOL": {
+        "official_name_en": "Bolivia (Plurinational State of)",
+        "ISO3166-1-Alpha-3": "BOL",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 27
+    },
+    "BES": {
+        "official_name_en": "Bonaire, Sint Eustatius and Saba",
+        "ISO3166-1-Alpha-3": "BES",
+        "groups": [
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 28
+    },
+    "BIH": {
+        "official_name_en": "Bosnia and Herzegovina",
+        "ISO3166-1-Alpha-3": "BIH",
+        "groups": [
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 29
+    },
+    "BWA": {
+        "official_name_en": "Botswana",
+        "ISO3166-1-Alpha-3": "BWA",
+        "groups": [
+            "AR5",
+            "G77",
+            "GRADUATED_LDCS",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 30
+    },
+    "BVT": {
+        "official_name_en": "Bouvet Island",
+        "ISO3166-1-Alpha-3": "BVT",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 31
+    },
+    "BRA": {
+        "official_name_en": "Brazil",
+        "ISO3166-1-Alpha-3": "BRA",
+        "groups": [
+            "AR5",
+            "BRICS",
+            "G20",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 32
+    },
+    "IOT": {
+        "official_name_en": "British Indian Ocean Territory",
+        "ISO3166-1-Alpha-3": "IOT",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 33
+    },
+    "VGB": {
+        "official_name_en": "British Virgin Islands",
+        "ISO3166-1-Alpha-3": "VGB",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 34
+    },
+    "BRN": {
+        "official_name_en": "Brunei Darussalam",
+        "ISO3166-1-Alpha-3": "BRN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 35
+    },
+    "BGR": {
+        "official_name_en": "Bulgaria",
+        "ISO3166-1-Alpha-3": "BGR",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 36
+    },
+    "BFA": {
+        "official_name_en": "Burkina Faso",
+        "ISO3166-1-Alpha-3": "BFA",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 37
+    },
+    "BDI": {
+        "official_name_en": "Burundi",
+        "ISO3166-1-Alpha-3": "BDI",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 38
+    },
+    "CPV": {
+        "official_name_en": "Cabo Verde",
+        "ISO3166-1-Alpha-3": "CPV",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "GRADUATED_LDCS",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 39
+    },
+    "KHM": {
+        "official_name_en": "Cambodia",
+        "ISO3166-1-Alpha-3": "KHM",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 40
+    },
+    "CMR": {
+        "official_name_en": "Cameroon",
+        "ISO3166-1-Alpha-3": "CMR",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 41
+    },
+    "CAN": {
+        "official_name_en": "Canada",
+        "ISO3166-1-Alpha-3": "CAN",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "G20",
+            "G7",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 42
+    },
+    "CYM": {
+        "official_name_en": "Cayman Islands",
+        "ISO3166-1-Alpha-3": "CYM",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 43
+    },
+    "CAF": {
+        "official_name_en": "Central African Republic",
+        "ISO3166-1-Alpha-3": "CAF",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 44
+    },
+    "TCD": {
+        "official_name_en": "Chad",
+        "ISO3166-1-Alpha-3": "TCD",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 45
+    },
+    "CHL": {
+        "official_name_en": "Chile",
+        "ISO3166-1-Alpha-3": "CHL",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 46
+    },
+    "CHN": {
+        "official_name_en": "China",
+        "ISO3166-1-Alpha-3": "CHN",
+        "groups": [
+            "AR5",
+            "BRICS",
+            "G20",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 47
+    },
+    "HKG": {
+        "official_name_en": "China, Hong Kong Special Administrative Region",
+        "ISO3166-1-Alpha-3": "HKG",
+        "groups": [
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 48
+    },
+    "MAC": {
+        "official_name_en": "China, Macao Special Administrative Region",
+        "ISO3166-1-Alpha-3": "MAC",
+        "groups": [
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 49
+    },
+    "CXR": {
+        "official_name_en": "Christmas Island",
+        "ISO3166-1-Alpha-3": "CXR",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 50
+    },
+    "CCK": {
+        "official_name_en": "Cocos (Keeling) Islands",
+        "ISO3166-1-Alpha-3": "CCK",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 51
+    },
+    "COL": {
+        "official_name_en": "Colombia",
+        "ISO3166-1-Alpha-3": "COL",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 52
+    },
+    "COM": {
+        "official_name_en": "Comoros",
+        "ISO3166-1-Alpha-3": "COM",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 53
+    },
+    "COG": {
+        "official_name_en": "Congo",
+        "ISO3166-1-Alpha-3": "COG",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 54
+    },
+    "COK": {
+        "official_name_en": "Cook Islands",
+        "ISO3166-1-Alpha-3": "COK",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 55
+    },
+    "CRI": {
+        "official_name_en": "Costa Rica",
+        "ISO3166-1-Alpha-3": "CRI",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 56
+    },
+    "HRV": {
+        "official_name_en": "Croatia",
+        "ISO3166-1-Alpha-3": "HRV",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 57
+    },
+    "CUB": {
+        "official_name_en": "Cuba",
+        "ISO3166-1-Alpha-3": "CUB",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 58
+    },
+    "CUW": {
+        "official_name_en": "Curaçao",
+        "ISO3166-1-Alpha-3": "CUW",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 59
+    },
+    "CYP": {
+        "official_name_en": "Cyprus",
+        "ISO3166-1-Alpha-3": "CYP",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 60
+    },
+    "CZE": {
+        "official_name_en": "Czechia",
+        "ISO3166-1-Alpha-3": "CZE",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 61
+    },
+    "CIV": {
+        "official_name_en": "Côte d'Ivoire",
+        "ISO3166-1-Alpha-3": "CIV",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 62
+    },
+    "PRK": {
+        "official_name_en": "Democratic People's Republic of Korea",
+        "ISO3166-1-Alpha-3": "PRK",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 63
+    },
+    "COD": {
+        "official_name_en": "Democratic Republic of the Congo",
+        "ISO3166-1-Alpha-3": "COD",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 64
+    },
+    "DNK": {
+        "official_name_en": "Denmark",
+        "ISO3166-1-Alpha-3": "DNK",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 65
+    },
+    "DJI": {
+        "official_name_en": "Djibouti",
+        "ISO3166-1-Alpha-3": "DJI",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 66
+    },
+    "DMA": {
+        "official_name_en": "Dominica",
+        "ISO3166-1-Alpha-3": "DMA",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 67
+    },
+    "DOM": {
+        "official_name_en": "Dominican Republic",
+        "ISO3166-1-Alpha-3": "DOM",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 68
+    },
+    "ECU": {
+        "official_name_en": "Ecuador",
+        "ISO3166-1-Alpha-3": "ECU",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 69
+    },
+    "EGY": {
+        "official_name_en": "Egypt",
+        "ISO3166-1-Alpha-3": "EGY",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 70
+    },
+    "SLV": {
+        "official_name_en": "El Salvador",
+        "ISO3166-1-Alpha-3": "SLV",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 71
+    },
+    "GNQ": {
+        "official_name_en": "Equatorial Guinea",
+        "ISO3166-1-Alpha-3": "GNQ",
+        "groups": [
+            "AR5",
+            "G77",
+            "GRADUATED_LDCS",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 72
+    },
+    "ERI": {
+        "official_name_en": "Eritrea",
+        "ISO3166-1-Alpha-3": "ERI",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 73
+    },
+    "EST": {
+        "official_name_en": "Estonia",
+        "ISO3166-1-Alpha-3": "EST",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 74
+    },
+    "SWZ": {
+        "official_name_en": "Eswatini",
+        "ISO3166-1-Alpha-3": "SWZ",
+        "groups": [
+            "AR5",
+            "G77",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 75
+    },
+    "ETH": {
+        "official_name_en": "Ethiopia",
+        "ISO3166-1-Alpha-3": "ETH",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 76
+    },
+    "FLK": {
+        "official_name_en": "Falkland Islands (Malvinas)",
+        "ISO3166-1-Alpha-3": "FLK",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 77
+    },
+    "FRO": {
+        "official_name_en": "Faroe Islands",
+        "ISO3166-1-Alpha-3": "FRO",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 78
+    },
+    "FJI": {
+        "official_name_en": "Fiji",
+        "ISO3166-1-Alpha-3": "FJI",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 79
+    },
+    "FIN": {
+        "official_name_en": "Finland",
+        "ISO3166-1-Alpha-3": "FIN",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 80
+    },
+    "FRA": {
+        "official_name_en": "France",
+        "ISO3166-1-Alpha-3": "FRA",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "G20",
+            "G7",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 81
+    },
+    "GUF": {
+        "official_name_en": "French Guiana",
+        "ISO3166-1-Alpha-3": "GUF",
+        "groups": [
+            "AR5",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 82
+    },
+    "PYF": {
+        "official_name_en": "French Polynesia",
+        "ISO3166-1-Alpha-3": "PYF",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 83
+    },
+    "ATF": {
+        "official_name_en": "French Southern Territories",
+        "ISO3166-1-Alpha-3": "ATF",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 84
+    },
+    "GAB": {
+        "official_name_en": "Gabon",
+        "ISO3166-1-Alpha-3": "GAB",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 85
+    },
+    "GMB": {
+        "official_name_en": "Gambia",
+        "ISO3166-1-Alpha-3": "GMB",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 86
+    },
+    "GEO": {
+        "official_name_en": "Georgia",
+        "ISO3166-1-Alpha-3": "GEO",
+        "groups": [
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 87
+    },
+    "DEU": {
+        "official_name_en": "Germany",
+        "ISO3166-1-Alpha-3": "DEU",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "G20",
+            "G7",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 88
+    },
+    "GHA": {
+        "official_name_en": "Ghana",
+        "ISO3166-1-Alpha-3": "GHA",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 89
+    },
+    "GIB": {
+        "official_name_en": "Gibraltar",
+        "ISO3166-1-Alpha-3": "GIB",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 90
+    },
+    "GRC": {
+        "official_name_en": "Greece",
+        "ISO3166-1-Alpha-3": "GRC",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 91
+    },
+    "GRL": {
+        "official_name_en": "Greenland",
+        "ISO3166-1-Alpha-3": "GRL",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 92
+    },
+    "GRD": {
+        "official_name_en": "Grenada",
+        "ISO3166-1-Alpha-3": "GRD",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 93
+    },
+    "GLP": {
+        "official_name_en": "Guadeloupe",
+        "ISO3166-1-Alpha-3": "GLP",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 94
+    },
+    "GUM": {
+        "official_name_en": "Guam",
+        "ISO3166-1-Alpha-3": "GUM",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 95
+    },
+    "GTM": {
+        "official_name_en": "Guatemala",
+        "ISO3166-1-Alpha-3": "GTM",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 96
+    },
+    "GGY": {
+        "official_name_en": "Guernsey",
+        "ISO3166-1-Alpha-3": "GGY",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 97
+    },
+    "GIN": {
+        "official_name_en": "Guinea",
+        "ISO3166-1-Alpha-3": "GIN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 98
+    },
+    "GNB": {
+        "official_name_en": "Guinea-Bissau",
+        "ISO3166-1-Alpha-3": "GNB",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 99
+    },
+    "GUY": {
+        "official_name_en": "Guyana",
+        "ISO3166-1-Alpha-3": "GUY",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 100
+    },
+    "HTI": {
+        "official_name_en": "Haiti",
+        "ISO3166-1-Alpha-3": "HTI",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 101
+    },
+    "HMD": {
+        "official_name_en": "Heard Island and McDonald Islands",
+        "ISO3166-1-Alpha-3": "HMD",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 102
+    },
+    "VAT": {
+        "official_name_en": "Holy See",
+        "ISO3166-1-Alpha-3": "VAT",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 103
+    },
+    "HND": {
+        "official_name_en": "Honduras",
+        "ISO3166-1-Alpha-3": "HND",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 104
+    },
+    "HUN": {
+        "official_name_en": "Hungary",
+        "ISO3166-1-Alpha-3": "HUN",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 105
+    },
+    "ISL": {
+        "official_name_en": "Iceland",
+        "ISO3166-1-Alpha-3": "ISL",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 106
+    },
+    "IND": {
+        "official_name_en": "India",
+        "ISO3166-1-Alpha-3": "IND",
+        "groups": [
+            "AR5",
+            "BRICS",
+            "G20",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 107
+    },
+    "IDN": {
+        "official_name_en": "Indonesia",
+        "ISO3166-1-Alpha-3": "IDN",
+        "groups": [
+            "AR5",
+            "G20",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 108
+    },
+    "IRN": {
+        "official_name_en": "Iran (Islamic Republic of)",
+        "ISO3166-1-Alpha-3": "IRN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 109
+    },
+    "IRQ": {
+        "official_name_en": "Iraq",
+        "ISO3166-1-Alpha-3": "IRQ",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 110
+    },
+    "IRL": {
+        "official_name_en": "Ireland",
+        "ISO3166-1-Alpha-3": "IRL",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 111
+    },
+    "IMN": {
+        "official_name_en": "Isle of Man",
+        "ISO3166-1-Alpha-3": "IMN",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 112
+    },
+    "ISR": {
+        "official_name_en": "Israel",
+        "ISO3166-1-Alpha-3": "ISR",
+        "groups": [
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 113
+    },
+    "ITA": {
+        "official_name_en": "Italy",
+        "ISO3166-1-Alpha-3": "ITA",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "G20",
+            "G7",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 114
+    },
+    "JAM": {
+        "official_name_en": "Jamaica",
+        "ISO3166-1-Alpha-3": "JAM",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 115
+    },
+    "JPN": {
+        "official_name_en": "Japan",
+        "ISO3166-1-Alpha-3": "JPN",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "G20",
+            "G7",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 116
+    },
+    "JEY": {
+        "official_name_en": "Jersey",
+        "ISO3166-1-Alpha-3": "JEY",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 117
+    },
+    "JOR": {
+        "official_name_en": "Jordan",
+        "ISO3166-1-Alpha-3": "JOR",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 118
+    },
+    "KAZ": {
+        "official_name_en": "Kazakhstan",
+        "ISO3166-1-Alpha-3": "KAZ",
+        "groups": [
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 119
+    },
+    "KEN": {
+        "official_name_en": "Kenya",
+        "ISO3166-1-Alpha-3": "KEN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 120
+    },
+    "KIR": {
+        "official_name_en": "Kiribati",
+        "ISO3166-1-Alpha-3": "KIR",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 121
+    },
+    "KWT": {
+        "official_name_en": "Kuwait",
+        "ISO3166-1-Alpha-3": "KWT",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 122
+    },
+    "KGZ": {
+        "official_name_en": "Kyrgyzstan",
+        "ISO3166-1-Alpha-3": "KGZ",
+        "groups": [
+            "AR5",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 123
+    },
+    "LAO": {
+        "official_name_en": "Lao People's Democratic Republic",
+        "ISO3166-1-Alpha-3": "LAO",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 124
+    },
+    "LVA": {
+        "official_name_en": "Latvia",
+        "ISO3166-1-Alpha-3": "LVA",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 125
+    },
+    "LBN": {
+        "official_name_en": "Lebanon",
+        "ISO3166-1-Alpha-3": "LBN",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 126
+    },
+    "LSO": {
+        "official_name_en": "Lesotho",
+        "ISO3166-1-Alpha-3": "LSO",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 127
+    },
+    "LBR": {
+        "official_name_en": "Liberia",
+        "ISO3166-1-Alpha-3": "LBR",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 128
+    },
+    "LBY": {
+        "official_name_en": "Libya",
+        "ISO3166-1-Alpha-3": "LBY",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 129
+    },
+    "LIE": {
+        "official_name_en": "Liechtenstein",
+        "ISO3166-1-Alpha-3": "LIE",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EIG",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 130
+    },
+    "LTU": {
+        "official_name_en": "Lithuania",
+        "ISO3166-1-Alpha-3": "LTU",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 131
+    },
+    "LUX": {
+        "official_name_en": "Luxembourg",
+        "ISO3166-1-Alpha-3": "LUX",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 132
+    },
+    "MDG": {
+        "official_name_en": "Madagascar",
+        "ISO3166-1-Alpha-3": "MDG",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 133
+    },
+    "MWI": {
+        "official_name_en": "Malawi",
+        "ISO3166-1-Alpha-3": "MWI",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 134
+    },
+    "MYS": {
+        "official_name_en": "Malaysia",
+        "ISO3166-1-Alpha-3": "MYS",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 135
+    },
+    "MDV": {
+        "official_name_en": "Maldives",
+        "ISO3166-1-Alpha-3": "MDV",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "GRADUATED_LDCS",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 136
+    },
+    "MLI": {
+        "official_name_en": "Mali",
+        "ISO3166-1-Alpha-3": "MLI",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 137
+    },
+    "MLT": {
+        "official_name_en": "Malta",
+        "ISO3166-1-Alpha-3": "MLT",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 138
+    },
+    "MHL": {
+        "official_name_en": "Marshall Islands",
+        "ISO3166-1-Alpha-3": "MHL",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 139
+    },
+    "MTQ": {
+        "official_name_en": "Martinique",
+        "ISO3166-1-Alpha-3": "MTQ",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 140
+    },
+    "MRT": {
+        "official_name_en": "Mauritania",
+        "ISO3166-1-Alpha-3": "MRT",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 141
+    },
+    "MUS": {
+        "official_name_en": "Mauritius",
+        "ISO3166-1-Alpha-3": "MUS",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 142
+    },
+    "MYT": {
+        "official_name_en": "Mayotte",
+        "ISO3166-1-Alpha-3": "MYT",
+        "groups": [
+            "AR5",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 143
+    },
+    "MEX": {
+        "official_name_en": "Mexico",
+        "ISO3166-1-Alpha-3": "MEX",
+        "groups": [
+            "AR5",
+            "EIG",
+            "G20",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 144
+    },
+    "FSM": {
+        "official_name_en": "Micronesia (Federated States of)",
+        "ISO3166-1-Alpha-3": "FSM",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 145
+    },
+    "MCO": {
+        "official_name_en": "Monaco",
+        "ISO3166-1-Alpha-3": "MCO",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EIG",
+            "IMO",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 146
+    },
+    "MNG": {
+        "official_name_en": "Mongolia",
+        "ISO3166-1-Alpha-3": "MNG",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 147
+    },
+    "MNE": {
+        "official_name_en": "Montenegro",
+        "ISO3166-1-Alpha-3": "MNE",
+        "groups": [
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 148
+    },
+    "MSR": {
+        "official_name_en": "Montserrat",
+        "ISO3166-1-Alpha-3": "MSR",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 149
+    },
+    "MAR": {
+        "official_name_en": "Morocco",
+        "ISO3166-1-Alpha-3": "MAR",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 150
+    },
+    "MOZ": {
+        "official_name_en": "Mozambique",
+        "ISO3166-1-Alpha-3": "MOZ",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 151
+    },
+    "MMR": {
+        "official_name_en": "Myanmar",
+        "ISO3166-1-Alpha-3": "MMR",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 152
+    },
+    "NAM": {
+        "official_name_en": "Namibia",
+        "ISO3166-1-Alpha-3": "NAM",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 153
+    },
+    "NRU": {
+        "official_name_en": "Nauru",
+        "ISO3166-1-Alpha-3": "NRU",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 154
+    },
+    "NPL": {
+        "official_name_en": "Nepal",
+        "ISO3166-1-Alpha-3": "NPL",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 155
+    },
+    "NLD": {
+        "official_name_en": "Netherlands",
+        "ISO3166-1-Alpha-3": "NLD",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 156
+    },
+    "NCL": {
+        "official_name_en": "New Caledonia",
+        "ISO3166-1-Alpha-3": "NCL",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 157
+    },
+    "NZL": {
+        "official_name_en": "New Zealand",
+        "ISO3166-1-Alpha-3": "NZL",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 158
+    },
+    "NIC": {
+        "official_name_en": "Nicaragua",
+        "ISO3166-1-Alpha-3": "NIC",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 159
+    },
+    "NER": {
+        "official_name_en": "Niger",
+        "ISO3166-1-Alpha-3": "NER",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 160
+    },
+    "NGA": {
+        "official_name_en": "Nigeria",
+        "ISO3166-1-Alpha-3": "NGA",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 161
+    },
+    "NIU": {
+        "official_name_en": "Niue",
+        "ISO3166-1-Alpha-3": "NIU",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "NON_ANNEX_ONE",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 162
+    },
+    "NFK": {
+        "official_name_en": "Norfolk Island",
+        "ISO3166-1-Alpha-3": "NFK",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 163
+    },
+    "MNP": {
+        "official_name_en": "Northern Mariana Islands",
+        "ISO3166-1-Alpha-3": "MNP",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 164
+    },
+    "NOR": {
+        "official_name_en": "Norway",
+        "ISO3166-1-Alpha-3": "NOR",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 165
+    },
+    "OMN": {
+        "official_name_en": "Oman",
+        "ISO3166-1-Alpha-3": "OMN",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 166
+    },
+    "PAK": {
+        "official_name_en": "Pakistan",
+        "ISO3166-1-Alpha-3": "PAK",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 167
+    },
+    "PLW": {
+        "official_name_en": "Palau",
+        "ISO3166-1-Alpha-3": "PLW",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 168
+    },
+    "PAN": {
+        "official_name_en": "Panama",
+        "ISO3166-1-Alpha-3": "PAN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 169
+    },
+    "PNG": {
+        "official_name_en": "Papua New Guinea",
+        "ISO3166-1-Alpha-3": "PNG",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 170
+    },
+    "PRY": {
+        "official_name_en": "Paraguay",
+        "ISO3166-1-Alpha-3": "PRY",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 171
+    },
+    "PER": {
+        "official_name_en": "Peru",
+        "ISO3166-1-Alpha-3": "PER",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 172
+    },
+    "PHL": {
+        "official_name_en": "Philippines",
+        "ISO3166-1-Alpha-3": "PHL",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 173
+    },
+    "PCN": {
+        "official_name_en": "Pitcairn",
+        "ISO3166-1-Alpha-3": "PCN",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 174
+    },
+    "POL": {
+        "official_name_en": "Poland",
+        "ISO3166-1-Alpha-3": "POL",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 175
+    },
+    "PRT": {
+        "official_name_en": "Portugal",
+        "ISO3166-1-Alpha-3": "PRT",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 176
+    },
+    "PRI": {
+        "official_name_en": "Puerto Rico",
+        "ISO3166-1-Alpha-3": "PRI",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 177
+    },
+    "QAT": {
+        "official_name_en": "Qatar",
+        "ISO3166-1-Alpha-3": "QAT",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 178
+    },
+    "KOR": {
+        "official_name_en": "Republic of Korea",
+        "ISO3166-1-Alpha-3": "KOR",
+        "groups": [
+            "AR5",
+            "EIG",
+            "G20",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 179
+    },
+    "MDA": {
+        "official_name_en": "Republic of Moldova",
+        "ISO3166-1-Alpha-3": "MDA",
+        "groups": [
+            "AR5",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 180
+    },
+    "ROU": {
+        "official_name_en": "Romania",
+        "ISO3166-1-Alpha-3": "ROU",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 181
+    },
+    "RUS": {
+        "official_name_en": "Russian Federation",
+        "ISO3166-1-Alpha-3": "RUS",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "BRICS",
+            "G20",
+            "IMO",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 182
+    },
+    "RWA": {
+        "official_name_en": "Rwanda",
+        "ISO3166-1-Alpha-3": "RWA",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 183
+    },
+    "REU": {
+        "official_name_en": "Réunion",
+        "ISO3166-1-Alpha-3": "REU",
+        "groups": [
+            "AR5",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 184
+    },
+    "BLM": {
+        "official_name_en": "Saint Barthélemy",
+        "ISO3166-1-Alpha-3": "BLM",
+        "groups": [
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 185
+    },
+    "SHN": {
+        "official_name_en": "Saint Helena",
+        "ISO3166-1-Alpha-3": "SHN",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 186
+    },
+    "KNA": {
+        "official_name_en": "Saint Kitts and Nevis",
+        "ISO3166-1-Alpha-3": "KNA",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 187
+    },
+    "LCA": {
+        "official_name_en": "Saint Lucia",
+        "ISO3166-1-Alpha-3": "LCA",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 188
+    },
+    "MAF": {
+        "official_name_en": "Saint Martin (French Part)",
+        "ISO3166-1-Alpha-3": "MAF",
+        "groups": [
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 189
+    },
+    "SPM": {
+        "official_name_en": "Saint Pierre and Miquelon",
+        "ISO3166-1-Alpha-3": "SPM",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 190
+    },
+    "VCT": {
+        "official_name_en": "Saint Vincent and the Grenadines",
+        "ISO3166-1-Alpha-3": "VCT",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 191
+    },
+    "WSM": {
+        "official_name_en": "Samoa",
+        "ISO3166-1-Alpha-3": "WSM",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "GRADUATED_LDCS",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 192
+    },
+    "SMR": {
+        "official_name_en": "San Marino",
+        "ISO3166-1-Alpha-3": "SMR",
+        "groups": [
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 193
+    },
+    "STP": {
+        "official_name_en": "Sao Tome and Principe",
+        "ISO3166-1-Alpha-3": "STP",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 194
+    },
+    "": {
+        "official_name_en": "Sark",
+        "ISO3166-1-Alpha-3": "",
+        "groups": [],
+        "index": 195
+    },
+    "SAU": {
+        "official_name_en": "Saudi Arabia",
+        "ISO3166-1-Alpha-3": "SAU",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G20",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 196
+    },
+    "SEN": {
+        "official_name_en": "Senegal",
+        "ISO3166-1-Alpha-3": "SEN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 197
+    },
+    "SRB": {
+        "official_name_en": "Serbia",
+        "ISO3166-1-Alpha-3": "SRB",
+        "groups": [
+            "AR5",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 198
+    },
+    "SYC": {
+        "official_name_en": "Seychelles",
+        "ISO3166-1-Alpha-3": "SYC",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 199
+    },
+    "SLE": {
+        "official_name_en": "Sierra Leone",
+        "ISO3166-1-Alpha-3": "SLE",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 200
+    },
+    "SGP": {
+        "official_name_en": "Singapore",
+        "ISO3166-1-Alpha-3": "SGP",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 201
+    },
+    "SXM": {
+        "official_name_en": "Sint Maarten (Dutch part)",
+        "ISO3166-1-Alpha-3": "SXM",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 202
+    },
+    "SVK": {
+        "official_name_en": "Slovakia",
+        "ISO3166-1-Alpha-3": "SVK",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 203
+    },
+    "SVN": {
+        "official_name_en": "Slovenia",
+        "ISO3166-1-Alpha-3": "SVN",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 204
+    },
+    "SLB": {
+        "official_name_en": "Solomon Islands",
+        "ISO3166-1-Alpha-3": "SLB",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 205
+    },
+    "SOM": {
+        "official_name_en": "Somalia",
+        "ISO3166-1-Alpha-3": "SOM",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 206
+    },
+    "ZAF": {
+        "official_name_en": "South Africa",
+        "ISO3166-1-Alpha-3": "ZAF",
+        "groups": [
+            "AR5",
+            "BRICS",
+            "G20",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 207
+    },
+    "SGS": {
+        "official_name_en": "South Georgia and the South Sandwich Islands",
+        "ISO3166-1-Alpha-3": "SGS",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 208
+    },
+    "SSD": {
+        "official_name_en": "South Sudan",
+        "ISO3166-1-Alpha-3": "SSD",
+        "groups": [
+            "AR5",
+            "G77",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 209
+    },
+    "ESP": {
+        "official_name_en": "Spain",
+        "ISO3166-1-Alpha-3": "ESP",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 210
+    },
+    "LKA": {
+        "official_name_en": "Sri Lanka",
+        "ISO3166-1-Alpha-3": "LKA",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 211
+    },
+    "PSE": {
+        "official_name_en": "State of Palestine",
+        "ISO3166-1-Alpha-3": "PSE",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 212
+    },
+    "SDN": {
+        "official_name_en": "Sudan",
+        "ISO3166-1-Alpha-3": "SDN",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 213
+    },
+    "SUR": {
+        "official_name_en": "Suriname",
+        "ISO3166-1-Alpha-3": "SUR",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 214
+    },
+    "SJM": {
+        "official_name_en": "Svalbard and Jan Mayen Islands",
+        "ISO3166-1-Alpha-3": "SJM",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 215
+    },
+    "SWE": {
+        "official_name_en": "Sweden",
+        "ISO3166-1-Alpha-3": "SWE",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EUROPEAN_UNION",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 216
+    },
+    "CHE": {
+        "official_name_en": "Switzerland",
+        "ISO3166-1-Alpha-3": "CHE",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "EIG",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 217
+    },
+    "SYR": {
+        "official_name_en": "Syrian Arab Republic",
+        "ISO3166-1-Alpha-3": "SYR",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 218
+    },
+    "TJK": {
+        "official_name_en": "Tajikistan",
+        "ISO3166-1-Alpha-3": "TJK",
+        "groups": [
+            "AR5",
+            "G77",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 219
+    },
+    "THA": {
+        "official_name_en": "Thailand",
+        "ISO3166-1-Alpha-3": "THA",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 220
+    },
+    "MKD": {
+        "official_name_en": "The former Yugoslav Republic of Macedonia",
+        "ISO3166-1-Alpha-3": "MKD",
+        "groups": [
+            "AR5",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 221
+    },
+    "TLS": {
+        "official_name_en": "Timor-Leste",
+        "ISO3166-1-Alpha-3": "TLS",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 222
+    },
+    "TGO": {
+        "official_name_en": "Togo",
+        "ISO3166-1-Alpha-3": "TGO",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 223
+    },
+    "TKL": {
+        "official_name_en": "Tokelau",
+        "ISO3166-1-Alpha-3": "TKL",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 224
+    },
+    "TON": {
+        "official_name_en": "Tonga",
+        "ISO3166-1-Alpha-3": "TON",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 225
+    },
+    "TTO": {
+        "official_name_en": "Trinidad and Tobago",
+        "ISO3166-1-Alpha-3": "TTO",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 226
+    },
+    "TUN": {
+        "official_name_en": "Tunisia",
+        "ISO3166-1-Alpha-3": "TUN",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 227
+    },
+    "TUR": {
+        "official_name_en": "Turkey",
+        "ISO3166-1-Alpha-3": "TUR",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "G20",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 228
+    },
+    "TKM": {
+        "official_name_en": "Turkmenistan",
+        "ISO3166-1-Alpha-3": "TKM",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LLDC",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 229
+    },
+    "TCA": {
+        "official_name_en": "Turks and Caicos Islands",
+        "ISO3166-1-Alpha-3": "TCA",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 230
+    },
+    "TUV": {
+        "official_name_en": "Tuvalu",
+        "ISO3166-1-Alpha-3": "TUV",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 231
+    },
+    "UGA": {
+        "official_name_en": "Uganda",
+        "ISO3166-1-Alpha-3": "UGA",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 232
+    },
+    "UKR": {
+        "official_name_en": "Ukraine",
+        "ISO3166-1-Alpha-3": "UKR",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "IMO",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 233
+    },
+    "ARE": {
+        "official_name_en": "United Arab Emirates",
+        "ISO3166-1-Alpha-3": "ARE",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "MONTREAL_PROTOCOL_HIGH_AMBIENT_TEMP",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 234
+    },
+    "GBR": {
+        "official_name_en": "United Kingdom of Great Britain and Northern Ireland",
+        "ISO3166-1-Alpha-3": "GBR",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "G20",
+            "G7",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 235
+    },
+    "TZA": {
+        "official_name_en": "United Republic of Tanzania",
+        "ISO3166-1-Alpha-3": "TZA",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 236
+    },
+    "UMI": {
+        "official_name_en": "United States Minor Outlying Islands",
+        "ISO3166-1-Alpha-3": "UMI",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 237
+    },
+    "VIR": {
+        "official_name_en": "United States Virgin Islands",
+        "ISO3166-1-Alpha-3": "VIR",
+        "groups": [
+            "AR5",
+            "SIDS_NON_UN_OR_REGIONAL_COMMISSIONS_ASSOCIATES",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 238
+    },
+    "USA": {
+        "official_name_en": "United States of America",
+        "ISO3166-1-Alpha-3": "USA",
+        "groups": [
+            "ANNEX_ONE",
+            "ANNEX_ONE_KAZ",
+            "AR5",
+            "G20",
+            "G7",
+            "IMO",
+            "OECD",
+            "SSP",
+            "UMBRELLA",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 239
+    },
+    "URY": {
+        "official_name_en": "Uruguay",
+        "ISO3166-1-Alpha-3": "URY",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 240
+    },
+    "UZB": {
+        "official_name_en": "Uzbekistan",
+        "ISO3166-1-Alpha-3": "UZB",
+        "groups": [
+            "AR5",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 241
+    },
+    "VUT": {
+        "official_name_en": "Vanuatu",
+        "ISO3166-1-Alpha-3": "VUT",
+        "groups": [
+            "AOSIS",
+            "AR5",
+            "G77",
+            "GRADUATED_LDCS",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SIDS",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 242
+    },
+    "VEN": {
+        "official_name_en": "Venezuela (Bolivarian Republic of)",
+        "ISO3166-1-Alpha-3": "VEN",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "OPEC",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 243
+    },
+    "VNM": {
+        "official_name_en": "Viet Nam",
+        "ISO3166-1-Alpha-3": "VNM",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 244
+    },
+    "WLF": {
+        "official_name_en": "Wallis and Futuna Islands",
+        "ISO3166-1-Alpha-3": "WLF",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 245
+    },
+    "ESH": {
+        "official_name_en": "Western Sahara",
+        "ISO3166-1-Alpha-3": "ESH",
+        "groups": [
+            "AR5",
+            "SSP",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 246
+    },
+    "YEM": {
+        "official_name_en": "Yemen",
+        "ISO3166-1-Alpha-3": "YEM",
+        "groups": [
+            "AR5",
+            "ARAB_GROUP",
+            "G77",
+            "IMO",
+            "LDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 247
+    },
+    "ZMB": {
+        "official_name_en": "Zambia",
+        "ISO3166-1-Alpha-3": "ZMB",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LDC",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 248
+    },
+    "ZWE": {
+        "official_name_en": "Zimbabwe",
+        "ISO3166-1-Alpha-3": "ZWE",
+        "groups": [
+            "AR5",
+            "G77",
+            "IMO",
+            "LLDC",
+            "NON_ANNEX_ONE",
+            "SSP",
+            "UN_REGIONAL_GROUPS",
+            "UNFCCC",
+            "UNSTATS_GEOGRAPHICAL_REGIONS",
+            "MONTREAL_PROTOCOL_COUNTRIES"
+        ],
+        "index": 249
+    },
+    "ALA": {
+        "official_name_en": "Åland Islands",
+        "ISO3166-1-Alpha-3": "ALA",
+        "groups": [
+            "AR5",
+            "UNSTATS_GEOGRAPHICAL_REGIONS"
+        ],
+        "index": 250
+    }
+}

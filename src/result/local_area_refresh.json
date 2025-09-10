@@ -1,0 +1,212 @@
+[
+    {
+        "interval": 0,
+        "affordable": {
+            "provider": {
+                "status": 1,
+                "gas_used": 27334,
+                "transaction_hash": "0x8f5607f48c4a966f306503b4fb11eda806ab916bce11d577554b5018fae39104",
+                "time_used": 108.9956,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 27363,
+                "transaction_hash": "0xd56bc43b8fb29a24056aa7a848ddef5617919d103486e4cd7a2aad31d7ed93c6",
+                "time_used": 84.6731,
+                "result": null
+            }
+        },
+        "baseline": {
+            "provider": {
+                "status": 1,
+                "gas_used": 23807,
+                "transaction_hash": "0xd6d7c20dac3dfbc01ac6f27397e31415ba61c39639874199f3491f5641638d7e",
+                "time_used": 42.2881,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 28637,
+                "transaction_hash": "0x59df2e006a122f49b410a08d1b7afe9a9cb0ad1ee43e73675c4c29e26cbd0de4",
+                "time_used": 133.2811,
+                "result": null
+            }
+        }
+    },
+    {
+        "interval": 20,
+        "affordable": {
+            "provider": {
+                "status": 1,
+                "gas_used": 47318,
+                "transaction_hash": "0xcd2878d78efec32c78c6c3e79283c5e7b472c137f20f1322ff8e05545eb69e5d",
+                "time_used": 42.0533,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 47347,
+                "transaction_hash": "0x38fc4969a8937593a9beb2d3b69611b1182a69ce44f3597e3d027193e84b5fca",
+                "time_used": 39.2143,
+                "result": null
+            }
+        },
+        "baseline": {
+            "provider": {
+                "status": 1,
+                "gas_used": 1160225,
+                "transaction_hash": "0x04f626ee2a360a7c08e55a313fc23967d6a05947feb2ae1d960405f024662788",
+                "time_used": 273.4758,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 132540,
+                "transaction_hash": "0x58eea9088f75ec6deac525df74111f68f770f8293412576ff6161d38046ee57a",
+                "time_used": 1094.1234,
+                "result": null
+            }
+        }
+    },
+    {
+        "interval": 40,
+        "affordable": {
+            "provider": {
+                "status": 1,
+                "gas_used": 47390,
+                "transaction_hash": "0xb944c6139b9f9b9d75e2e4def3ab1482f9ad47b8d47908c77167a922e09b91b9",
+                "time_used": 41.8464,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 47419,
+                "transaction_hash": "0x5bcb2c38678bf1c8416f96cb0a9fa274888a027c55d353e183e607a08e5f408b",
+                "time_used": 37.0966,
+                "result": null
+            }
+        },
+        "baseline": {
+            "provider": {
+                "status": 1,
+                "gas_used": 2296640,
+                "transaction_hash": "0x7e026399f0fc7a5b637a5f1c7e846ae77d7643182fd965d821f3a6d2c9e113a1",
+                "time_used": 389.7063,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 216471,
+                "transaction_hash": "0x26e620cd95a8664bd0961ba6e78517ce5eb89e602a9315548ca4e99bcefccf68",
+                "time_used": 2313.1834,
+                "result": null
+            }
+        }
+    },
+    {
+        "interval": 60,
+        "affordable": {
+            "provider": {
+                "status": 1,
+                "gas_used": 47462,
+                "transaction_hash": "0xef64a211ad3cf843a3b19101fa555c4b357c24f12316c33b355856e234acc616",
+                "time_used": 39.9842,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 47491,
+                "transaction_hash": "0x48ee13ed8db07f59a088b38155616c257c2666c41390e21fff9a68ffd97c9776",
+                "time_used": 39.0071,
+                "result": null
+            }
+        },
+        "baseline": {
+            "provider": {
+                "status": 1,
+                "gas_used": 3433066,
+                "transaction_hash": "0xf13b668841ed7b93a5bd3676ebf852fdc8a188a8f77cb8704cda45e327c0102e",
+                "time_used": 632.228,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 266755,
+                "transaction_hash": "0xbcda997c46bbb557e8f7cc1f37838e74d6db90fc871a9fc0507fa0155b3c9406",
+                "time_used": 2863.7445,
+                "result": null
+            }
+        }
+    },
+    {
+        "interval": 80,
+        "affordable": {
+            "provider": {
+                "status": 1,
+                "gas_used": 47546,
+                "transaction_hash": "0x8e493dc05537848b730758037c6eb9fe62468d1d60502abc83a48789d8e3975e",
+                "time_used": 33.9272,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 47575,
+                "transaction_hash": "0x02082e18886f44ea10eb0cf8bbb0238ac5cf19be33a5d7c4cc61396b7c5804af",
+                "time_used": 41.0405,
+                "result": null
+            }
+        },
+        "baseline": {
+            "provider": {
+                "status": 1,
+                "gas_used": 4569501,
+                "transaction_hash": "0x71f6ada550cc5c5761c5b88459e66db43c91977c62717a40bf6d6954b7f6eb77",
+                "time_used": 840.4585,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 350706,
+                "transaction_hash": "0x6a11d9fb1fbceefd55aa25ee188bb71b5bc943d9fd3f944909476ee76b6e874a",
+                "time_used": 4061.4336,
+                "result": null
+            }
+        }
+    },
+    {
+        "interval": 100,
+        "affordable": {
+            "provider": {
+                "status": 1,
+                "gas_used": 47618,
+                "transaction_hash": "0xabe0fb865bc1a5ce79d36c68d7556c6b99fc38edf6cad7ce95a80e2b34672913",
+                "time_used": 38.1978,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 47647,
+                "transaction_hash": "0x1c16f9860f6f548b9f9128aea1a89b7b5cc1e9930c6430a5aada9cfdbcc9e030",
+                "time_used": 40.8315,
+                "result": null
+            }
+        },
+        "baseline": {
+            "provider": {
+                "status": 1,
+                "gas_used": 5705947,
+                "transaction_hash": "0x702de64bdeef61895cb19380c088fe9a1c55614cca2deef3361717c0c9396f02",
+                "time_used": 1013.7408,
+                "result": null
+            },
+            "requester": {
+                "status": 1,
+                "gas_used": 401010,
+                "transaction_hash": "0x25f87e1d596441f953e0072bfb3e7dbea1d4b52b7abda1b907080549c329338c",
+                "time_used": 4788.6951,
+                "result": null
+            }
+        }
+    }
+]

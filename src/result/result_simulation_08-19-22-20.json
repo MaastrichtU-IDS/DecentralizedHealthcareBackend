@@ -1,0 +1,29 @@
+{
+    "scenario_1": {
+        "Open": {
+            "total": 200,
+            "success": 100,
+            "error": {
+                "HMBResearch": 100
+            }
+        }
+    },
+    "scenario_2": {
+        "Open": {
+            "total": 180,
+            "success": 90,
+            "error": {
+                "HMBResearch": 90
+            }
+        }
+    },
+    "scenario_3": {
+        "Open": {
+            "total": 200,
+            "success": 100,
+            "error": {
+                "HMBResearch": 100
+            }
+        }
+    }
+}

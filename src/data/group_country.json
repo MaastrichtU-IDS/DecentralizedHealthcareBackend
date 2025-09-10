@@ -1,0 +1,122 @@
+[
+  {
+    "index": 2,
+    "name": "European Union (EU)",
+    "abbreviation": "EU",
+    "members": ["AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA", "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE"]
+  },
+  {
+    "index": 4,
+    "name": "Schengen Area",
+    "abbreviation": "SCHENGEN",
+    "members": ["AUT", "BEL", "CZE", "DNK", "EST", "FIN", "FRA", "DEU", "GRC", "HUN", "ISL", "ITA", "LVA", "LIE", "LTU", "LUX", "MLT", "NLD", "NOR", "POL", "PRT", "SVK", "SVN", "ESP", "SWE", "CHE", "CYP", "CZE"]
+  },
+  {
+    "index": 8,
+    "name": "Eurozone",
+    "abbreviation": "EZ",
+    "members": ["AUT", "BEL", "CYP", "EST", "FIN", "FRA", "DEU", "GRC", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "PRT", "SVK", "SVN", "ESP", "HRV"]
+  },
+  {
+    "index": 16,
+    "name": "Council of Europe",
+    "abbreviation": "COE",
+    "members": [
+      "ALB",
+      "AND",
+      "ARM",
+      "AUT",
+      "AZE",
+      "BEL",
+      "BIH",
+      "BGR",
+      "HRV",
+      "CYP",
+      "CZE",
+      "DNK",
+      "EST",
+      "FIN",
+      "FRA",
+      "GEO",
+      "DEU",
+      "GRC",
+      "HUN",
+      "ISL",
+      "IRL",
+      "ITA",
+      "KAZ",
+      "LVA",
+      "LIE",
+      "LTU",
+      "LUX",
+      "MLT",
+      "MDA",
+      "MCO",
+      "MNE",
+      "NLD",
+      "MKD",
+      "NOR",
+      "POL",
+      "PRT",
+      "ROU",
+      "SMR",
+      "SRB",
+      "SVK",
+      "SVN",
+      "ESP",
+      "SWE",
+      "CHE",
+      "TUR",
+      "UKR",
+      "GBR"
+    ]
+  },
+  {
+    "index": 32,
+    "name": "European Molecular Biology Organization",
+    "abbreviation": "EMBO",
+    "members": ["AUT", "BEL", "BGR", "HRV", "CZE", "DNK", "EST", "FIN", "FRA", "DEU", "GRC", "HUN", "ISL", "IRL", "ISR", "ITA", "LVA", "LTU", "LUX", "MLT", "MNE", "NLD", "NOR", "POL", "PRT", "SVK", "SVN", "ESP", "SWE", "CHE", "TUR", "GBR"]
+  },
+  {
+    "index": 64,
+    "name": "European Economic Area (EEA)",
+    "abbreviation": "EEA",
+    "members": ["AUT", "BEL", "BGR", "HRV", "CYP", "CZE", "DNK", "EST", "FIN", "FRA", "DEU", "GRC", "HUN", "IRL", "ITA", "LVA", "LTU", "LUX", "MLT", "NLD", "POL", "PRT", "ROU", "SVK", "SVN", "ESP", "SWE", "ISL", "LIE", "NOR"]
+  },
+  {
+    "index": 128,
+    "name": "European Free Trade Association (EFTA)",
+    "abbreviation": "EFTA",
+    "members": ["ISL", "LIE", "NOR", "CHE"]
+  },
+  {
+    "index": 256,
+    "name": "Visegrád Group",
+    "abbreviation": "V4",
+    "members": ["CZE", "HUN", "POL", "SVK"]
+  },
+  {
+    "index": 512,
+    "name": "Benelux Union",
+    "abbreviation": "BENELUX",
+    "members": ["BEL", "NLD", "LUX"]
+  },
+  {
+    "index": 1024,
+    "name": "Alpine Convention",
+    "abbreviation": "ALPINE",
+    "members": ["AUT", "FRA", "DEU", "ITA", "LIE", "MCO", "SVN", "CHE"]
+  },
+  {
+    "index": 2048,
+    "name": "Baltic Assembly",
+    "abbreviation": "BALTIC",
+    "members": ["EST", "LVA", "LTU"]
+  },
+  {
+    "index": 4096,
+    "name": "Nordic Council",
+    "abbreviation": "NORDIC",
+    "members": ["DNK", "FIN", "ISL", "NOR", "SWE"]
+  }
+]

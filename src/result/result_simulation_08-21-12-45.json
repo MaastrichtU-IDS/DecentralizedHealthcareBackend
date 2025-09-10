@@ -1,0 +1,64 @@
+{
+    "scenario_1": {
+        "Open": {
+            "total": 900,
+            "success": 180,
+            "error": {
+                "HMBResearch": 600,
+                "TimeLimitOnUse": 360
+            }
+        }
+    },
+    "scenario_2": {
+        "Moderate": {
+            "total": 210,
+            "success": 10,
+            "error": {
+                "GeographicSpecific": 200
+            }
+        },
+        "Open": {
+            "total": 450,
+            "success": 90,
+            "error": {
+                "HMBResearch": 300,
+                "TimeLimitOnUse": 180
+            }
+        },
+        "Restrictive": {
+            "total": 210,
+            "success": 0,
+            "error": {
+                "GeographicSpecific": 199,
+                "DiseaseSpecific": 210,
+                "TimeLimitOnUse": 84
+            }
+        }
+    },
+    "scenario_3": {
+        "Open": {
+            "total": 180,
+            "success": 36,
+            "error": {
+                "HMBResearch": 120,
+                "TimeLimitOnUse": 72
+            }
+        },
+        "Restrictive": {
+            "total": 360,
+            "success": 0,
+            "error": {
+                "GeographicSpecific": 342,
+                "DiseaseSpecific": 360,
+                "TimeLimitOnUse": 144
+            }
+        },
+        "Moderate": {
+            "total": 360,
+            "success": 16,
+            "error": {
+                "GeographicSpecific": 344
+            }
+        }
+    }
+}

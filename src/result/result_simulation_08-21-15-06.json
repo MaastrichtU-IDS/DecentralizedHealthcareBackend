@@ -1,0 +1,53 @@
+{
+    "scenario_1": {
+        "Open": {
+            "total": 900,
+            "success": 900,
+            "error": {}
+        }
+    },
+    "scenario_2": {
+        "Restrictive": {
+            "total": 210,
+            "success": 11,
+            "error": {
+                "GeographicSpecific": 147,
+                "DiseaseSpecific": 189
+            }
+        },
+        "Moderate": {
+            "total": 210,
+            "success": 41,
+            "error": {
+                "GeographicSpecific": 169
+            }
+        },
+        "Open": {
+            "total": 450,
+            "success": 450,
+            "error": {}
+        }
+    },
+    "scenario_3": {
+        "Restrictive": {
+            "total": 360,
+            "success": 11,
+            "error": {
+                "GeographicSpecific": 274,
+                "DiseaseSpecific": 324
+            }
+        },
+        "Open": {
+            "total": 180,
+            "success": 180,
+            "error": {}
+        },
+        "Moderate": {
+            "total": 360,
+            "success": 79,
+            "error": {
+                "GeographicSpecific": 281
+            }
+        }
+    }
+}

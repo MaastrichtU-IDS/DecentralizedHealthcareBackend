@@ -1,0 +1,23 @@
+{
+    "scenario_1": {
+        "Open": {
+            "total": 0,
+            "success": 0,
+            "error": {}
+        }
+    },
+    "scenario_2": {
+        "Open": {
+            "total": 0,
+            "success": 0,
+            "error": {}
+        }
+    },
+    "scenario_3": {
+        "Open": {
+            "total": 0,
+            "success": 0,
+            "error": {}
+        }
+    }
+}

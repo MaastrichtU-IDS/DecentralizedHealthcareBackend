@@ -1,0 +1,72 @@
+{
+    "scenario_1": {
+        "open": {
+            "total": 100,
+            "success": 22,
+            "error": {
+                "disease_error": 50,
+                "area_error": 69
+            }
+        }
+    },
+    "scenario_2": {
+        "open": {
+            "total": 50,
+            "success": 9,
+            "error": {
+                "disease_error": 25,
+                "area_error": 34
+            }
+        },
+        "strict": {
+            "total": 20,
+            "success": 1,
+            "error": {
+                "purpose_error": 10,
+                "disease_error": 10,
+                "area_error": 19,
+                "date_error": 2
+            }
+        },
+        "medium": {
+            "total": 20,
+            "success": 0,
+            "error": {
+                "purpose_error": 20,
+                "disease_error": 10,
+                "area_error": 18,
+                "date_error": 16
+            }
+        }
+    },
+    "scenario_3": {
+        "strict": {
+            "total": 40,
+            "success": 1,
+            "error": {
+                "purpose_error": 30,
+                "disease_error": 20,
+                "area_error": 39,
+                "date_error": 6
+            }
+        },
+        "open": {
+            "total": 20,
+            "success": 4,
+            "error": {
+                "disease_error": 10,
+                "area_error": 13
+            }
+        },
+        "medium": {
+            "total": 40,
+            "success": 0,
+            "error": {
+                "purpose_error": 20,
+                "disease_error": 20,
+                "area_error": 40,
+                "date_error": 14
+            }
+        }
+    }
+}
